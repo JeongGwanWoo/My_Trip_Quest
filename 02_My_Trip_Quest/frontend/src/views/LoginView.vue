@@ -2,11 +2,14 @@
   <div class="pixel-page">
     <h1 class="pixel-text">Login</h1>
     <p class="pixel-text">This is the Login page.</p>
-    <router-link to="/main-menu" class="pixel-btn">Go to Main Menu</router-link>
+    <BaseButton>
+      <router-link to="/main-menu" class="pixel-btn">Go to Main Menu</router-link>
+    </BaseButton>
   </div>
 </template>
 
 <script setup>
+import BaseButton from '@/components/ui/BaseButton.vue';
 </script>
 
 <style scoped>
