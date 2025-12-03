@@ -7,34 +7,7 @@
         <h2 class="section-title">📍 QUEST MAP</h2>
         
         <div class="map-board">
-          <div class="korea-map-shape">
-            
-            <div class="map-pin pin-seoul" style="top: 20%; left: 45%;">
-              <div class="pin-head red">📍</div>
-              <div class="pin-label">서울</div>
-              <div class="pin-badge">3</div>
-            </div>
-
-            <div class="map-pin pin-gyeongju" style="top: 50%; left: 55%;">
-              <div class="pin-head purple">📍</div>
-              <div class="pin-label">경주</div>
-              <div class="pin-badge">0</div>
-            </div>
-
-            <div class="map-pin pin-busan" style="top: 65%; left: 60%;">
-              <div class="pin-head blue">📍</div>
-              <div class="pin-label">부산</div>
-              <div class="pin-badge">0</div>
-            </div>
-
-            <div class="map-pin pin-jeju" style="top: 85%; left: 30%;">
-              <div class="pin-head green">📍</div>
-              <div class="pin-label">제주</div>
-              <div class="pin-badge">0</div>
-            </div>
-
-          </div>
-
+          <MapComponent />
           <div class="map-legend">
             <div class="legend-item">
               <span class="dot yellow"></span> IN PROGRESS
@@ -78,6 +51,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import MapComponent from '@/components/map/MapComponent.vue';
 
 const quests = ref([
   { 
@@ -156,65 +130,6 @@ const quests = ref([
   justify-content: center;
   align-items: center;
   box-shadow: 6px 6px 0px rgba(0,0,0,0.2);
-}
-
-.korea-map-shape {
-  width: 300px;
-  height: 100%;
-  background: linear-gradient(160deg, #475569 0%, #cbd5e1 100%);
-  border-radius: 100px;
-  position: relative;
-  border: 4px solid #1e293b;
-}
-
-.map-pin {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  z-index: 10;
-}
-
-.pin-head {
-  font-size: 24px;
-  filter: drop-shadow(2px 2px 0px black);
-  transition: transform 0.2s;
-}
-
-.map-pin:hover .pin-head {
-  transform: scale(1.2) translateY(-5px);
-}
-
-.pin-label {
-  background: white;
-  border: 2px solid black;
-  padding: 4px 6px;
-  font-size: 8px;
-  margin-top: 4px;
-  box-shadow: 2px 2px 0px black;
-}
-
-.pin-head.red { color: #ef4444; }
-.pin-head.blue { color: #3b82f6; }
-.pin-head.green { color: #22c55e; }
-.pin-head.purple { color: #a855f7; }
-
-.pin-badge {
-  position: absolute;
-  top: -5px;
-  right: -10px;
-  background: #fbbf24;
-  border: 2px solid black;
-  font-size: 8px;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  color: black;
 }
 
 .map-legend {
