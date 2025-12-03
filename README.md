@@ -35,16 +35,16 @@
 
 ### 1. 도착 미션 수행
 
-![도착 미션 화면 1](./screenshots/01_arrival_mission_1.png)
-![도착 미션 화면 2](./screenshots/01_arrival_mission_2.png)
+![도착 미션 화면 1](01_Prototype/screenshots/01_arrival_mission_1.png)
+![도착 미션 화면 2](01_Prototype/screenshots/01_arrival_mission_2.png)
 
 ### 2. 사진 미션 수행
 
-![사진 미션 화면 1](./screenshots/02_photo_mission_1.png)
-![사진 미션 화면 2](./screenshots/02_photo_mission_2.png)
-![사진 미션 화면 3](./screenshots/02_photo_mission_3.png)
+![사진 미션 화면 1](01_Prototype/screenshots/02_photo_mission_1.png)
+![사진 미션 화면 2](01_Prototype/screenshots/02_photo_mission_2.png)
+![사진 미션 화면 3](01_Prototype/screenshots/02_photo_mission_3.png)
 
 ### 3. 캐릭터 커스터마이징
 
-![캐릭터 꾸미기 화면 1](./screenshots/03_character_custom_1.png)
-![캐릭터 꾸미기 화면 2](./screenshots/03_character_custom_2.png)
+![캐릭터 꾸미기 화면 1](01_Prototype/screenshots/03_character_custom_1.png)
+![캐릭터 꾸미기 화면 2](01_Prototype/screenshots/03_character_custom_2.png)
