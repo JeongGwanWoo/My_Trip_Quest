@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 퀘스트 데이터에 접근하기 위한 MyBatis Mapper 인터페이스
@@ -25,4 +26,11 @@ public interface QuestRepository {
      * @return 퀘스트 리스트
      */
     List<Quest> findQuestsByLocationId(@Param("locationId") Long locationId);
+
+    /**
+     * 퀘스트 ID로 퀘스트 단건을 조회합니다.
+     * @param questId
+     * @return 퀘스트 Optional
+     */
+    Optional<Quest> findQuestById(@Param("questId") long questId);
 }

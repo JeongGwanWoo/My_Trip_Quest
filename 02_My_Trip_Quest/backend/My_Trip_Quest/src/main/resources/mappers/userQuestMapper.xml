@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mytripquest.domain.quest.repository.UserQuestRepository">
+
+    <resultMap id="userQuestMap" type="com.mytripquest.domain.quest.entity.UserQuest">
+        <id property="userQuestId" column="user_quest_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="questId" column="quest_id"/>
+        <result property="status" column="status" javaType="com.mytripquest.domain.quest.entity.QuestStatus"/>
+        <result property="proofData" column="proof_data"/>
+        <result property="acceptedAt" column="accepted_at"/>
+        <result property="completedAt" column="completed_at"/>
+        <result property="lastUpdatedAt" column="last_updated_at"/>
+    </resultMap>
+
+    <select id="findByUserIdAndQuestId" resultMap="userQuestMap">
+        SELECT *
+        FROM user_quests
+        WHERE user_id = #{userId} AND quest_id = #{questId}
+    </select>
+
+    <select id="findCompletedByUserIdAndQuestId" resultMap="userQuestMap">
+        SELECT *
+        FROM user_quests
+        WHERE user_id = #{userId} AND quest_id = #{questId} AND status = 'COMPLETED'
+    </select>
+
+    <insert id="save" parameterType="com.mytripquest.domain.quest.entity.UserQuest" useGeneratedKeys="true" keyProperty="userQuestId">
+        INSERT INTO user_quests (user_id, quest_id, status, accepted_at)
+        VALUES (#{userId}, #{questId}, #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}, NOW())
+    </insert>
+
+</mapper>
