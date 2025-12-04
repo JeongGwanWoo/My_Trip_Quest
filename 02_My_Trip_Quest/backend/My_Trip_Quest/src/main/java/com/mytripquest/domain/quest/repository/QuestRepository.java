@@ -1,5 +1,6 @@
 package com.mytripquest.domain.quest.repository;
 
+import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.entity.Quest;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -12,9 +13,16 @@ import java.util.List;
 @Mapper
 public interface QuestRepository {
     /**
-     * 지역 코드를 기준으로 퀘스트 목록을 조회합니다.
+     * 지역 코드를 기준으로, 퀘스트가 있는 관광지 목록과 각 관광지의 퀘스트 개수를 조회합니다.
      * @param areaCode
+     * @return 관광지 정보와 퀘스트 개수를 담은 DTO 리스트
+     */
+    List<LocationWithQuestCountDto> findLocationsByAreaCode(@Param("areaCode") String areaCode);
+
+    /**
+     * 특정 관광지 ID를 기준으로 해당 관광지에 속한 퀘스트 목록을 조회합니다.
+     * @param locationId
      * @return 퀘스트 리스트
      */
-    List<Quest> findByAreaCode(@Param("areaCode") String areaCode);
+    List<Quest> findQuestsByLocationId(@Param("locationId") Long locationId);
 }
