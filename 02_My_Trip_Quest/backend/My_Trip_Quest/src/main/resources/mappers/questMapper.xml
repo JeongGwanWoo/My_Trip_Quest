@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mytripquest.domain.quest.repository.QuestRepository">
+
+    <!-- Quest 엔티티와 quests 테이블의 컬럼을 매핑합니다. -->
+    <resultMap id="questMap" type="com.mytripquest.domain.quest.entity.Quest">
+        <id property="questId" column="quest_id"/>
+        <result property="locationId" column="location_id"/>
+        <result property="questTypeId" column="quest_type_id"/>
+        <result property="previousQuestId" column="previous_quest_id"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="rewardXp" column="reward_xp"/>
+        <result property="rewardPoints" column="reward_points"/>
+        <result property="requireGpsVerify" column="require_gps_verify"/>
+        <result property="isActive" column="is_active"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 지역 코드를 기준으로 퀘스트 목록을 조회합니다. -->
+    <select id="findByAreaCode" resultMap="questMap">
+        SELECT q.*
+        FROM quests q
+        JOIN locations l ON q.location_id = l.location_id
+        WHERE l.area_code = #{areaCode}
+    </select>
+
+</mapper>
