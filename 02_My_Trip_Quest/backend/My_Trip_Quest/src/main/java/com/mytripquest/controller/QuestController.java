@@ -2,6 +2,7 @@ package com.mytripquest.controller;
 
 import com.mytripquest.domain.quest.dto.AreaQuestCountDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
+import com.mytripquest.domain.quest.dto.QuestAcceptRequestDto;
 import com.mytripquest.domain.quest.entity.Quest;
 import com.mytripquest.domain.quest.service.QuestService;
 import com.mytripquest.global.ApiResponse;
@@ -10,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -56,5 +59,17 @@ public class QuestController {
     public ResponseEntity<ApiResponse<List<Quest>>> getQuestsByLocation(@PathVariable Long locationId) {
         List<Quest> quests = questService.getQuestsByLocationId(locationId);
         return ResponseEntity.ok(ApiResponse.success(quests));
+    }
+
+    /**
+     * 퀘스트를 수락합니다.
+     * @param questId 수락할 퀘스트의 ID
+     * @param request 수락 요청 DTO (사용자 ID 포함)
+     * @return 성공 응답
+     */
+    @PostMapping("/quests/{questId}/accept")
+    public ResponseEntity<ApiResponse<Void>> acceptQuest(@PathVariable long questId, @RequestBody QuestAcceptRequestDto request) {
+        questService.acceptQuest(questId, request.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

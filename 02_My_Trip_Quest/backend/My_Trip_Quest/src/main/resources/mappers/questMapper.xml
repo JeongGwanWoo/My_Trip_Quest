@@ -53,4 +53,11 @@
         WHERE location_id = #{locationId}
     </select>
 
+    <!-- 퀘스트 ID를 기준으로 퀘스트를 단건 조회합니다. -->
+    <select id="findQuestById" resultMap="questMap">
+        SELECT *
+        FROM quests
+        WHERE quest_id = #{questId}
+    </select>
+
 </mapper>
