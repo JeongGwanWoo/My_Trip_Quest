@@ -124,7 +124,7 @@ const quests = ref([
   background: white;
   border: 4px solid #1e293b;
   padding: 40px;
-  height: 400px;
+  height: 600px;
   position: relative;
   display: flex;
   justify-content: center;

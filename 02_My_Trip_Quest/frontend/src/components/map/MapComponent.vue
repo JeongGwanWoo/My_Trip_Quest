@@ -21,8 +21,8 @@ onMounted(() => {
 const initMap = () => {
   const container = document.getElementById("map");
   const options = {
-    center: new kakao.maps.LatLng(37.566826, 126.9786567),
-    level: 3,
+    center: new kakao.maps.LatLng(35.9, 127.8),
+    level: 13,
   };
   const map = new kakao.maps.Map(container, options);
 
@@ -33,6 +33,6 @@ const initMap = () => {
 <style scoped>
 #map {
   width: 100%;
-  height: 400px;
+  height: 600px;
 }
 </style>
