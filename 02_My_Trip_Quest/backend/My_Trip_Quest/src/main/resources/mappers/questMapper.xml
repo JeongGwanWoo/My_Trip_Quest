@@ -60,4 +60,10 @@
         WHERE quest_id = #{questId}
     </select>
 
+    <select id="countTotalLocationsByArea" resultType="int">
+        SELECT COUNT(*)
+        FROM locations
+        WHERE area_code = #{areaCode}
+    </select>
+
 </mapper>

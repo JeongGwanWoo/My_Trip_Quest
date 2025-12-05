@@ -25,6 +25,24 @@
         WHERE user_id = #{userId} AND quest_id = #{questId} AND status = 'COMPLETED'
     </select>
 
+    <select id="countIncompleteLocationsByArea" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            locations l
+        WHERE
+            l.area_code = #{areaCode}
+            AND (
+                (SELECT COUNT(q.quest_id) FROM quests q WHERE q.location_id = l.location_id)
+                >
+                (SELECT COUNT(q2.quest_id) FROM user_quests uq
+                JOIN quests q2 ON uq.quest_id = q2.quest_id
+                WHERE q2.location_id = l.location_id
+                AND uq.user_id = #{userId}
+                AND uq.status = 'COMPLETED')
+            )
+    </select>
+
     <insert id="save" parameterType="com.mytripquest.domain.quest.entity.UserQuest" useGeneratedKeys="true" keyProperty="userQuestId">
         INSERT INTO user_quests (user_id, quest_id, status, accepted_at)
         VALUES (#{userId}, #{questId}, #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}, NOW())
