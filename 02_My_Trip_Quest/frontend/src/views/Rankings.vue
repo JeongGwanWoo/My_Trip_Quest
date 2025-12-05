@@ -16,6 +16,11 @@
         </div>
 
         <div class="my-info-right">
+          <div class="stat-box green-box">
+            <span class="icon">#</span>
+            <span class="value">{{ myData.rank }}</span>
+            <span class="unit">RANK</span>
+          </div>
           <div class="stat-box yellow-box">
             <span class="icon">🪙</span>
             <span class="value">{{ myData.coins }}</span>
@@ -30,7 +35,6 @@
       </section>
 
       <section class="leaderboard-container">
-        
         <div class="table-header">
           <div class="col rank">RANK</div>
           <div class="col player">PLAYER</div>
@@ -64,7 +68,6 @@
             <div class="col missions">{{ user.missions }}</div>
           </div>
         </div>
-
       </section>
 
       <footer class="info-footer">
@@ -82,6 +85,7 @@ import { ref } from 'vue';
 
 const myData = ref({
   name: 'TRAVELMASTER',
+  rank: 125,
   coins: 5000,
   level: 12
 });
@@ -193,6 +197,7 @@ const rankings = ref([
 
 .yellow-box { background: #fbbf24; color: black; }
 .blue-box { background: #3b82f6; color: white; }
+.green-box { background: #22c55e; color: white; }
 
 .stat-box .icon { font-size: 20px; }
 .stat-box .value { font-size: 14px; font-weight: bold; }
@@ -271,13 +276,56 @@ const rankings = ref([
   }
   .my-info-right {
     align-self: flex-end;
+    flex-wrap: nowrap; /* Prevent wrapping for stat boxes */
+    justify-content: flex-end;
+    gap: 8px; /* Reduced gap between stat boxes */
   }
-  
+  .stat-box {
+    width: 50px; /* Reduced width */
+    height: 50px; /* Reduced height */
+    border-width: 2px;
+    gap: 3px;
+  }
+  .stat-box .icon { font-size: 16px; }
+  .stat-box .value { font-size: 10px; }
+  .stat-box .unit { font-size: 6px; }
+
   .table-header, .table-row {
-    grid-template-columns: 0.5fr 2fr 1.5fr;
+    display: grid; /* Back to grid */
+    grid-template-columns: 0.3fr 1fr 0.8fr 0.6fr 0.6fr; /* Aggressively re-proportioned */
+    font-size: 7px; /* Extremely small font */
+    padding: 5px 3px; /* Minimal padding */
+    gap: 2px; /* Minimal gap */
+  }
+  .col.player {
+    word-break: break-all; /* Ensure long names wrap */
+    text-shadow: none; /* Remove text shadow for better readability at small size */
+  }
+  .col.rank, .col.coins, .col.level, .col.missions {
+    text-shadow: none; /* Remove text shadow for better readability at small size */
   }
   .col.level, .col.missions {
-    display: none;
+    display: flex; /* Make them visible again */
+    justify-content: flex-end; /* Align to the right, consistent with coins */
+    flex-direction: column; /* Stack level and unit if space is very tight */
+    align-items: flex-end; /* Align stacked items to the right */
+  }
+  .col.level span, .col.missions span {
+    line-height: 1; /* Tighten line height for stacked elements */
+  }
+}
+
+@media (max-width: 480px) { /* Even smaller screens */
+  .my-rank-card {
+    flex-direction: column; /* Revert to column for very small screens */
+    align-items: center;
+  }
+  .my-info-left {
+    flex-grow: 0;
+  }
+  .my-info-right {
+    justify-content: center;
+    align-self: center;
   }
 }
 </style>

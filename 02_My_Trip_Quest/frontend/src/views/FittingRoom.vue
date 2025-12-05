@@ -57,7 +57,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-const currentTab = ref('skin');
+const currentTab = ref('all');
 
 const equipped = ref({
   skin: { id: 1, type: 'skin', name: '기본 스킨', image: '😊' },
@@ -67,6 +67,7 @@ const equipped = ref({
 });
 
 const tabs = [
+  { id: 'all', label: 'ALL ITEMS', icon: '🏷️' },
   { id: 'skin', label: 'SKINS', icon: '😊' },
   { id: 'hair', label: 'HAIR', icon: '🎩' },
   { id: 'outfit', label: 'OUTFITS', icon: '👖' },
@@ -97,17 +98,23 @@ const inventory = {
 };
 
 const currentItems = computed(() => {
+  if (currentTab.value === 'all') {
+    // Flatten all items from all categories into one array
+    return Object.values(inventory).flat();
+  }
   return inventory[currentTab.value] || [];
 });
 
 const isEquipped = (item) => {
-  const current = equipped.value[currentTab.value];
+  if (!item || !item.type) return false;
+  const current = equipped.value[item.type];
   return current && current.id === item.id;
 };
 
 const equipItem = (item) => {
   
   if (isEquipped(item)) {
+    // Cannot unequip skin
     if (item.type !== 'skin') {
       equipped.value[item.type] = null;
     }
@@ -304,7 +311,29 @@ const equipItem = (item) => {
 }
 
 @media (max-width: 768px) {
+  .tab-bar {
+    justify-content: flex-start; /* Align to start for scrolling */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    flex-wrap: nowrap; /* Prevent wrapping */
+    padding: 8px 10px; /* Adjust padding */
+    gap: 8px; /* Reduce gap between buttons */
+
+    /* Hide scrollbar */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .tab-bar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+  .tab-btn {
+    flex-shrink: 0; /* Prevent buttons from shrinking */
+    font-size: 9px; /* Smaller font size */
+    padding: 6px 10px; /* Smaller padding */
+    gap: 6px;
+  }
+  .tab-btn .tab-icon {
+    font-size: 14px; /* Smaller icon size */
+  }
   .items-area { grid-template-columns: repeat(3, 1fr); }
-  .tab-bar { justify-content: center; }
 }
 </style>

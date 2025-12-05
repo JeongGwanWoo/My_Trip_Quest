@@ -21,7 +21,6 @@ const router = useRouter();
 
 const tabs = [
   { id: 'map', label: 'MAP', icon: '📍', path: '/quest-map' },
-  { id: 'collection', label: 'COLLECTION', icon: '📦', path: '/collection' },
   { id: 'rankings', label: 'RANKINGS', icon: '🏆', path: '/rankings' },
   { id: 'shop', label: 'SHOP', icon: '🛍️', path: '/shop' },
   { id: 'fitting', label: 'FITTING ROOM', icon: '✨', path: '/fitting-room' },
@@ -83,7 +82,20 @@ const navigate = (path) => {
 
 
 @media (max-width: 600px) {
-  .nav-item span { display: none; }
-  .nav-item { padding: 15px 10px; }
+  .pixel-nav {
+    justify-content: flex-start;
+    overflow-x: auto;
+    /* Hide scrollbar for IE, Edge and Firefox */
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
+  }
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .pixel-nav::-webkit-scrollbar {
+    display: none;
+  }  .nav-item { 
+    padding: 12px 10px;
+    font-size: 9px;
+    flex-shrink: 0; /* Prevent items from shrinking */
+  }
 }
 </style>

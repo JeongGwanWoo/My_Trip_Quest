@@ -5,30 +5,46 @@
         <span class="icon">🏠</span> MAIN MENU
       </div>
       <div class="controls">
-        <router-link to="/login" class="pixel-btn">Login</router-link>
-        <router-link to="/signup" class="pixel-btn">Signup</router-link>
+        <template v-if="!authStore.isLoggedIn">
+          <router-link to="/login" class="pixel-btn">Login</router-link>
+          <router-link to="/signup" class="pixel-btn">Signup</router-link>
+        </template>
+        <template v-else>
+          <button @click="handleLogout" class="pixel-btn">Logout</button>
+        </template>
       </div>
     </header>
 
     <main class="map-content">
-      
-      <div class="menu-grid">
-        <div 
-          v-for="item in menuItems" 
-          :key="item.id" 
-          class="pixel-card" 
-          @click="handleItemClick(item.id)"
-        >
-          <div class="img-box">
-            <span class="emoji">{{ item.icon }}</span>
+      <div class="menu-container">
+        <div class="menu-row">
+          <div 
+            v-for="item in topRowItems" 
+            :key="item.id" 
+            class="pixel-card" 
+            @click="handleItemClick(item.id)"
+          >
+            <div class="img-box">
+              <span class="emoji">{{ item.icon }}</span>
+            </div>
+            <span class="label">{{ item.label }}</span>
+            <div v-if="item.id === 'rankings'" class="badge">SEASON 1</div>
           </div>
-          
-          <span class="label">{{ item.label }}</span>
-          
-          <div v-if="item.id === 'rankings'" class="badge">SEASON 1</div>
+        </div>
+        <div class="menu-row">
+          <div 
+            v-for="item in bottomRowItems" 
+            :key="item.id" 
+            class="pixel-card" 
+            @click="handleItemClick(item.id)"
+          >
+            <div class="img-box">
+              <span class="emoji">{{ item.icon }}</span>
+            </div>
+            <span class="label">{{ item.label }}</span>
+          </div>
         </div>
       </div>
-
     </main>
   </div>
 </template>
@@ -36,13 +52,21 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
+const authStore = useAuthStore();
 
-const menuItems = ref([
+const handleLogout = () => {
+  authStore.logout();
+};
+
+const topRowItems = ref([
   { id: 'map', label: 'MAP', icon: '🗺️' },
-  { id: 'collection', label: 'COLLECTION', icon: '📚' },
   { id: 'rankings', label: 'RANKINGS', icon: '🏆' },
+]);
+
+const bottomRowItems = ref([
   { id: 'shop', label: 'SHOP', icon: '🛒' },
   { id: 'fittingroom', label: 'FITTINGROOM', icon: '👕' },
   { id: 'profile', label: 'PROFILE', icon: '👤' },
@@ -54,9 +78,6 @@ const handleItemClick = (id) => {
   switch (id) {
     case 'map':
       router.push('/quest-map');
-      break;
-    case 'collection':
-      router.push('/collection');
       break;
     case 'rankings':
       router.push('/rankings');
@@ -140,12 +161,18 @@ const handleItemClick = (id) => {
   padding: 40px;
 }
 
-.menu-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 60px 80px;
-  max-width: 1000px;
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
   width: 100%;
+  max-width: 1000px;
+}
+
+.menu-row {
+  display: flex;
+  justify-content: center;
+  gap: 80px;
 }
 
 .pixel-card {
@@ -155,6 +182,7 @@ const handleItemClick = (id) => {
   cursor: pointer;
   transition: transform 0.2s;
   position: relative;
+  width: 150px; /* Set a width for items */
 }
 
 .pixel-card:hover {
@@ -199,19 +227,47 @@ const handleItemClick = (id) => {
 }
 
 @media (max-width: 900px) {
-  .menu-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .menu-row {
+    flex-wrap: wrap;
     gap: 40px;
   }
 }
 
 @media (max-width: 600px) {
-  .menu-grid {
-    grid-template-columns: repeat(1, 1fr);
+  .map-header {
+    padding: 15px 20px;
+  }
+  .brand {
+    font-size: 12px;
+  }
+  .controls .pixel-btn { /* Target buttons specifically within .controls */
+    padding: 6px 10px;
+    font-size: 9px;
+  }
+  .map-content {
+    padding: 20px;
+  }
+  .menu-container {
+    gap: 30px;
+  }
+  .menu-row {
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .pixel-card {
+    width: 80px;
   }
   .img-box {
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+    border-width: 3px;
+  }
+  .emoji {
+    font-size: 28px;
+  }
+  .label {
+    font-size: 9px;
   }
 }
 </style>
