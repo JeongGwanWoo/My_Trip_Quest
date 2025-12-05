@@ -88,18 +88,15 @@ CREATE TABLE IF NOT EXISTS `quests` (
 
 
 
--- 6. ITEMS (아이템 마스터)
-CREATE TABLE IF NOT EXISTS `items` (
-    `item_id`       BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `name`          VARCHAR(100) NOT NULL,
-    `description`   TEXT NOT NULL,
-    `type`          ENUM('EQUIPMENT','CONSUMABLE') NOT NULL,
-    `slot`          ENUM('HEAD','EYES','TOP','BOTTOM','SHOES','ACCESSORY','BACKGROUND') NULL,
-    `image_url`     VARCHAR(255) NULL,
-    `is_purchasable` BOOLEAN NOT NULL DEFAULT FALSE,
-    `price`         INT NULL,
-    `created_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- 6. ITEMS (콤마 에러 수정됨)
+CREATE TABLE `items` (
+    `item_id`        BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `name`           VARCHAR(100) NOT NULL,            -- 아이템 이름 (예: 빨간 모자)
+    `slot`           ENUM('HAIR', 'HAT', 'TOP', 'BOTTOM', 'FACE', 'SKIN') NOT NULL, -- 장착 부위
+    `image_url`      VARCHAR(255) NOT NULL,            -- 이미지 경로
+    `price`          INT DEFAULT 0,                    -- 가격
+    `is_purchasable` BOOLEAN DEFAULT TRUE,             -- 상점 판매 여부
+    `created_at`     TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- 등록일 (이건 남겨두는 게 좋습니다)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 

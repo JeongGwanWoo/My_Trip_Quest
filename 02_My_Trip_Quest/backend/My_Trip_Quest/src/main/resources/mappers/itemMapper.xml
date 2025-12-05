@@ -2,26 +2,60 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mytripquest.domain.item.repository.ItemMapper">
 
-    <select id="findItemById" parameterType="long" resultType="com.mytripquest.domain.item.entity.Item">
-        SELECT item_id, name, description, type, slot, image_url, is_purchasable, price, created_at, updated_at
+    <resultMap id="UserItemWithItemMap" type="com.mytripquest.domain.item.entity.UserItem">
+        <id property="itemId" column="item_id"/> 
+        
+        <result property="userId" column="user_id"/>
+        <result property="quantity" column="quantity"/>
+        <result property="isEquipped" column="is_equipped"/>
+        <result property="acquiredAt" column="acquired_at"/>
+        <result property="updatedAt" column="updated_at"/>
+
+        <association property="item" javaType="com.mytripquest.domain.item.entity.Item">
+            <id property="itemId" column="item_id"/>
+            <result property="name" column="item_name"/> 
+            <result property="slot" column="slot"/>
+            <result property="imageUrl" column="image_url"/>
+            <result property="price" column="price"/>
+            <result property="isPurchasable" column="is_purchasable"/>
+        </association>
+    </resultMap>
+
+    <select id="findItemById" resultType="com.mytripquest.domain.item.entity.Item">
+        SELECT item_id AS itemId, name, slot, image_url AS imageUrl, price
         FROM items
         WHERE item_id = #{itemId}
     </select>
 
-    <select id="findUserItemsByUserId" parameterType="long" resultType="com.mytripquest.domain.item.entity.UserItem">
-        SELECT user_id, item_id, quantity, is_equipped, acquired_at, updated_at
-        FROM user_items
-        WHERE user_id = #{userId}
+    <select id="findUserItemsByUserId" resultMap="UserItemWithItemMap">
+        SELECT 
+            ui.user_id, 
+            ui.item_id, 
+            ui.quantity, 
+            ui.is_equipped, 
+            ui.acquired_at, 
+            ui.updated_at,
+            i.name as item_name,
+            i.slot,
+            i.image_url,
+            i.price,
+            i.is_purchasable
+        FROM user_items ui
+        JOIN items i ON ui.item_id = i.item_id
+        WHERE ui.user_id = #{userId}
     </select>
 
-    <select id="findUserItem" resultType="com.mytripquest.domain.item.entity.UserItem">
-        SELECT user_id, item_id, quantity, is_equipped, acquired_at, updated_at
-        FROM user_items
-        WHERE user_id = #{userId} AND item_id = #{itemId}
+    <select id="findUserItem" resultMap="UserItemWithItemMap">
+        SELECT ui.*, i.name as item_name, i.slot, i.image_url
+        FROM user_items ui
+        JOIN items i ON ui.item_id = i.item_id
+        WHERE ui.user_id = #{userId} AND ui.item_id = #{itemId}
     </select>
 
-    <select id="findEquippedItemBySlot" resultType="com.mytripquest.domain.item.entity.UserItem">
-        SELECT ui.*
+    <select id="findEquippedItemBySlot" resultMap="UserItemWithItemMap">
+        SELECT 
+            ui.user_id, ui.item_id, ui.quantity, ui.is_equipped,
+            i.name as item_name, i.slot, i.image_url
         FROM user_items ui
         JOIN items i ON ui.item_id = i.item_id
         WHERE ui.user_id = #{userId}
@@ -29,11 +63,25 @@
           AND i.slot = #{slot}
     </select>
 
-    <update id="updateUserItem" parameterType="com.mytripquest.domain.item.entity.UserItem">
-        UPDATE user_items
-        SET quantity = #{quantity},
-            is_equipped = #{isEquipped}
-        WHERE user_id = #{userId} AND item_id = #{itemId}
+    <update id="equipItemAndUnequipOthers">
+        UPDATE user_items ui
+        JOIN items i ON ui.item_id = i.item_id
+        SET ui.is_equipped = (CASE WHEN ui.item_id = #{itemId} THEN 1 ELSE 0 END),
+            ui.updated_at = NOW()
+        WHERE ui.user_id = #{userId}
+          AND i.slot = (
+              SELECT slot 
+              FROM (SELECT slot FROM items WHERE item_id = #{itemId}) AS sub
+          )
+    </update>
+    
+    <update id="unequipSlot">
+        UPDATE user_items ui
+        JOIN items i ON ui.item_id = i.item_id
+        SET ui.is_equipped = FALSE,
+            ui.updated_at = NOW()
+        WHERE ui.user_id = #{userId}
+          AND i.slot = #{slot}
     </update>
 
 </mapper>

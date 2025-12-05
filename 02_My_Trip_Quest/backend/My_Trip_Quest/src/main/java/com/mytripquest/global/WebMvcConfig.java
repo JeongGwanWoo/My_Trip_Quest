@@ -27,13 +27,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
 	}
 	
 	@Override
-	public void addCorsMappings(CorsRegistry registry) {
-	    registry.addMapping("/**") // 모든 API 경로에 대해
-        .allowedOrigins("http://localhost:5173") // 프론트엔드 주소 허용 (Vue, React 등)
-        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS") // 허용할 HTTP 메서드
-        .allowedHeaders("*") // 모든 헤더 허용
-        .allowCredentials(true) // 쿠키/인증정보 포함 허용
-        .maxAge(3600); // 설정 캐시 시간 (1시간)
-	}
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                // ★ 중요: allowedOrigins 대신 allowedOriginPatterns 사용 권장
+                .allowedOriginPatterns("http://localhost:5173") 
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true) // 이게 true면, 위에서 * 를 쓰면 안 됨!
+                .maxAge(3600);
+    }
 
 }
