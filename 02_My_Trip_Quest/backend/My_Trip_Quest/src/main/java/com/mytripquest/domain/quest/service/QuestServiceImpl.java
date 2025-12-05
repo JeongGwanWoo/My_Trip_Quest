@@ -1,7 +1,7 @@
 package com.mytripquest.domain.quest.service;
 
-import com.mytripquest.domain.quest.dto.AreaQuestCountDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
+import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
 import com.mytripquest.domain.quest.entity.Quest;
 import com.mytripquest.domain.quest.entity.QuestStatus;
 import com.mytripquest.domain.quest.entity.UserQuest;
@@ -44,22 +44,33 @@ public class QuestServiceImpl implements QuestService {
     }
 
     /**
-     * 각 지역별 퀘스트 개수를 조회합니다.
-     * @return 각 지역의 이름과 퀘스트 개수를 담은 DTO 리스트
+     * 각 지역별 퀘스트 개수와 사용자의 완료 현황을 조회합니다.
+     * @param userId 현재 사용자의 ID
+     * @return 각 지역의 이름, 총 퀘스트 개수, 완료한 퀘스트 개수를 담은 DTO 리스트
      */
     @Override
     @Transactional(readOnly = true)
-    public List<AreaQuestCountDto> getAreaQuestCounts() {
-        List<AreaQuestCountDto> areaQuestCounts = new ArrayList<>();
+    public List<UserAreaQuestStatusDto> getUserAreaQuestCounts(Long userId) {
+        List<UserAreaQuestStatusDto> areaQuestStatus = new ArrayList<>();
         for (Map.Entry<String, String> entry : AREA_CODES.entrySet()) {
-            List<LocationWithQuestCountDto> locations = questRepository.findLocationsByAreaCode(entry.getValue());
-            int totalQuests = locations.stream().mapToInt(LocationWithQuestCountDto::getQuestCount).sum();
-            areaQuestCounts.add(AreaQuestCountDto.builder()
-                    .areaName(entry.getKey())
-                    .questCount(totalQuests)
+            String areaName = entry.getKey();
+            String areaCode = entry.getValue();
+
+            // 1. 해당 지역의 전체 관광지 수 계산
+            int totalLocations = questRepository.countTotalLocationsByArea(areaCode);
+
+            // 2. 해당 지역에서 사용자가 완료하지 않은 관광지 수 계산
+            int incompleteLocations = userQuestRepository.countIncompleteLocationsByArea(userId, areaCode);
+
+            // 3. DTO 생성
+            areaQuestStatus.add(UserAreaQuestStatusDto.builder()
+                    .areaName(areaName)
+                    .areaCode(areaCode)
+                    .incompleteLocationCount(incompleteLocations)
+                    .totalLocationCount(totalLocations)
                     .build());
         }
-        return areaQuestCounts;
+        return areaQuestStatus;
     }
 
     /**

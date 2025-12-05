@@ -33,4 +33,11 @@ public interface QuestRepository {
      * @return 퀘스트 Optional
      */
     Optional<Quest> findQuestById(@Param("questId") long questId);
+
+    /**
+     * 특정 지역의 총 관광지 개수를 조회합니다.
+     * @param areaCode
+     * @return 총 관광지 개수
+     */
+    int countTotalLocationsByArea(@Param("areaCode") String areaCode);
 }
