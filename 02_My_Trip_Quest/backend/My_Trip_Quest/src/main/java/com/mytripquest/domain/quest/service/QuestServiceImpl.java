@@ -37,8 +37,8 @@ public class QuestServiceImpl implements QuestService {
 
     static {
         Map<String, String> aMap = new HashMap<>();
-        aMap.put("seoul", "1");
-        aMap.put("gwangju", "5");
+        aMap.put("서울특별시", "1");
+        aMap.put("광주광역시", "5");
         AREA_CODES = Collections.unmodifiableMap(aMap);
         CODE_TO_NAME = Collections.unmodifiableMap(aMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)));
     }
