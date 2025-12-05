@@ -12,6 +12,8 @@ public interface UserQuestRepository {
     Optional<UserQuest> findByUserIdAndQuestId(@Param("userId") long userId, @Param("questId") long questId);
 
     Optional<UserQuest> findCompletedByUserIdAndQuestId(@Param("userId") long userId, @Param("questId") long questId);
+
+    int countIncompleteLocationsByArea(@Param("userId") Long userId, @Param("areaCode") String areaCode);
     
     void save(UserQuest userQuest);
 
