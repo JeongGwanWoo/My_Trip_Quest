@@ -7,10 +7,14 @@
         
         <div class="avatar-display">
           <div class="avatar-layers">
-            <div class="layer skin">{{ equipped.skin.image }}</div>
-            <div class="layer outfit" v-if="equipped.outfit">{{ equipped.outfit.image }}</div>
-            <div class="layer hair" v-if="equipped.hair">{{ equipped.hair.image }}</div>
-            <div class="layer accessory" v-if="equipped.accessory">{{ equipped.accessory.image }}</div>
+            <div class="layer skin">
+              <img :src="equipped.SKIN?.image || '/assets/avatar/avatar-base.png'" alt="skin"/>
+            </div>
+            <div class="layer bottom" v-if="equipped.BOTTOM"><img :src="equipped.BOTTOM.image" alt="bottom"/></div>
+            <div class="layer top" v-if="equipped.TOP"><img :src="equipped.TOP.image" alt="top"/></div>
+            <div class="layer hair" v-if="equipped.HAIR"><img :src="equipped.HAIR.image" alt="hair"/></div>
+            <div class="layer hat" v-if="equipped.HAT"><img :src="equipped.HAT.image" alt="hat"/></div>
+            <div class="layer face" v-if="equipped.FACE"><img :src="equipped.FACE.image" alt="face"/></div>
           </div>
         </div>
 
@@ -22,6 +26,12 @@
           <span class="sparkle-icon">✨</span> CUSTOMIZE YOUR CHARACTER
         </h2>
 
+        <div class="action-bar" style="margin-bottom: 15px; text-align: right;">
+          <button @click="saveCurrentAvatar" class="save-btn">
+            💾 현재 코디 저장하기
+          </button>
+        </div>
+
         <div class="tab-bar">
           <button 
             v-for="tab in tabs" 
@@ -30,11 +40,14 @@
             :class="{ active: currentTab === tab.id }"
             @click="currentTab = tab.id"
           >
-            <span class="tab-icon">{{ tab.icon }}</span> {{ tab.label }}
+            {{ tab.label }}
           </button>
         </div>
 
         <div class="items-area">
+          <div v-if="isLoading" style="color: white;">로딩 중...</div>
+          <div v-else-if="currentItems.length === 0" style="color: #ddd;">아이템이 없습니다.</div>
+          
           <div 
             v-for="item in currentItems" 
             :key="item.id"
@@ -44,7 +57,7 @@
           >
             <div v-if="isEquipped(item)" class="check-mark">✔</div>
             
-            <div class="item-img">{{ item.image }}</div>
+            <div class="item-img"><img :src="item.image" :alt="item.name"/></div>
             <div class="item-name">{{ item.name }}</div>
           </div>
         </div>
@@ -55,88 +68,175 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { getAllItems, equipItemApi, unequipItemApi  } from '@/api/items';
 
-const currentTab = ref('all');
 
+const currentTab = ref('recent');
+const allBackendItems = ref([]); 
+const isLoading = ref(true);
+const error = ref(null);
+
+// 장착 상태 관리
 const equipped = ref({
-  skin: { id: 1, type: 'skin', name: '기본 스킨', image: '😊' },
-  hair: { id: 4, type: 'hair', name: '모자', image: '🎩' },
-  outfit: { id: 7, type: 'outfit', name: '정장', image: '👔' },
-  accessory: null 
+  SKIN: { id: null, type: 'SKIN', name: '기본 스킨', image: '/assets/avatar/avatar-base.png' },
+  HAIR: null,
+  HAT: null,
+  TOP: null,
+  BOTTOM: null,
+  FACE: null,
 });
 
 const tabs = [
-  { id: 'all', label: 'ALL ITEMS', icon: '🏷️' },
-  { id: 'skin', label: 'SKINS', icon: '😊' },
-  { id: 'hair', label: 'HAIR', icon: '🎩' },
-  { id: 'outfit', label: 'OUTFITS', icon: '👖' },
-  { id: 'accessory', label: 'ACCESSORIES', icon: '🎒' },
+  { id: 'recent', label: '모두' },
+  { id: 'HAIR', label: '머리' },
+  { id: 'HAT', label: '모자' },
+  { id: 'TOP', label: '상의' },
+  { id: 'BOTTOM', label: '하의' },
+  { id: 'FACE', label: '얼굴' },
+  { id: 'SKIN', label: '스킨' },
 ];
 
-const inventory = {
-  skin: [
-    { id: 1, type: 'skin', name: '기본 스킨', image: '😊' },
-    { id: 2, type: 'skin', name: '멋진 스킨', image: '😎' },
-    { id: 3, type: 'skin', name: '행복 스킨', image: '😄' },
-  ],
-  hair: [
-    { id: 4, type: 'hair', name: '모자', image: '🎩' },
-    { id: 5, type: 'hair', name: '왕관', image: '👑' },
-    { id: 6, type: 'hair', name: '헬멧', image: '⛑️' },
-  ],
-  outfit: [
-    { id: 7, type: 'outfit', name: '정장', image: '👔' },
-    { id: 8, type: 'outfit', name: '티셔츠', image: '👕' },
-    { id: 9, type: 'outfit', name: '드레스', image: '👗' },
-  ],
-  accessory: [
-    { id: 10, type: 'accessory', name: '배낭', image: '🎒' },
-    { id: 11, type: 'accessory', name: '카메라', image: '📷' },
-    { id: 12, type: 'accessory', name: '지도', image: '🗺️' },
-  ]
-};
+// 1. 목록 데이터 가공
+const categorizedInventory = computed(() => {
+  const inventory = {
+    SKIN: [], HAIR: [], HAT: [], TOP: [], BOTTOM: [], FACE: [],
+  };
+
+  allBackendItems.value.forEach(userItem => {
+    const itemDetail = userItem.item;
+    if (itemDetail && itemDetail.slot) {
+      const slotCategory = itemDetail.slot.toUpperCase();
+      if (inventory[slotCategory]) {
+        inventory[slotCategory].push({
+          id: itemDetail.itemId,       
+          type: itemDetail.slot,       
+          name: itemDetail.name,       
+          image: itemDetail.imageUrl,  
+        });
+      }
+    }
+  });
+  return inventory;
+});
 
 const currentItems = computed(() => {
-  if (currentTab.value === 'all') {
-    // Flatten all items from all categories into one array
-    return Object.values(inventory).flat();
+  if (currentTab.value === 'recent') {
+    const allItems = [];
+    for (const category in categorizedInventory.value) {
+      allItems.push(...categorizedInventory.value[category]);
+    }
+    return allItems;
   }
-  return inventory[currentTab.value] || [];
+  return categorizedInventory.value[currentTab.value] || [];
 });
 
 const isEquipped = (item) => {
   if (!item || !item.type) return false;
-  const current = equipped.value[item.type];
+  const current = equipped.value[item.type]; 
   return current && current.id === item.id;
 };
 
+// 2. 옷 입히기 (화면 반영)
 const equipItem = (item) => {
-  
   if (isEquipped(item)) {
-    // Cannot unequip skin
-    if (item.type !== 'skin') {
+    if (item.type !== 'SKIN') {
       equipped.value[item.type] = null;
     }
   } else {
     equipped.value[item.type] = item;
   }
 };
+
+// 3. 저장 버튼 기능
+const saveCurrentAvatar = async () => {
+  if (!confirm('현재 착용한 모습을 저장하시겠습니까?')) return;
+  
+  try {
+    const promises = [];
+
+    // ★ [핵심 변경] 모든 슬롯을 순회하며 검사합니다.
+    // SKIN은 벗을 수 없으니 제외하고 나머지 슬롯만 체크
+    const slotsToCheck = ['HAIR', 'HAT', 'TOP', 'BOTTOM', 'FACE'];
+
+    for (const slot of slotsToCheck) {
+      const currentItem = equipped.value[slot];
+
+      if (currentItem && currentItem.id) {
+        // 1. 입고 있는 게 있으면 -> 장착 요청 (Equip)
+        promises.push(equipItemApi(currentItem.id));
+      } else {
+        // 2. 입고 있는 게 없으면(null) -> 해제 요청 (Unequip)
+        promises.push(unequipItemApi(slot));
+      }
+    }
+    
+    // (스킨은 무조건 장착되어 있다고 가정하거나, 별도 처리)
+    if (equipped.value.SKIN && equipped.value.SKIN.id) {
+        promises.push(equipItemApi(equipped.value.SKIN.id));
+    }
+
+    await Promise.all(promises);
+    alert('성공적으로 저장되었습니다! (벗은 것도 반영됨)');
+
+  } catch (err) {
+    console.error(err);
+    alert('저장 중 오류가 발생했습니다.');
+  }
+};
+
+// ★★★ 4. [핵심] 페이지 로딩 시 장착 아이템 불러오기
+onMounted(async () => {
+  try {
+    const data = await getAllItems();
+    allBackendItems.value = data;
+
+    data.forEach(userItem => {
+      // ★ 핵심: 백엔드에서 온 변수명(equipped) 또는 (isEquipped) 둘 다 체크
+      const isOn = userItem.equipped || userItem.isEquipped;
+
+      if (isOn && userItem.item) {
+        const itemDetail = userItem.item;
+        
+        // 슬롯 이름 대문자 변환 (안전하게)
+        const slotName = itemDetail.slot ? itemDetail.slot.toUpperCase() : null;
+
+        if (slotName) {
+            equipped.value[slotName] = {
+                id: itemDetail.itemId,
+                type: slotName,
+                name: itemDetail.name,
+                image: itemDetail.imageUrl
+            };
+        }
+      }
+    });
+
+  } catch (err) {
+    error.value = '아이템 로딩 실패: ' + err.message;
+    console.error(err);
+  } finally {
+    isLoading.value = false;
+  }
+});
+
+
 </script>
 
 <style scoped>
-
+/* 기존 스타일 그대로 유지 */
 .fitting-page {
   width: 100%;
   display: flex;
   justify-content: center;
   color: #1e1e1e;
+  padding-top: 20px;
 }
 
 .content-container {
   max-width: 1000px;
   width: 100%;
-  padding: 40px 20px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 30px;
@@ -158,6 +258,7 @@ const equipItem = (item) => {
   margin-bottom: 20px;
   text-shadow: 2px 2px 0 #000;
   letter-spacing: 2px;
+  font-weight: bold;
 }
 
 .avatar-display {
@@ -171,11 +272,12 @@ const equipItem = (item) => {
   margin-bottom: 20px;
   position: relative;
   box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  overflow: hidden;
 }
 
 .avatar-layers {
   position: relative;
-  width: 100px;
+  width: 100px; 
   height: 100px;
 }
 
@@ -186,19 +288,26 @@ const equipItem = (item) => {
   width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
-  font-size: 80px;
-  filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.3));
+  align-items: center;
 }
 
-.layer.skin { z-index: 1; }
-.layer.outfit { z-index: 2; margin-top: 30px; font-size: 60px; }
-.layer.hair { z-index: 3; margin-top: -35px; }
-.layer.accessory { z-index: 4; margin-left: 40px; margin-top: 20px; font-size: 40px; }
+.layer > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.3));
+}
+
+.layer.skin { z-index: 10; }
+.layer.bottom { z-index: 20; }
+.layer.top { z-index: 30; }
+.layer.face { z-index: 40; }
+.layer.hair { z-index: 50; }
+.layer.hat { z-index: 60; }
 
 .username {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
   text-shadow: 2px 2px 0 #000;
   letter-spacing: 1px;
@@ -237,103 +346,104 @@ const equipItem = (item) => {
   border: 2px solid transparent;
   color: #94a3b8;
   padding: 8px 16px;
-  font-family: inherit;
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: bold;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   text-transform: uppercase;
 }
 
-.tab-btn:hover {
-  color: white;
-}
+.tab-btn:hover { color: white; }
 
 .tab-btn.active {
   background-color: #fbbf24;
   color: #000;
   border: 2px solid #000;
-  font-weight: bold;
   box-shadow: 2px 2px 0 #000;
 }
 
 .items-area {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 15px;
   padding: 10px;
 }
 
 .item-card {
   background-color: rgba(255, 255, 255, 0.2);
   border: 2px solid rgba(0,0,0,0.1);
-  padding: 15px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
   position: relative;
   transition: transform 0.1s;
+  border-radius: 8px;
 }
 
 .item-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
   background-color: rgba(255, 255, 255, 0.4);
 }
 
 .item-card.selected {
   background-color: #22c55e;
-  border: 4px solid #fbbf24;
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+  border: 3px solid #fbbf24;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
 }
 
 .check-mark {
   position: absolute;
-  top: 5px;
+  top: 3px;
   right: 5px;
   color: #fbbf24;
-  font-size: 10px;
+  font-size: 12px;
   text-shadow: 1px 1px 0 #000;
 }
 
 .item-img {
-  font-size: 32px;
-  margin-bottom: 10px;
+  width: 50px;
+  height: 50px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.2));
 }
 
 .item-name {
-  font-size: 8px;
+  font-size: 10px;
   color: white;
   text-shadow: 1px 1px 0 #000;
   text-align: center;
+  word-break: keep-all;
 }
 
-@media (max-width: 768px) {
-  .tab-bar {
-    justify-content: flex-start; /* Align to start for scrolling */
-    overflow-x: auto; /* Enable horizontal scrolling */
-    flex-wrap: nowrap; /* Prevent wrapping */
-    padding: 8px 10px; /* Adjust padding */
-    gap: 8px; /* Reduce gap between buttons */
+.save-btn {
+  background-color: #fbbf24; /* 노란색 포인트 */
+  color: #000;
+  border: 3px solid #000;
+  padding: 10px 20px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+  transition: transform 0.1s, box-shadow 0.1s;
+  font-family: inherit; /* 폰트 상속 */
+}
 
-    /* Hide scrollbar */
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  .tab-bar::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
-  }
-  .tab-btn {
-    flex-shrink: 0; /* Prevent buttons from shrinking */
-    font-size: 9px; /* Smaller font size */
-    padding: 6px 10px; /* Smaller padding */
-    gap: 6px;
-  }
-  .tab-btn .tab-icon {
-    font-size: 14px; /* Smaller icon size */
-  }
-  .items-area { grid-template-columns: repeat(3, 1fr); }
+.save-btn:active {
+  transform: translate(2px, 2px); /* 눌리는 효과 */
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+}
+
+.save-btn:hover {
+  background-color: #f59e0b;
 }
 </style>

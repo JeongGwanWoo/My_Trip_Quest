@@ -21,7 +21,6 @@
           :class="{ active: currentCategory === cat.id }"
           @click="currentCategory = cat.id"
         >
-          <span class="filter-icon">{{ cat.icon }}</span>
           {{ cat.label }}
         </button>
       </nav>
@@ -36,7 +35,7 @@
           <div v-if="item.owned" class="owned-badge">✓ OWNED</div>
 
           <div class="item-image">
-            <span class="emoji">{{ item.image }}</span>
+            <img :src="item.image" :alt="item.name" style="width: 100%; height: 100%; object-fit: contain;"/>
           </div>
 
           <h3 class="item-name">{{ item.name }}</h3>
@@ -74,26 +73,27 @@ const userCoins = ref(5000);
 const currentCategory = ref('all');
 
 const categories = [
-  { id: 'all', label: 'ALL ITEMS', icon: '🏷️' },
-  { id: 'skin', label: 'SKINS', icon: '😊' },
-  { id: 'hair', label: 'HAIR', icon: '🎩' },
-  { id: 'outfit', label: 'OUTFITS', icon: '👖' },
-  { id: 'accessory', label: 'ACCESSORIES', icon: '🎒' },
+  { id: 'all', label: 'ALL ITEMS' },
+  { id: 'hair', label: '머리' },
+  { id: 'hat', label: '모자' },
+  { id: 'top', label: '상의' },
+  { id: 'bottom', label: '하의' },
+  { id: 'face', label: '얼굴' },
+  { id: 'skin', label: '스킨' },
 ];
 
 const items = ref([
-  { id: 1, name: '기본 스킨', category: 'skin', price: 0, owned: true, image: '😊' },
-  { id: 2, name: '멋진 스킨', category: 'skin', price: 500, owned: false, image: '😎' },
-  { id: 3, name: '행복 스킨', category: 'skin', price: 800, owned: false, image: '😄' },
-  { id: 4, name: '모자', category: 'hair', price: 300, owned: true, image: '🎩' },
-  { id: 5, name: '왕관', category: 'hair', price: 1000, owned: false, image: '👑' },
-  { id: 6, name: '헬멧', category: 'hair', price: 800, owned: false, image: '⛑️' },
-  { id: 7, name: '정장', category: 'outfit', price: 0, owned: true, image: '👔' },
-  { id: 8, name: '티셔츠', category: 'outfit', price: 600, owned: false, image: '👕' },
-  { id: 9, name: '드레스', category: 'outfit', price: 1200, owned: false, image: '👗' },
-  { id: 10, name: '배낭', category: 'accessory', price: 0, owned: true, image: '🎒' },
-  { id: 11, name: '카메라', category: 'accessory', price: 700, owned: false, image: '📷' },
-  { id: 12, name: '지도', category: 'accessory', price: 500, owned: false, image: '🗺️' },
+  { id: 1, name: '기본 스킨', category: 'skin', price: 0, owned: true, image: '/assets/avatar/skin-base.svg' },
+  { id: 2, name: '멋진 스킨', category: 'skin', price: 500, owned: false, image: '/assets/avatar/skin-base.svg' }, // 임시 이미지
+  { id: 3, name: '행복 스킨', category: 'skin', price: 800, owned: false, image: '/assets/avatar/skin-base.svg' }, // 임시 이미지
+  { id: 101, name: '테스트 머리', category: 'hair', price: 300, owned: true, image: '/assets/avatar/testhair.png' },
+  { id: 102, name: '긴머리', category: 'hair', price: 500, owned: false, image: '/assets/avatar/testhair.png' }, // 임시 이미지
+  { id: 201, name: '테스트 상의', category: 'top', price: 600, owned: true, image: '/assets/avatar/testshirts.png' },
+  { id: 202, name: '티셔츠', category: 'top', price: 400, owned: false, image: '/assets/avatar/testshirts.png' }, // 임시 이미지
+  { id: 301, name: '테스트 하의', category: 'bottom', price: 700, owned: true, image: '/assets/avatar/testpants.png' },
+  { id: 302, name: '반바지', category: 'bottom', price: 500, owned: false, image: '/assets/avatar/testpants.png' }, // 임시 이미지
+  { id: 401, name: '모자', category: 'hat', price: 800, owned: false, image: '/assets/avatar/testhair.png' }, // 임시 이미지
+  { id: 501, name: '안경', category: 'face', price: 400, owned: false, image: '/assets/avatar/testhair.png' }, // 임시 이미지
 ]);
 
 const filteredItems = computed(() => {
@@ -246,8 +246,8 @@ const handleBuy = (item) => {
 }
 
 .item-image {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -9,4 +9,6 @@ public interface AvatarService {
 
     void equipItem(Long userId, EquipRequest equipRequest);
 
+	void unequipSlot(Long userId, String slot);
+
 }

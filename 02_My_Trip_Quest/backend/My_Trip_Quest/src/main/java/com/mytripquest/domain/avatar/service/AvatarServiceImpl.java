@@ -22,21 +22,26 @@ public class AvatarServiceImpl implements AvatarService {
     @Override
     @Transactional(readOnly = true)
     public AvatarResponse getAvatar(Long userId) {
-        // 1. 유저가 소유한 아이템 목록 조회
+        // 1. 유저가 소유한 아이템 목록 조회 (MyBatis ResultMap 덕분에 Item 정보도 이미 안에 들어있음!)
         List<UserItem> userItems = itemMapper.findUserItemsByUserId(userId);
 
-        // 2. 착용중인(isEquipped = true) 아이템만 필터링
+     // 2. 착용중인(isEquipped = true) 아이템만 필터링
         List<EquippedItemDto> equippedItems = userItems.stream()
-                .filter(UserItem::isEquipped)
+                .filter(UserItem::isEquipped) // 장착된 것만
+                .filter(ui -> ui.getItem() != null) // 혹시 모를 Null 체크
                 .map(userItem -> {
-                    // 3. 아이템 상세 정보 조회
-                    Item item = itemMapper.findItemById(userItem.getItemId())
-                            .orElseThrow(() -> new RuntimeException("Item not found: " + userItem.getItemId()));
-                    // 4. DTO로 변환
+                    
+                    // ★ 수정 포인트: findItemById 호출 금지! (DB 또 가면 안 됨)
+                    // MyBatis가 이미 가져온 Item 객체를 바로 꺼냅니다.
+                    Item item = userItem.getItem(); 
+
                     return EquippedItemDto.builder()
-                            .itemId(item.getItemId())
+                            // ★ 만약 여기서 getItemId()에 빨간줄이 뜬다면 getId()로 바꿔보세요!
+                            // (Item 엔티티 필드명이 id인지 itemId인지에 따라 다름)
+                            .itemId(item.getItemId()) 
+                            
                             .name(item.getName())
-                            .slot(item.getSlot())
+                            .slot(item.getSlot().name()) // Enum을 문자열(String)로 변환
                             .imageUrl(item.getImageUrl())
                             .build();
                 })
@@ -46,30 +51,23 @@ public class AvatarServiceImpl implements AvatarService {
     }
 
     @Override
-    @Transactional
+    // @Transactional <-- 필요 없습니다. 한 방 쿼리라 안전합니다.
     public void equipItem(Long userId, EquipRequest equipRequest) {
         Long itemIdToEquip = equipRequest.getItemId();
 
-        // 1. 착용할 아이템이 유저의 소유인지 확인
-        UserItem userItemToEquip = itemMapper.findUserItem(userId, itemIdToEquip)
-                .orElseThrow(() -> new RuntimeException("User does not own this item"));
+        // 1. 아이템 보유 확인 (최소한의 안전장치)
+        itemMapper.findUserItem(userId, itemIdToEquip)
+                .orElseThrow(() -> new RuntimeException("보유하지 않은 아이템입니다."));
 
-        // 2. 착용할 아이템의 상세 정보(특히 slot) 조회
-        Item itemToEquip = itemMapper.findItemById(itemIdToEquip)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
-
-        // 3. 동일한 슬롯에 이미 착용중인 아이템이 있는지 확인
-        itemMapper.findEquippedItemBySlot(userId, itemToEquip.getSlot().name())
-                .ifPresent(currentlyEquippedItem -> {
-                    // 4. 있다면, 해당 아이템을 착용 해제 상태로 변경
-                    if (!currentlyEquippedItem.getItemId().equals(itemIdToEquip)) {
-                        currentlyEquippedItem.setEquipped(false); // setEquipped는 UserItem에 추가 필요
-                        itemMapper.updateUserItem(currentlyEquippedItem);
-                    }
-                });
-
-        // 5. 새로 요청된 아이템을 착용 상태로 변경
-        userItemToEquip.setEquipped(true); // setEquipped는 UserItem에 추가 필요
-        itemMapper.updateUserItem(userItemToEquip);
+        // 2. [한 방 해결] 같은 부위 다 벗기고 얘만 입히기!
+        itemMapper.equipItemAndUnequipOthers(userId, itemIdToEquip);
+        
+    }
+    
+    @Override
+    @Transactional
+    public void unequipSlot(Long userId, String slot) {
+        // 해당 슬롯 싹 비우기
+        itemMapper.unequipSlot(userId, slot);
     }
 }
