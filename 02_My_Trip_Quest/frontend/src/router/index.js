@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '@/views/Home.vue'
 import MainMenuView from '@/views/MainMenuView.vue'
 import QuestMap from '@/views/Questmap.vue'
-import Collection from '@/views/Collection.vue'
 import Rankings from '@/views/Rankings.vue'
 import FittingRoom from '@/views/FittingRoom.vue'
 import Profile from '@/views/Profile.vue'
@@ -23,12 +22,6 @@ const routes = [
     name: 'MainMenuView',    
     component: MainMenuView, 
     meta: { hideHeader: true }
-  },
-
-  {
-  path: '/collection',
-  name: 'Collection',
-  component: Collection
   },
 
   {

@@ -315,8 +315,45 @@ const handleBuy = (item) => {
 }
 
 @media (max-width: 600px) {
-  .shop-header { flex-direction: column; gap: 15px; }
-  .filter-bar { justify-content: center; }
+  .shop-header { 
+    flex-direction: row; /* Keep them in a row */
+    gap: 10px; /* Reduce gap */
+    padding: 10px; /* Reduce header padding */
+  }
+  .page-title {
+    font-size: 16px; /* Smaller font for character shop title */
+    padding: 8px 10px; /* Smaller padding */
+    gap: 8px; /* Smaller gap */
+    -webkit-text-stroke: 0.5px #000; /* Thinner stroke */
+    text-shadow: 2px 2px 0 #000; /* Smaller shadow */
+  }
+  .my-coin-box {
+    font-size: 12px; /* Smaller font for coin count */
+    padding: 8px 10px; /* Smaller padding */
+    gap: 5px; /* Smaller gap */
+  }
+  .filter-bar { 
+    justify-content: flex-start; /* Align to start for scrolling */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    flex-wrap: nowrap; /* Prevent wrapping */
+    padding: 15px 10px; /* Adjust padding */
+    gap: 8px; /* Reduce gap between buttons */
+
+    /* Hide scrollbar */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .filter-bar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+  .filter-btn {
+    flex-shrink: 0; /* Prevent buttons from shrinking */
+    font-size: 9px; /* Smaller font size */
+    padding: 8px 12px; /* Smaller padding */
+  }
+  .filter-btn .filter-icon {
+    font-size: 12px; /* Smaller icon size */
+  }
   .item-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
