@@ -69,7 +69,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { getAllItems, equipItemApi, unequipItemApi  } from '@/api/items';
+import { getMyInventory, equipItemApi, unequipItemApi  } from '@/api/items';
 
 
 const currentTab = ref('recent');
@@ -188,7 +188,7 @@ const saveCurrentAvatar = async () => {
 // ★★★ 4. [핵심] 페이지 로딩 시 장착 아이템 불러오기
 onMounted(async () => {
   try {
-    const data = await getAllItems();
+    const data = await getMyInventory();
     allBackendItems.value = data;
 
     data.forEach(userItem => {

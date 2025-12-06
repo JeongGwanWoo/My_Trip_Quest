@@ -7,5 +7,6 @@ import java.util.List;
 @Data
 @Builder
 public class AvatarResponse {
+    private int points;
     private List<EquippedItemDto> equippedItems;
 }

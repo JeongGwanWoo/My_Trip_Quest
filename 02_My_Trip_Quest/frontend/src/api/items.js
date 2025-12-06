@@ -1,20 +1,51 @@
 import api from './index';
 
-export const getAllItems = async () => {
+/**
+ * 내 인벤토리 아이템 목록을 가져옵니다.
+ * @deprecated 상점 목록은 getShopItems를 사용하세요.
+ */
+export const getMyInventory = async () => {
   try {
-    // [수정 전] const response = await api.get('/api/items');
-    
-    // [수정 후] 뒤에 '/inventory'를 붙여서 내 옷장 데이터를 요청합니다.
     const response = await api.get('/api/v1/items/inventory'); 
-    
     return response.data;
   } catch (error) {
-    console.error('Error fetching all items:', error);
+    console.error('Error fetching inventory:', error);
     throw error;
   }
-
-
 };
+
+// ================= SHOP APIs =================
+
+/**
+ * 상점에 표시될 아이템 목록을 가져옵니다. (소유 여부 포함)
+ * @returns {Promise<object>} ApiResponse
+ */
+export const getShopItems = async () => {
+  try {
+    const response = await api.get('/api/v1/items/shop');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching shop items:', error);
+    throw error;
+  }
+};
+
+/**
+ * 아이템 구매를 요청합니다.
+ * @param {number} itemId 구매할 아이템의 ID
+ * @returns {Promise<object>} ApiResponse
+ */
+export const buyItem = async (itemId) => {
+  try {
+    const response = await api.post(`/api/v1/items/${itemId}/buy`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error purchasing item ${itemId}:`, error);
+    throw error;
+  }
+};
+
+// ================= Avatar APIs (from item context) =================
 
 export const equipItemApi = async (itemId) => {
   try {

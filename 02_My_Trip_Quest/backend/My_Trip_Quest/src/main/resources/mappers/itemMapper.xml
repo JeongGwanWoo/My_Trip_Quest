@@ -52,6 +52,11 @@
         WHERE ui.user_id = #{userId} AND ui.item_id = #{itemId}
     </select>
 
+    <insert id="addUserItem">
+        INSERT INTO user_items (user_id, item_id, quantity, is_equipped, acquired_at, updated_at)
+        VALUES (#{userId}, #{itemId}, 1, FALSE, NOW(), NOW())
+    </insert>
+
     <select id="findEquippedItemBySlot" resultMap="UserItemWithItemMap">
         SELECT 
             ui.user_id, ui.item_id, ui.quantity, ui.is_equipped,
