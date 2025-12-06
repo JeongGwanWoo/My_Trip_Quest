@@ -7,7 +7,7 @@ import api from './index.js';
  */
 export const getAvatar = async (userId) => {
   try {
-    const response = await api.get(`/api/avatar/${userId}`);
+    const response = await api.get(`/api/v1/avatar/${userId}`);
     return response.data;
   } catch (error) {
     console.error('Failed to get avatar:', error);
@@ -23,7 +23,7 @@ export const getAvatar = async (userId) => {
  */
 export const equipItem = async (userId, itemId) => {
   try {
-    const response = await api.post(`/api/avatar/${userId}/equip`, { itemId });
+    const response = await api.post(`/api/v1/avatar/${userId}/equip`, { itemId });
     return response.data;
   } catch (error) {
     console.error('Failed to equip item:', error);
