@@ -11,21 +11,19 @@
         <div class="left-column">
           
           <div class="profile-card">
-            <!-- ========== AVATAR DISPLAY ========== -->
+            <!-- ========== AVATAR DISPLAY (REFACTORED) ========== -->
             <div class="avatar-wrapper">
               <div class="avatar-bg"></div>
               <div class="avatar-layers">
-                <!-- Equipped items will be rendered here -->
-                <img 
-                  v-for="item in equippedItems" 
-                  :key="item.itemId" 
-                  :src="item.imageUrl" 
-                  :class="['avatar-item-layer', item.slot.toLowerCase()]"
-                  :alt="item.name"
-                />
+                <img :src="equippedItemsBySlot.SKIN?.imageUrl || '/assets/avatar/skin-base.png'" alt="skin" class="avatar-item-layer skin">
+                <img v-if="equippedItemsBySlot.BOTTOM" :src="equippedItemsBySlot.BOTTOM.imageUrl" :alt="equippedItemsBySlot.BOTTOM.name" class="avatar-item-layer bottom">
+                <img v-if="equippedItemsBySlot.TOP" :src="equippedItemsBySlot.TOP.imageUrl" :alt="equippedItemsBySlot.TOP.name" class="avatar-item-layer top">
+                <img v-if="equippedItemsBySlot.FACE" :src="equippedItemsBySlot.FACE.imageUrl" :alt="equippedItemsBySlot.FACE.name" class="avatar-item-layer face">
+                <img v-if="equippedItemsBySlot.HAIR" :src="equippedItemsBySlot.HAIR.imageUrl" :alt="equippedItemsBySlot.HAIR.name" class="avatar-item-layer hair">
+                <img v-if="equippedItemsBySlot.HAT" :src="equippedItemsBySlot.HAT.imageUrl" :alt="equippedItemsBySlot.HAT.name" class="avatar-item-layer hat">
               </div>
             </div>
-            <!-- ===================================== -->
+            <!-- ======================================================= -->
 
             <h1 class="username">TRAVELMASTER</h1>
             <p class="user-handle">TRAVELQUEST.COM</p>
@@ -71,7 +69,7 @@
               <div class="stat-icon">🪙</div>
               <div class="stat-content">
                 <span class="stat-label">TOTAL COINS</span>
-                <span class="stat-value">5000</span>
+                <span class="stat-value">{{ userCoins }}</span>
               </div>
             </div>
             <div class="stat-card green">
@@ -130,33 +128,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { getAvatar, equipItem } from '@/api/avatar.js';
+import { ref, onMounted, computed } from 'vue';
+import { getAvatar } from '@/api/avatar.js';
 
-// 현재 로그인한 유저 ID (예시)
 const userId = ref(1);
+const equippedItemsList = ref([]);
+const userCoins = ref(0);
 
-// 착용중인 아이템 목록
-const equippedItems = ref([]);
+// API로 받아온 배열을 슬롯별 객체로 변환
+const equippedItemsBySlot = computed(() => {
+  const slots = {
+    SKIN: null, HAIR: null, HAT: null, TOP: null, BOTTOM: null, FACE: null,
+  };
+  for (const item of equippedItemsList.value) {
+    if (item && item.slot) {
+      slots[item.slot.toUpperCase()] = item;
+    }
+  }
+  return slots;
+});
 
-// 서버에서 현재 아바타 정보를 가져와 equippedItems를 업데이트하는 함수
 const fetchAvatarData = async () => {
   try {
     const response = await getAvatar(userId.value);
     if (response.success) {
-      equippedItems.value = response.data.equippedItems;
+      equippedItemsList.value = response.data.equippedItems;
+      userCoins.value = response.data.points; // 코인 정보도 함께 설정
     }
   } catch (error) {
     console.error("Failed to fetch avatar data:", error);
   }
 };
 
-// 컴포넌트가 마운트될 때 아바타 데이터를 불러옴
-onMounted(() => {
-  fetchAvatarData();
-});
+onMounted(fetchAvatarData);
 
-
+// 하드코딩된 더미 데이터
 const cityProgress = ref([
   { id: 1, name: '서울', icon: '🏙️', completed: 3, total: 15, percentage: 20, colorClass: 'fill-green' },
   { id: 2, name: '부산', icon: '🌊', completed: 0, total: 15, percentage: 0, colorClass: 'fill-blue' },
@@ -167,8 +173,6 @@ const cityProgress = ref([
 
 <style scoped>
 /* ======================================================== */
-
-
 .profile-page {
   width: 100%;
   display: flex;
@@ -187,7 +191,6 @@ const cityProgress = ref([
 
 .page-title {
   font-size: 24px;
-  color: #fbbf24;
   color: #e2e8f0;
   text-shadow: 2px 2px 0 #000;
   margin: 0;
@@ -236,6 +239,31 @@ const cityProgress = ref([
   border-radius: 50%;
   border: 3px solid #000;
 }
+
+/* ===== AVATAR LAYERING STYLES (ADDED) ===== */
+.avatar-layers {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.avatar-item-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.3));
+}
+
+.skin { z-index: 10; }
+.bottom { z-index: 20; }
+.top { z-index: 30; }
+.face { z-index: 40; }
+.hair { z-index: 50; }
+.hat { z-index: 60; }
+/* =========================================== */
 
 .username {
   color: white;
