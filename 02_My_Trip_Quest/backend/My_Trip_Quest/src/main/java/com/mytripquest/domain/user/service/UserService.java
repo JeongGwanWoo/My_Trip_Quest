@@ -3,10 +3,11 @@ package com.mytripquest.domain.user.service;
 import com.mytripquest.domain.user.dto.UserRequestDto;
 import com.mytripquest.domain.user.entity.User;
 import com.mytripquest.domain.user.repository.UserMapper;
+import com.mytripquest.global.error.exception.BusinessException;
+import com.mytripquest.global.error.exception.ErrorCode;
 import com.mytripquest.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +23,11 @@ public class UserService {
     public void register(UserRequestDto.Register aVar) {
         // 이메일 중복 확인
         if (userMapper.findByEmail(aVar.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+        // 닉네임 중복 확인
+        if (userMapper.findByNickname(aVar.getNickname()).isPresent()) {
+            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
 
         User user = User.builder()
@@ -36,11 +41,10 @@ public class UserService {
 
     public String login(UserRequestDto.Login aVar) {
         User user = userMapper.findByEmail(aVar.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         
-        log.debug("{}, {}, : 비밀번호?", aVar.getPassword(), user.getPasswordHash());
         if (!passwordEncoder.matches(aVar.getPassword(), user.getPasswordHash())) {
-            throw new IllegalArgumentException("잘못된 비밀번호입니다." + user.getPasswordHash() + ", " + aVar.getPassword() );
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND); // 참고: 보안을 위해 "잘못된 비밀번호"라고 명시하지 않음
         }
 
         return jwtTokenProvider.createToken(user.getEmail(), user.getRole().name());

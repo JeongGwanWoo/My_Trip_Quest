@@ -102,7 +102,7 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>${springdoc-openapi-starter-webmvc-ui-version}</version>
         </dependency>
-        <!--spring-security 기본 lib-->
+        <!-- Spring Security 기본 라이브러리 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
