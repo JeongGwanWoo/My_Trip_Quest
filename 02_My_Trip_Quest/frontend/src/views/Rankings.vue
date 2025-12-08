@@ -44,29 +44,28 @@
         </div>
 
         <div class="table-body">
-          <div 
-            v-for="(user, index) in rankings" 
-            :key="user.id" 
-            class="table-row"
-            :class="{ 'top-rank': index < 3 }"
-          >
-            <div class="col rank">
-              <span v-if="user.rank === 1" class="trophy">🏆</span>
-              <span v-else-if="user.rank === 2" class="medal">🥈</span>
-              <span v-else-if="user.rank === 3" class="medal">🥉</span>
-              <span v-else class="rank-num">{{ user.rank }}</span>
-            </div>
-
-            <div class="col player">{{ user.name }}</div>
-            
-            <div class="col coins">
-              <span class="coin-icon">🪙</span> {{ user.coins.toLocaleString() }}
-            </div>
-            
-            <div class="col level">LV.{{ user.level }}</div>
-            
-            <div class="col missions">{{ user.missions }}</div>
-          </div>
+                      <div 
+                      v-for="(user, index) in rankings" 
+                      :key="user.nickname" 
+                      class="table-row"
+                      :class="{ 'top-rank': user.rank <= 3 }"
+                    >
+                      <div class="col rank">
+                        <span v-if="user.rank === 1" class="trophy">🏆</span>
+                        <span v-else-if="user.rank === 2" class="medal">🥈</span>
+                        <span v-else-if="user.rank === 3" class="medal">🥉</span>
+                        <span v-else class="rank-num">{{ user.rank }}</span>
+                      </div>
+          
+                      <div class="col player">{{ user.nickname }}</div>
+                      
+                      <div class="col coins">
+                        <span class="coin-icon">🪙</span> {{ user.points.toLocaleString() }}
+                      </div>
+                      
+                      <div class="col level">LV.{{ calculateLevel(user.totalXp) }}</div>
+                      
+                      <div class="col missions">0</div> <!-- Placeholder for missions -->          </div>
         </div>
       </section>
 
@@ -81,27 +80,65 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { getRankings, getMyRank } from '@/api/ranking.js';
+
+// TODO: 실제 로그인한 유저 ID로 변경 필요
+const userId = 1;
 
 const myData = ref({
-  name: 'TRAVELMASTER',
-  rank: 125,
-  coins: 5000,
-  level: 12
+  name: 'Loading...',
+  rank: '-',
+  coins: 0,
+  level: 0,
+  missions: 0 // Placeholder
 });
 
-const rankings = ref([
-  { id: 1, rank: 1, name: 'QUESTMASTER', coins: 15000, level: 25, missions: 48 },
-  { id: 2, rank: 2, name: 'TRAVELNINJA', coins: 14200, level: 23, missions: 45 },
-  { id: 3, rank: 3, name: 'ADVENTUREKING', coins: 12900, level: 21, missions: 42 },
-  { id: 4, rank: 4, name: 'EXPLOREQUEEN', coins: 11500, level: 20, missions: 39 },
-  { id: 5, rank: 5, name: 'WANDERERPRO', coins: 10800, level: 19, missions: 37 },
-  { id: 6, rank: 6, name: 'JOURNEYSEEKER', coins: 9200, level: 17, missions: 34 },
-  { id: 7, rank: 7, name: 'MAPEXPLORER', coins: 8500, level: 16, missions: 31 },
-  { id: 8, rank: 8, name: 'ROADTRIPPER', coins: 7800, level: 15, missions: 28 },
-  { id: 9, rank: 9, name: 'GLOBETREKKER', coins: 6800, level: 14, missions: 25 },
-  { id: 10, rank: 10, name: 'TRAVELBUFF', coins: 6100, level: 13, missions: 23 },
-]);
+const rankings = ref([]);
+
+const fetchRankings = async () => {
+  try {
+    const rankingsResponse = await getRankings(10); // Fetch top 10 rankings
+
+    if (rankingsResponse.success) {
+      rankings.value = rankingsResponse.data;
+      // Filter out 'UNKNOWN' nicknames if any
+      rankings.value = rankings.value.filter(user => user.nickname !== 'UNKNOWN');
+    } else {
+      console.error('Failed to fetch rankings:', rankingsResponse.message);
+    }
+  } catch (error) {
+    console.error('Error fetching rankings:', error);
+  }
+};
+
+const fetchMyData = async () => {
+  try {
+    const myRankResponse = await getMyRank(userId);
+    if (myRankResponse.success) {
+      const rankData = myRankResponse.data;
+      myData.value.name = rankData.nickname;
+      myData.value.rank = rankData.rank;
+      myData.value.coins = rankData.points;
+      myData.value.level = rankData.level;
+    } else {
+      myData.value.name = "Rank not found";
+    }
+  } catch (error) {
+    console.error('Error fetching my data:', error);
+    myData.value.name = "Error loading rank";
+  }
+};
+
+onMounted(async () => {
+  await fetchRankings();
+  await fetchMyData(); // Fetch current user's data
+});
+
+const calculateLevel = (totalXp) => {
+  if (totalXp === undefined || totalXp === null) return 1; // Default to level 1 if XP is not available
+  return 1 + Math.floor(totalXp / 1000); // Same logic as backend DTO
+};
 </script>
 
 <style scoped>

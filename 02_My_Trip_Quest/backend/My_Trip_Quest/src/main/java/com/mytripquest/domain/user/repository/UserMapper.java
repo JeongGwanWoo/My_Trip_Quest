@@ -1,7 +1,9 @@
 package com.mytripquest.domain.user.repository;
 
+import com.mytripquest.domain.ranking.dto.UserRankDto;
 import com.mytripquest.domain.user.entity.User;
 import org.apache.ibatis.annotations.Mapper;
+import java.util.List;
 import java.util.Optional;
 
 @Mapper
@@ -14,5 +16,9 @@ public interface UserMapper {
     Optional<User> findByEmail(String email);
 
     void updateUser(User user);
+
+    List<User> findTopUsersByPoints(int limit);
+
+    Optional<UserRankDto> findUserRankById(long userId);
 
 }
