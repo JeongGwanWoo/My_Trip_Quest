@@ -46,9 +46,11 @@ const handleLogin = async () => {
       email: email.value,
       password: password.value,
     });
-    // 백엔드 응답에서 토큰을 추출합니다. 실제 응답 구조에 따라 'response.data.token' 또는 다른 필드가 될 수 있습니다.
-    // 예시: 백엔드가 { accessToken: '...' } 형태로 토큰을 준다고 가정
-    const token = response.data.accessToken; 
+    
+    console.log('백엔드 응답:', response.data); // 응답 데이터 전체를 로깅
+
+    // 백엔드 응답에서 토큰을 추출합니다. 실제 응답 구조에 따라 경로를 조정합니다.
+    const token = response.data.data.token; 
     
     if (token) {
       authStore.login(token);
