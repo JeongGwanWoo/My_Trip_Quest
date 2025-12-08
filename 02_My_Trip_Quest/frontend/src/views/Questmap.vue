@@ -242,6 +242,7 @@ const closeModal = () => {
 
 .map-legend {
   position: absolute;
+  z-index: 10;
   top: 20px; /* Moved to top */
   right: 20px;
   background: rgba(255, 255, 255, 0.8);

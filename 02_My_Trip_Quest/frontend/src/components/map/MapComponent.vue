@@ -34,8 +34,9 @@ const displayAreaMarkers = (newAreas) => {
         // 커스텀 오버레이를 위한 DOM 엘리먼트를 생성합니다.
         const contentEl = document.createElement('div');
         contentEl.className = 'custom-marker';
+        const pinColorClass = area.incompleteLocationCount === 0 ? 'green-pin' : 'orange-pin';
         contentEl.innerHTML = `
-          <div class="pin-body"><span class="pin-number">${area.incompleteLocationCount}</span></div>
+          <div class="pin-body ${pinColorClass}"><span class="pin-number">${area.incompleteLocationCount}</span></div>
           <div class="pin-tail"></div>
         `;
 
@@ -89,8 +90,40 @@ const initMap = () => {
   const options = {
     center: new kakao.maps.LatLng(35.9, 127.8),
     level: 13,
+    tileAnimation: false, // 지도 타일 애니메이션 비활성화
   };
   map = new kakao.maps.Map(container, options); // map 변수에 인스턴스 할당
+
+  // 대한민국 전체를 포함하는 경계 영역 설정
+  const bounds = new kakao.maps.LatLngBounds(
+    new kakao.maps.LatLng(33, 124),
+    new kakao.maps.LatLng(39, 132)
+  );
+
+  kakao.maps.event.addListener(map, 'dragend', function() {
+    const center = map.getCenter();
+    let newLat = center.getLat();
+    let newLng = center.getLng();
+
+    // 경계를 벗어나는지 확인하고 조정
+    if (center.getLat() < bounds.getSouthWest().getLat()) {
+      newLat = bounds.getSouthWest().getLat();
+    }
+    if (center.getLat() > bounds.getNorthEast().getLat()) {
+      newLat = bounds.getNorthEast().getLat();
+    }
+    if (center.getLng() < bounds.getSouthWest().getLng()) {
+      newLng = bounds.getSouthWest().getLng();
+    }
+    if (center.getLng() > bounds.getNorthEast().getLng()) {
+      newLng = bounds.getNorthEast().getLng();
+    }
+
+    // 조정된 위치가 원래 위치와 다를 경우, 지도를 즉시 해당 위치로 설정
+    if (newLat !== center.getLat() || newLng !== center.getLng()) {
+      map.setCenter(new kakao.maps.LatLng(newLat, newLng));
+    }
+  });
 };
 </script>
 
@@ -108,7 +141,6 @@ const initMap = () => {
   position: absolute;
   width: 100%;
   height: 100%;
-  background-color: #ef4444; /* 빨간색 배경 */
   color: white;
   border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg);
@@ -120,8 +152,18 @@ const initMap = () => {
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
   border: 2px solid white;
 }
+
+.pin-body.orange-pin {
+  background-color: #fbbf24; /* 주황색 배경 */
+}
+
+.pin-body.green-pin {
+  background-color: #22c55e; /* 초록색 배경 */
+}
+
 .pin-body .pin-number {
   transform: rotate(45deg); /* 숫자 바로 세우기 */
+  color: #333; /* 텍스트 색상을 어둡게 변경하여 밝은 배경에서 가독성 확보 */
 }
 .pin-tail {
   position: absolute;
@@ -136,5 +178,6 @@ const initMap = () => {
 #map {
   width: 100%;
   height: 600px;
+  background-color: #a2d1ff; /* 지도 타일 로딩 중 보이는 배경색을 바다색과 유사하게 변경 */
 }
 </style>
