@@ -1,10 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 
 export const useAuthStore = defineStore('auth', () => {
-  const router = useRouter()
-  
   // State
   const token = ref(localStorage.getItem('user_token') || null)
   
@@ -19,8 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   function login(newToken) {
     setToken(newToken)
-    // On successful login, navigate to the main menu
-    router.push('/main-menu')
+    // Removed router.push('/main-menu') here. Navigation will be handled by the component.
   }
 
   function logout() {

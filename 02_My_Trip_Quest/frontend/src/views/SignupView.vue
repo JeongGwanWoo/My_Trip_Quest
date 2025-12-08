@@ -38,6 +38,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import api from '@/api'; // api 인스턴스 추가
 
 const router = useRouter();
 const nickname = ref('');
@@ -45,19 +46,34 @@ const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 
-const handleSignup = () => {
+const handleSignup = async () => {
   if (!nickname.value || !email.value || !password.value || !confirmPassword.value) {
-    alert('Please fill in all fields.');
+    alert('모든 필드를 입력해주세요.');
     return;
   }
   if (password.value !== confirmPassword.value) {
-    alert('Passwords do not match.');
+    alert('비밀번호가 일치하지 않습니다.');
     return;
   }
-  console.log('Signing up with:', nickname.value, email.value);
-  // Here you would typically call an API to register the user
-  // For now, we'll just redirect to the login page
-  router.push('/login');
+  
+  try {
+    await api.post('/api/v1/users/register', {
+      nickname: nickname.value,
+      email: email.value,
+      password: password.value,
+    });
+    
+    alert('회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.');
+    router.push('/login');
+
+  } catch (error) {
+    console.error('회원가입 중 오류 발생:', error);
+    if (error.response && error.response.data && error.response.data.message) {
+      alert(`회원가입 실패: ${error.response.data.message}`);
+    } else {
+      alert('회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    }
+  }
 };
 </script>
 

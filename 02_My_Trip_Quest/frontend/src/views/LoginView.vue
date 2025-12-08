@@ -28,21 +28,45 @@
 <script setup>
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useRouter } from 'vue-router'; // useRouter 추가
+import api from '@/api'; // api 인스턴스 추가
 
 const authStore = useAuthStore();
+const router = useRouter(); // useRouter 인스턴스화
 const email = ref('');
 const password = ref('');
 
-const handleLogin = () => {
+const handleLogin = async () => {
   if (!email.value || !password.value) {
-    alert('Please fill in all fields.');
+    alert('이메일과 비밀번호를 모두 입력해주세요.');
     return;
   }
-  console.log('Logging in with:', email.value, password.value);
-  // Here you would typically call an API to authenticate the user and get a token
-  // For now, we'll simulate a successful login with a fake token
-  const fakeToken = 'fake-jwt-token-for-demo';
-  authStore.login(fakeToken);
+  try {
+    const response = await api.post('/api/v1/users/login', {
+      email: email.value,
+      password: password.value,
+    });
+    
+    console.log('백엔드 응답:', response.data); // 응답 데이터 전체를 로깅
+
+    // 백엔드 응답에서 토큰을 추출합니다. 실제 응답 구조에 따라 경로를 조정합니다.
+    const token = response.data.data.token; 
+    
+    if (token) {
+      authStore.login(token);
+      router.push('/main-menu'); // 로그인 성공 후 메인 메뉴 페이지로 이동
+    } else {
+      alert('로그인에 실패했습니다: 토큰을 받을 수 없습니다.');
+    }
+  } catch (error) {
+    console.error('로그인 중 오류 발생:', error);
+    // 에러 응답이 있을 경우 상세 메시지를 표시
+    if (error.response && error.response.data && error.response.data.message) {
+      alert(`로그인 실패: ${error.response.data.message}`);
+    } else {
+      alert('로그인에 실패했습니다. 이메일 또는 비밀번호를 확인해주세요.');
+    }
+  }
 };
 </script>
 
