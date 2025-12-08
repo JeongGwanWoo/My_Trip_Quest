@@ -62,7 +62,7 @@ public class JwtTokenProvider {
             Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
             return true;
         } catch (Exception e) {
-            // MalformedJwtException, ExpiredJwtException, etc.
+            // 유효하지 않거나 만료된 JWT 예외 처리 등
             return false;
         }
     }

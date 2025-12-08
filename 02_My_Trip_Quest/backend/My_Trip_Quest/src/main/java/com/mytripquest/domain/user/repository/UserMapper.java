@@ -15,6 +15,8 @@ public interface UserMapper {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByNickname(String nickname);
+
     void updateUser(User user);
 
     List<User> findTopUsersByPoints(int limit);

@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional 
+@Transactional // 각 테스트 후 데이터베이스 변경사항 롤백
 public class UserControllerTest {
 
     @Autowired
@@ -43,10 +43,10 @@ public class UserControllerTest {
     @DisplayName("로그인 성공 통합 테스트 - 제공된 자격 증명 사용")
     public void testLogin_Success_Integration() throws Exception {
         // given
-        // Note: This test relies on a pre-existing user in the database
-        // with email 'test@test.com' and password '1234'.
-        // For better isolation, consider creating a user in @BeforeEach
-        // if the database state cannot be guaranteed.
+        // 참고: 이 테스트는 데이터베이스에 미리 존재하는 사용자에 의존합니다.
+        // 이메일 'test@test.com'과 비밀번호 '1234'를 가진 사용자입니다.
+        // 더 나은 격리를 위해, @BeforeEach에서 사용자를 생성하는 것을 고려하세요.
+        // 데이터베이스 상태를 보장할 수 없는 경우.
         UserRequestDto.Login loginRequest = new UserRequestDto.Login();
         loginRequest.setEmail(TEST_EMAIL);
         loginRequest.setPassword(TEST_PASSWORD);
@@ -58,7 +58,7 @@ public class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("로그인이 성공적으로 완료되었습니다."))
-                .andExpect(jsonPath("$.data.token").isNotEmpty()); // Check that token is not empty
+                .andExpect(jsonPath("$.data.token").isNotEmpty()); // 토큰이 비어있지 않은지 확인
     }
 
     @Test
@@ -78,4 +78,3 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("회원가입이 성공적으로 완료되었습니다."));
     }
-}

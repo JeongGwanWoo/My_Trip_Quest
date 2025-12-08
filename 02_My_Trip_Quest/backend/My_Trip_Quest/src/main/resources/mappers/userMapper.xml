@@ -26,6 +26,12 @@
         WHERE email = #{email}
     </select>
 
+    <select id="findByNickname" parameterType="string" resultMap="userResultMap">
+        SELECT user_id, email, password_hash, nickname, role, total_xp, points, created_at, updated_at
+        FROM users
+        WHERE nickname = #{nickname}
+    </select>
+
     <insert id="save" parameterType="com.mytripquest.domain.user.entity.User" useGeneratedKeys="true" keyProperty="userId">
         INSERT INTO users (email, password_hash, nickname, role)
         VALUES (#{email}, #{passwordHash}, #{nickname}, #{role})
