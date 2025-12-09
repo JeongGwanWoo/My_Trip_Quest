@@ -20,6 +20,7 @@ public interface UserQuestRepository {
     
     void save(UserQuest userQuest);
     void update(UserQuest userQuest);
+    void delete(UserQuest userQuest);
     List<InProgressQuestDto> findUserQuestsByStatus(@Param("userId") Long userId, @Param("status") QuestStatus status);
 
 }

@@ -115,6 +115,62 @@ class QuestControllerTest {
                 .andExpect(result -> assertEquals(ErrorCode.DISTANCE_TOO_FAR.getMessage(), result.getResolvedException().getMessage()));
     }
 
-    // TODO: 퀘스트 상태가 올바르지 않은 경우 (이미 완료, 수락 안 함) 테스트 추가
-    // TODO: 좌표 값이 누락된 경우 테스트 추가
+    @Test
+    @DisplayName("도착 퀘스트 완료 실패 - 좌표 값 누락")
+    void completeArrivalQuest_Fail_MissingCoordinates() throws Exception {
+        // given: 위도 또는 경도 값이 누락된 요청
+        String requestJson = "{\"latitude\": 37.5796}"; // 경도 누락
+
+        // when: '퀘스트 완료' API를 호출하면
+        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete")
+                        .header("Authorization", "Bearer " + testToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                // then: BusinessException이 발생하고, 그 원인이 GPS_COORDINATES_REQUIRED인지 확인한다.
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BusinessException))
+                .andExpect(result -> assertEquals(ErrorCode.GPS_COORDINATES_REQUIRED.getMessage(), result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    @DisplayName("도착 퀘스트 완료 실패 - 이미 완료된 퀘스트")
+    void completeArrivalQuest_Fail_AlreadyCompleted() throws Exception {
+        // given: 퀘스트를 이미 완료한 상태
+        UserQuest completedUserQuest = userQuestRepository.findByUserIdAndQuestId(testUser.getUserId(), arrivalQuest.getQuestId()).get();
+        completedUserQuest.setStatus(QuestStatus.COMPLETED);
+        userQuestRepository.update(completedUserQuest); // DB에 업데이트
+
+        QuestCompleteRequestDto requestDto = new QuestCompleteRequestDto(37.5796, 126.9770);
+        String requestJson = objectMapper.writeValueAsString(requestDto);
+
+        // when: '퀘스트 완료' API를 호출하면
+        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete")
+                        .header("Authorization", "Bearer " + testToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                // then: BusinessException이 발생하고, 그 원인이 QUEST_ALREADY_COMPLETED인지 확인한다.
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BusinessException))
+                .andExpect(result -> assertEquals(ErrorCode.QUEST_ALREADY_COMPLETED.getMessage(), result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    @DisplayName("도착 퀘스트 완료 실패 - 수락하지 않은 퀘스트")
+    void completeArrivalQuest_Fail_NotAccepted() throws Exception {
+        // given: 퀘스트를 수락하지 않은 상태
+        // setUp에서 수락된 퀘스트를 삭제하여 수락되지 않은 상태로 만듦
+        // (주의: @Transactional이므로 이 테스트에만 영향을 줌)
+        userQuestRepository.findByUserIdAndQuestId(testUser.getUserId(), arrivalQuest.getQuestId())
+                .ifPresent(userQuestRepository::delete); // UserQuestRepository에 delete 메서드가 있다고 가정
+
+        QuestCompleteRequestDto requestDto = new QuestCompleteRequestDto(37.5796, 126.9770);
+        String requestJson = objectMapper.writeValueAsString(requestDto);
+
+        // when: '퀘스트 완료' API를 호출하면
+        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete")
+                        .header("Authorization", "Bearer " + testToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                // then: BusinessException이 발생하고, 그 원인이 QUEST_NOT_ACCEPTED인지 확인한다.
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BusinessException))
+                .andExpect(result -> assertEquals(ErrorCode.QUEST_NOT_ACCEPTED.getMessage(), result.getResolvedException().getMessage()));
+    }
 }

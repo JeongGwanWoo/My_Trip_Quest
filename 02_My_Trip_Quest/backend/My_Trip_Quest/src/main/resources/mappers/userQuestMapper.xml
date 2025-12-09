@@ -86,4 +86,9 @@
             uq.accepted_at DESC
     </select>
 
+    <delete id="delete" parameterType="com.mytripquest.domain.quest.entity.UserQuest">
+        DELETE FROM user_quests
+        WHERE user_quest_id = #{userQuestId}
+    </delete>
+
 </mapper>
