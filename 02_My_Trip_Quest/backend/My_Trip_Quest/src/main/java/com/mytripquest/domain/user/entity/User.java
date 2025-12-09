@@ -18,8 +18,8 @@ public class User {
     private String passwordHash;
     private String nickname;
     private Role role;
-    private int totalXp;
-    private int points;
+    private Integer totalXp;
+    private Integer points;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

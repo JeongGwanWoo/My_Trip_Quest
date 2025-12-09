@@ -14,6 +14,8 @@ public interface ItemMapper {
     // == Finders == //
     Optional<Item> findItemById(Long itemId);
 
+    Optional<Item> findItemByName(String name); // Add this method
+
     List<UserItem> findUserItemsByUserId(Long userId);
 
     Optional<UserItem> findUserItem(@Param("userId") Long userId, @Param("itemId") Long itemId);
@@ -21,7 +23,7 @@ public interface ItemMapper {
     Optional<UserItem> findEquippedItemBySlot(@Param("userId") Long userId, @Param("slot") Item.ItemSlot slot);
 
     // == Mutators == //
-    void addUserItem(@Param("userId") Long userId, @Param("itemId") Long itemId);
+    void addUserItem(@Param("userId") Long userId, @Param("itemId") Long itemId, @Param("isEquipped") boolean isEquipped);
 
     void equipItemAndUnequipOthers(@Param("userId") Long userId, @Param("itemId") Long itemId);
 

@@ -33,8 +33,8 @@
     </select>
 
     <insert id="save" parameterType="com.mytripquest.domain.user.entity.User" useGeneratedKeys="true" keyProperty="userId">
-        INSERT INTO users (email, password_hash, nickname, role)
-        VALUES (#{email}, #{passwordHash}, #{nickname}, #{role})
+        INSERT INTO users (email, password_hash, nickname, role, points)
+        VALUES (#{email}, #{passwordHash}, #{nickname}, #{role}, #{points})
     </insert>
 
     <update id="updateUser" parameterType="com.mytripquest.domain.user.entity.User">
@@ -42,13 +42,13 @@
         <set>
             <if test="nickname != null">nickname = #{nickname},</if>
             <if test="passwordHash != null">password_hash = #{passwordHash},</if>
-            <if test="totalXp != 0">total_xp = #{totalXp},</if>
-            <if test="points != 0">points = #{points},</if>
+            <if test="totalXp != null">total_xp = #{totalXp},</if>
+            <if test="points != null">points = #{points},</if>
         </set>
         WHERE user_id = #{userId}
     </update>
 
-    <select id="findTopUsersByPoints" parameterType="int" resultType="com.mytripquest.domain.user.entity.User">
+    <select id="findTopUsersByPoints" parameterType="int" resultMap="userResultMap">
         SELECT user_id, email, password_hash, nickname, role, total_xp, points, created_at, updated_at
         FROM users
         ORDER BY points DESC
@@ -65,6 +65,12 @@
             users u1
         WHERE
             u1.user_id = #{userId}
+    </select>
+
+    <select id="findIdByEmail" parameterType="string" resultType="long">
+        SELECT user_id
+        FROM users
+        WHERE email = #{email}
     </select>
 
 </mapper>

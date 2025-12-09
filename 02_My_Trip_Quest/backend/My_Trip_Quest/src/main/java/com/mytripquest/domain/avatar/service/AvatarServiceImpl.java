@@ -69,6 +69,10 @@ public class AvatarServiceImpl implements AvatarService {
     @Override
     @Transactional
     public void unequipSlot(Long userId, String slot) {
+        // 스킨은 장착 해제할 수 없음
+        if ("SKIN".equalsIgnoreCase(slot)) {
+            throw new BusinessException(ErrorCode.CANNOT_UNEQUIP_SKIN);
+        }
         itemMapper.unequipSlot(userId, slot);
     }
 }
