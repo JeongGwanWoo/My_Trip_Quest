@@ -6,6 +6,10 @@ import com.mytripquest.domain.quest.dto.QuestAcceptRequestDto;
 import com.mytripquest.domain.quest.entity.Quest;
 import com.mytripquest.domain.quest.service.QuestService;
 import com.mytripquest.domain.user.repository.UserMapper;
+import com.mytripquest.global.ApiResponse;
+import com.mytripquest.global.error.exception.BusinessException;
+import com.mytripquest.global.error.exception.ErrorCode;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -43,7 +47,7 @@ public class QuestController {
         String email = ((UserDetails) authentication.getPrincipal()).getUsername();
         return userMapper.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND)) // 또는 적절한 예외 처리
-                .getId();
+                .getUserId();
     }
 
     /**
