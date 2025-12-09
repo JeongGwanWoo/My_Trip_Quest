@@ -96,4 +96,16 @@ public class QuestController {
         questService.acceptQuest(questId, userId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
+
+    /**
+     * 퀘스트를 완료 처리합니다.
+     * @param questId 완료할 퀘스트의 ID
+     * @return 성공 응답
+     */
+    @PostMapping("/quests/{questId}/complete")
+    public ResponseEntity<ApiResponse<Void>> completeQuest(@PathVariable long questId) {
+        Long userId = getCurrentUserId();
+        questService.completeQuest(questId, userId);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }

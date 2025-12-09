@@ -16,5 +16,6 @@ public interface UserQuestRepository {
     int countIncompleteLocationsByArea(@Param("userId") Long userId, @Param("areaCode") String areaCode);
     
     void save(UserQuest userQuest);
+    void update(UserQuest userQuest);
 
 }

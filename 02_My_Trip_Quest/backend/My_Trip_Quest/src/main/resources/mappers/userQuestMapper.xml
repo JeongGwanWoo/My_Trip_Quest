@@ -48,4 +48,13 @@
         VALUES (#{userId}, #{questId}, #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}, NOW())
     </insert>
 
+    <update id="update" parameterType="com.mytripquest.domain.quest.entity.UserQuest">
+        UPDATE user_quests
+        SET
+            status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            completed_at = NOW(),
+            last_updated_at = NOW()
+        WHERE user_quest_id = #{userQuestId}
+    </update>
+
 </mapper>
