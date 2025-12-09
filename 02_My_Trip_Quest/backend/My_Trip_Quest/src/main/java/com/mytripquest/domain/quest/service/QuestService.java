@@ -11,5 +11,4 @@ public interface QuestService {
     List<LocationWithQuestCountDto> getLocationsByAreaCode(String areaCode);
     List<Quest> getQuestsByLocationId(Long locationId);
     void acceptQuest(long questId, long userId);
-    void completeQuest(long questId, long userId);
 }

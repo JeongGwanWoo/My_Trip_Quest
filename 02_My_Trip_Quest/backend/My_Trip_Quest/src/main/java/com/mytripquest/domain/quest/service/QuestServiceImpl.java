@@ -128,30 +128,4 @@ public class QuestServiceImpl implements QuestService {
                 .build();
         userQuestRepository.save(newUserQuest);
     }
-
-    /**
-     * 사용자가 퀘스트를 완료 처리합니다.
-     * @param questId 완료할 퀘스트 ID
-     * @param userId 완료하는 사용자 ID
-     */
-    @Override
-    public void completeQuest(long questId, long userId) {
-        // 1. 사용자-퀘스트 관계 조회
-        UserQuest userQuest = userQuestRepository.findByUserIdAndQuestId(userId, questId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_FOUND)); // 또는 USER_QUEST_NOT_FOUND 등
-
-        // 2. 퀘스트 상태 확인 (ACCEPTED 상태일 때만 완료 가능)
-        if (userQuest.getStatus() == QuestStatus.COMPLETED) {
-            throw new BusinessException(ErrorCode.QUEST_ALREADY_COMPLETED); // 새로운 에러 코드 필요
-        }
-        if (userQuest.getStatus() != QuestStatus.ACCEPTED) {
-            throw new BusinessException(ErrorCode.QUEST_NOT_ACCEPTED); // 새로운 에러 코드 필요
-        }
-
-        // 3. 퀘스트 상태를 COMPLETED로 업데이트
-        userQuest.setStatus(QuestStatus.COMPLETED);
-        userQuestRepository.update(userQuest); // 이 메서드는 다음 단계에서 추가해야 함
-
-        // TODO: 퀘스트 완료 보상 로직 추가 (경험치, 아이템 등)
-    }
 }
