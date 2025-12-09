@@ -66,4 +66,17 @@
         WHERE area_code = #{areaCode}
     </select>
 
+    <select id="findLocationById" resultMap="locationWithQuestCountMap">
+        SELECT
+            location_id,
+            title,
+            latitude,
+            longitude,
+            0 AS quest_count
+        FROM
+            locations
+        WHERE
+            location_id = #{locationId}
+    </select>
+
 </mapper>

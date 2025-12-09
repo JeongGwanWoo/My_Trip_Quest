@@ -40,4 +40,6 @@ public interface QuestRepository {
      * @return 총 관광지 개수
      */
     int countTotalLocationsByArea(@Param("areaCode") String areaCode);
+
+    Optional<LocationWithQuestCountDto> findLocationById(@Param("locationId") Long locationId);
 }

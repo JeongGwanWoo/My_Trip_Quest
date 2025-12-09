@@ -1,6 +1,7 @@
 package com.mytripquest.controller;
 
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
+import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.QuestAcceptRequestDto;
@@ -104,9 +105,9 @@ public class QuestController {
      * @return 성공 응답
      */
     @PostMapping("/quests/{questId}/complete")
-    public ResponseEntity<ApiResponse<Void>> completeQuest(@PathVariable long questId) {
+    public ResponseEntity<ApiResponse<Void>> completeQuest(@PathVariable long questId, @RequestBody QuestCompleteRequestDto request) {
         Long userId = getCurrentUserId();
-        questService.completeQuest(questId, userId);
+        questService.completeQuest(questId, userId, request);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 

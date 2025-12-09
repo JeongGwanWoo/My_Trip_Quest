@@ -1,5 +1,6 @@
 package com.mytripquest.domain.quest.service;
 
+import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
@@ -136,24 +137,78 @@ public class QuestServiceImpl implements QuestService {
      * @param userId 완료하는 사용자 ID
      */
     @Override
-    public void completeQuest(long questId, long userId) {
-        // 1. 사용자-퀘스트 관계 조회
+    public void completeQuest(long questId, long userId, QuestCompleteRequestDto request) {
+        // 1. 퀘스트 및 사용자-퀘스트 정보 조회
+        Quest quest = questRepository.findQuestById(questId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_FOUND));
         UserQuest userQuest = userQuestRepository.findByUserIdAndQuestId(userId, questId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_FOUND)); // 또는 USER_QUEST_NOT_FOUND 등
+                .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_ACCEPTED));
 
-        // 2. 퀘스트 상태 확인 (ACCEPTED 상태일 때만 완료 가능)
+        // 2. 퀘스트 상태 확인 (중복 완료 방지)
         if (userQuest.getStatus() == QuestStatus.COMPLETED) {
-            throw new BusinessException(ErrorCode.QUEST_ALREADY_COMPLETED); // 새로운 에러 코드 필요
+            throw new BusinessException(ErrorCode.QUEST_ALREADY_COMPLETED);
         }
         if (userQuest.getStatus() != QuestStatus.ACCEPTED) {
-            throw new BusinessException(ErrorCode.QUEST_NOT_ACCEPTED); // 새로운 에러 코드 필요
+            throw new BusinessException(ErrorCode.QUEST_NOT_ACCEPTED);
         }
 
-        // 3. 퀘스트 상태를 COMPLETED로 업데이트
+        // 3. 퀘스트 타입별 완료 조건 검증
+        switch (quest.getQuestTypeId()) {
+            case 1: // 도착 퀘스트
+                verifyArrivalQuest(quest, request);
+                break;
+            case 2: // 사진 퀘스트 (향후 구현)
+                // verifyPhotoQuest(quest, request);
+                break;
+            default:
+                // 지원하지 않는 퀘스트 타입 처리
+                break;
+        }
+
+        // 4. 퀘스트 상태를 COMPLETED로 업데이트
         userQuest.setStatus(QuestStatus.COMPLETED);
-        userQuestRepository.update(userQuest); // 이 메서드는 다음 단계에서 추가해야 함
+        userQuestRepository.update(userQuest);
 
         // TODO: 퀘스트 완료 보상 로직 추가 (경험치, 아이템 등)
+    }
+
+    /**
+     * 도착 퀘스트의 완료 조건을 검증합니다 (GPS 좌표 기반).
+     */
+    private void verifyArrivalQuest(Quest quest, QuestCompleteRequestDto request) {
+        if (request.getLatitude() == null || request.getLongitude() == null) {
+            throw new BusinessException(ErrorCode.GPS_COORDINATES_REQUIRED); // 또는 GPS_REQUIRED 등
+        }
+
+        // 퀘스트에 연결된 장소 정보 조회
+        LocationWithQuestCountDto location = questRepository.findLocationById(quest.getLocationId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND)); // 또는 LOCATION_NOT_FOUND
+
+        // 거리 계산 (미터 단위)
+        double distance = calculateDistance(request.getLatitude(), request.getLongitude(),
+                location.getLatitude(), location.getLongitude());
+
+        // 예: 50미터 이내에 있어야 통과
+        double MAX_DISTANCE_METERS = 50.0;
+        if (distance > MAX_DISTANCE_METERS) {
+            throw new BusinessException(ErrorCode.DISTANCE_TOO_FAR);
+        }
+    }
+
+    /**
+     * 두 지점 간의 거리를 미터 단위로 계산합니다 (Haversine formula).
+     */
+    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // 지구 반지름 (킬로미터)
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c * 1000; // 미터 단위로 변환
     }
 
     /**
