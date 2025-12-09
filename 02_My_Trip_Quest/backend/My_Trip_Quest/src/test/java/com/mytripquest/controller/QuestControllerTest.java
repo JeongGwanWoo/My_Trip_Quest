@@ -22,8 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.junit.jupiter.api.Disabled;
+import org.springframework.mock.web.MockMultipartFile;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -88,7 +90,7 @@ class QuestControllerTest {
         int initialPoints = testUser.getPoints();
 
         // when: '퀘스트 완료' API를 호출하면
-        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete")
+        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete/arrival")
                         .header("Authorization", "Bearer " + testToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
@@ -113,7 +115,7 @@ class QuestControllerTest {
         String requestJson = objectMapper.writeValueAsString(requestDto);
 
         // when: '퀘스트 완료' API를 호출하면
-        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete")
+        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete/arrival")
                         .header("Authorization", "Bearer " + testToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
@@ -129,7 +131,7 @@ class QuestControllerTest {
         String requestJson = "{\"latitude\": 37.5796}"; // 경도 누락
 
         // when: '퀘스트 완료' API를 호출하면
-        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete")
+        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete/arrival")
                         .header("Authorization", "Bearer " + testToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
@@ -150,7 +152,7 @@ class QuestControllerTest {
         String requestJson = objectMapper.writeValueAsString(requestDto);
 
         // when: '퀘스트 완료' API를 호출하면
-        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete")
+        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete/arrival")
                         .header("Authorization", "Bearer " + testToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
@@ -172,12 +174,45 @@ class QuestControllerTest {
         String requestJson = objectMapper.writeValueAsString(requestDto);
 
         // when: '퀘스트 완료' API를 호출하면
-        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete")
+        mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete/arrival")
                         .header("Authorization", "Bearer " + testToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 // then: BusinessException이 발생하고, 그 원인이 QUEST_NOT_ACCEPTED인지 확인한다.
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof BusinessException))
                 .andExpect(result -> assertEquals(ErrorCode.QUEST_NOT_ACCEPTED.getMessage(), result.getResolvedException().getMessage()));
+    @Disabled // 실제 Gemini API를 호출하므로, CI/CD 환경에서는 실행하지 않도록 비활성화합니다. 로컬에서 수동으로 실행하여 확인할 수 있습니다.
+    @Test
+    @DisplayName("사진 퀘스트 완료 성공 (실제 API 호출)")
+    void completePhotoQuest_Success() throws Exception {
+        // given: '사진 퀘스트'를 수락한 상태로 만듭니다.
+        // 'quest_dummy.sql'에 ID=11, quest_type_id=2인 '사진' 퀘스트가 있다고 가정
+        long photoQuestId = 11L;
+        UserQuest photoUserQuest = UserQuest.builder()
+                .userId(testUser.getUserId())
+                .questId(photoQuestId)
+                .status(QuestStatus.ACCEPTED)
+                .build();
+        userQuestRepository.save(photoUserQuest);
+
+        // given: 검증에 성공할 만한 (가짜) 이미지 파일을 준비합니다.
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "image", // 컨트롤러에서 받을 @RequestParam("image")의 이름과 일치
+                "landmark.jpg",
+                MediaType.IMAGE_JPEG_VALUE,
+                "fake-image-bytes".getBytes() // 실제로는 src/test/resources에 있는 테스트용 이미지 파일을 읽어와 사용합니다.
+        );
+
+        // when: '사진 퀘스트 완료' API를 호출하면
+        mockMvc.perform(multipart("/api/v1/quest-map/quests/" + photoQuestId + "/complete/photo")
+                        .file(imageFile)
+                        .header("Authorization", "Bearer " + testToken)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                // then: HTTP 200 OK 응답을 받는다.
+                .andExpect(status().isOk());
+
+        // then: DB의 퀘스트 상태가 COMPLETED로 변경되었는지 확인한다.
+        UserQuest completedUserQuest = userQuestRepository.findByUserIdAndQuestId(testUser.getUserId(), photoQuestId).get();
+        assertEquals(QuestStatus.COMPLETED, completedUserQuest.getStatus());
     }
 }
