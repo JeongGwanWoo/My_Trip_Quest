@@ -78,3 +78,4 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("회원가입이 성공적으로 완료되었습니다."));
     }
+}
