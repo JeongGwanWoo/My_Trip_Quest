@@ -17,12 +17,11 @@ export const getRankings = async (limit = 10) => {
 
 /**
  * 현재 로그인한 사용자의 랭킹 정보를 가져옵니다.
- * @param {number} userId 사용자 ID
  * @returns {Promise<object>} ApiResponse
  */
-export const getMyRank = async (userId) => {
+export const getMyRank = async () => {
   try {
-    const response = await api.get(`/api/v1/rankings/my-rank?userId=${userId}`);
+    const response = await api.get(`/api/v1/rankings/my-rank`);
     return response.data;
   } catch (error) {
     console.error('Error fetching my rank:', error);

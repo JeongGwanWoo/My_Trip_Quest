@@ -70,9 +70,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { getShopItems, buyItem } from '@/api/items.js';
-import { getAvatar } from '@/api/avatar.js';
-
-const userId = 1; // TODO: 실제 로그인한 유저 ID로 변경 필요
+import { getProfile } from '@/api/user.js'; // getAvatar 대신 getProfile import
 
 const userCoins = ref(0);
 const items = ref([]);
@@ -94,17 +92,19 @@ const categories = [
 const fetchShopData = async () => {
   isLoading.value = true;
   try {
-    const [shopItemsResponse, avatarResponse] = await Promise.all([
+    // getAvatar 호출을 getProfile 호출로 변경
+    const [shopItemsResponse, profileResponse] = await Promise.all([
       getShopItems(),
-      getAvatar(userId)
+      getProfile()
     ]);
 
     if (shopItemsResponse.success) {
       items.value = shopItemsResponse.data;
     }
 
-    if (avatarResponse.success) {
-      userCoins.value = avatarResponse.data.points;
+    // getProfile 응답에서 코인(포인트) 정보를 가져옴
+    if (profileResponse.success) {
+      userCoins.value = profileResponse.data.points;
     }
 
   } catch (error) {
