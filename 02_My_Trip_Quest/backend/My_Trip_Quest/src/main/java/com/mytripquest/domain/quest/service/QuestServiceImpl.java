@@ -146,21 +146,15 @@ public class QuestServiceImpl implements QuestService {
      */
     @Override
     public void completeArrivalQuest(long questId, long userId, QuestCompleteRequestDto request) {
-        completeQuest(questId, userId, () -> verifyArrivalQuest(questId, request));
+        completeQuestInternal(questId, userId, request, null);
     }
 
     @Override
     public void completePhotoQuest(long questId, long userId, MultipartFile imageFile) throws IOException {
-        completeQuest(questId, userId, () -> verifyPhotoQuest(questId, imageFile));
+        completeQuestInternal(questId, userId, null, imageFile);
     }
 
-    /**
-     * 퀘스트 완료의 공통 로직을 처리하는 private 메서드.
-     * @param questId 완료할 퀘스트 ID
-     * @param userId 완료하는 사용자 ID
-     * @param verification 퀘스트 타입별 검증 로직을 담은 `Runnable`
-     */
-    private void completeQuest(long questId, long userId, Runnable verification) {
+    private void completeQuestInternal(long questId, long userId, QuestCompleteRequestDto arrivalRequest, MultipartFile photoFile) {
         // 1. 퀘스트 및 사용자-퀘스트 정보 조회
         Quest quest = questRepository.findQuestById(questId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_FOUND));
@@ -175,8 +169,22 @@ public class QuestServiceImpl implements QuestService {
             throw new BusinessException(ErrorCode.QUEST_NOT_ACCEPTED);
         }
 
-        // 3. 퀘스트 타입별 완료 조건 검증 (전략 실행)
-        verification.run();
+        // 3. 퀘스트 타입별 완료 조건 검증
+        switch (quest.getQuestTypeId()) {
+            case 1:
+                verifyArrivalQuest(quest, arrivalRequest);
+                break;
+            case 2:
+                try {
+                    verifyPhotoQuest(quest, photoFile);
+                } catch (IOException e) {
+                    throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+                }
+                break;
+            default:
+                // 지원하지 않는 퀘스트 타입에 대한 예외 처리나 로깅
+                break;
+        }
 
         // 4. 퀘스트 상태를 COMPLETED로 업데이트
         userQuest.setStatus(QuestStatus.COMPLETED);
@@ -186,28 +194,18 @@ public class QuestServiceImpl implements QuestService {
         grantQuestRewards(userId, quest);
     }
 
-    /**
-     * 사진 퀘스트의 완료 조건을 검증합니다 (AI Vision API 기반).
-     */
-    private void verifyPhotoQuest(long questId, MultipartFile imageFile) {
-        try {
-            if (imageFile == null || imageFile.isEmpty()) {
-                throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF); // 또는 FILE_EMPTY
-            }
+    private void verifyPhotoQuest(Quest quest, MultipartFile imageFile) throws IOException {
+        if (imageFile == null || imageFile.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF);
+        }
 
-            // 퀘스트에 연결된 장소 정보 조회
-            Quest quest = questRepository.findQuestById(questId).get(); // 이미 조회했지만, 장소 이름이 필요
-            LocationWithQuestCountDto location = questRepository.findLocationById(quest.getLocationId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
+        LocationWithQuestCountDto location = questRepository.findLocationById(quest.getLocationId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
 
-            // AI Vision Service 호출
-            boolean isVerified = aiVisionService.isPhotoOfLandmark(imageFile.getBytes(), location.getTitle());
+        boolean isVerified = aiVisionService.isPhotoOfLandmark(imageFile.getBytes(), location.getTitle());
 
-            if (!isVerified) {
-                throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF);
-            }
-        } catch (IOException e) {
-            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR); // 또는 FILE_PROCESSING_ERROR
+        if (!isVerified) {
+            throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF);
         }
     }
 
