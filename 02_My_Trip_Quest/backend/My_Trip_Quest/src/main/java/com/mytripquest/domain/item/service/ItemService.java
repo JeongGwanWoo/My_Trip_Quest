@@ -11,6 +11,7 @@ import com.mytripquest.domain.user.repository.UserMapper;
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j; // Import Slf4j
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j // Add Slf4j annotation
 public class ItemService {
 
     private final ItemRepository itemRepository;
@@ -105,6 +107,6 @@ public class ItemService {
         userMapper.updateUser(updatedUser);
 
         // 7. 인벤토리에 아이템 추가
-        itemMapper.addUserItem(userId, itemId);
+        itemMapper.addUserItem(userId, itemId, false);
     }
 }

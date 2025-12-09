@@ -25,15 +25,15 @@
             </div>
             <!-- ======================================================= -->
 
-            <h1 class="username">TRAVELMASTER</h1>
-            <p class="user-handle">TRAVELQUEST.COM</p>
+            <h1 class="username">{{ userProfile?.nickname || '여행자' }}</h1>
+            <p class="user-handle">{{ userProfile?.email || 'N/A' }}</p>
           </div>
 
           <div class="info-box dark-box">
             <div class="info-label">
               <span class="small-icon">📅</span> JOINED
             </div>
-            <div class="info-value">2024. 1. 15.</div>
+            <div class="info-value">{{ userJoined }}</div>
           </div>
         </div>
 
@@ -45,22 +45,22 @@
                 <span class="star-icon">⭐</span>
                 <div class="text-group">
                   <span class="sub-label">CURRENT LEVEL</span>
-                  <span class="main-label">LEVEL 12</span>
+                  <span class="main-label">LEVEL {{ levelInfo.currentLevel }}</span>
                 </div>
               </div>
               <div class="xp-badge">
                 <span class="xp-label">XP</span>
-                3400/12000
+                {{ userProfile?.totalXp || 0 }} / {{ levelInfo.xpForNextLevel }}
               </div>
             </div>
 
             <div class="xp-progress-container">
               <div class="xp-bar-bg">
-                <div class="xp-bar-fill" style="width: 28%">
-                  <span class="progress-text">28%</span>
+                <div class="xp-bar-fill" :style="{ width: levelInfo.progressPercentage + '%' }">
+                  <span class="progress-text">{{ levelInfo.progressPercentage }}%</span>
                 </div>
               </div>
-              <div class="xp-footer">8600 XP TO LEVEL 13</div>
+              <div class="xp-footer">{{ levelInfo.xpForNextLevel - (userProfile?.totalXp || 0) }} XP TO LEVEL {{ levelInfo.currentLevel + 1 }}</div>
             </div>
           </div>
 
@@ -69,7 +69,7 @@
               <div class="stat-icon">🪙</div>
               <div class="stat-content">
                 <span class="stat-label">TOTAL COINS</span>
-                <span class="stat-value">{{ userCoins }}</span>
+                <span class="stat-value">{{ userProfile?.points || 0 }}</span>
               </div>
             </div>
             <div class="stat-card green">
@@ -130,12 +130,27 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { getAvatar } from '@/api/avatar.js';
+import { getProfile } from '@/api/user.js';
+import { getLevelProgress } from '@/utils/level.js';
 
-const userId = ref(1);
+const userProfile = ref(null);
 const equippedItemsList = ref([]);
-const userCoins = ref(0);
+const userJoined = ref('2024. 1. 15.'); // Placeholder for joined date
 
-// API로 받아온 배열을 슬롯별 객체로 변환
+// Computed property to calculate level information
+const levelInfo = computed(() => {
+  if (userProfile.value) {
+    return getLevelProgress(userProfile.value.totalXp);
+  }
+  // Return default values before profile is loaded
+  return {
+    currentLevel: 1,
+    xpForNextLevel: 1000,
+    progressPercentage: 0,
+  };
+});
+
+// Computed property to get items by slot for avatar display
 const equippedItemsBySlot = computed(() => {
   const slots = {
     SKIN: null, HAIR: null, HAT: null, TOP: null, BOTTOM: null, FACE: null,
@@ -148,21 +163,34 @@ const equippedItemsBySlot = computed(() => {
   return slots;
 });
 
+const fetchUserProfileData = async () => {
+  try {
+    const response = await getProfile();
+    if (response.success) {
+      userProfile.value = response.data;
+    }
+  } catch (error) {
+    console.error("Failed to fetch user profile data:", error);
+  }
+};
+
 const fetchAvatarData = async () => {
   try {
-    const response = await getAvatar(userId.value);
+    const response = await getAvatar(); // Call getAvatar without userId
     if (response.success) {
       equippedItemsList.value = response.data.equippedItems;
-      userCoins.value = response.data.points; // 코인 정보도 함께 설정
     }
   } catch (error) {
     console.error("Failed to fetch avatar data:", error);
   }
 };
 
-onMounted(fetchAvatarData);
+onMounted(async () => {
+  await fetchUserProfileData();
+  await fetchAvatarData(); 
+});
 
-// 하드코딩된 더미 데이터
+// Dummy data for city progress
 const cityProgress = ref([
   { id: 1, name: '서울', icon: '🏙️', completed: 3, total: 15, percentage: 20, colorClass: 'fill-green' },
   { id: 2, name: '부산', icon: '🌊', completed: 0, total: 15, percentage: 0, colorClass: 'fill-blue' },

@@ -82,9 +82,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { getRankings, getMyRank } from '@/api/ranking.js';
-
-// TODO: 실제 로그인한 유저 ID로 변경 필요
-const userId = 1;
+import { calculateLevel } from '@/utils/level.js';
 
 const myData = ref({
   name: 'Loading...',
@@ -114,7 +112,7 @@ const fetchRankings = async () => {
 
 const fetchMyData = async () => {
   try {
-    const myRankResponse = await getMyRank(userId);
+    const myRankResponse = await getMyRank(); // Call without userId
     if (myRankResponse.success) {
       const rankData = myRankResponse.data;
       myData.value.name = rankData.nickname;
@@ -135,10 +133,6 @@ onMounted(async () => {
   await fetchMyData(); // Fetch current user's data
 });
 
-const calculateLevel = (totalXp) => {
-  if (totalXp === undefined || totalXp === null) return 1; // Default to level 1 if XP is not available
-  return 1 + Math.floor(totalXp / 1000); // Same logic as backend DTO
-};
 </script>
 
 <style scoped>

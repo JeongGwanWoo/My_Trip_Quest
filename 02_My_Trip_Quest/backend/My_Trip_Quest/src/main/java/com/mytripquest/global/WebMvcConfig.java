@@ -27,16 +27,5 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/img/**")
                 .addResourceLocations("classpath:/img/");
 	}
-	
-	@Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                // ★ 중요: allowedOrigins 대신 allowedOriginPatterns 사용 권장
-                .allowedOriginPatterns("http://localhost:5173") 
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true) // 이게 true면, 위에서 * 를 쓰면 안 됨!
-                .maxAge(3600);
-    }
 
 }
