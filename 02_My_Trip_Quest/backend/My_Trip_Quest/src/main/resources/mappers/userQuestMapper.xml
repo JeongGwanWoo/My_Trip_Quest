@@ -13,6 +13,16 @@
         <result property="lastUpdatedAt" column="last_updated_at"/>
     </resultMap>
 
+    <resultMap id="inProgressQuestDtoMap" type="com.mytripquest.domain.quest.dto.InProgressQuestDto">
+        <constructor>
+            <arg column="quest_id" javaType="long"/>
+            <arg column="title" javaType="string"/>
+            <arg column="status" javaType="com.mytripquest.domain.quest.entity.QuestStatus"/>
+            <arg column="accepted_at" javaType="java.time.LocalDateTime"/>
+            <arg column="location_name" javaType="string"/>
+        </constructor>
+    </resultMap>
+
     <select id="findByUserIdAndQuestId" resultMap="userQuestMap">
         SELECT *
         FROM user_quests
@@ -47,5 +57,38 @@
         INSERT INTO user_quests (user_id, quest_id, status, accepted_at)
         VALUES (#{userId}, #{questId}, #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}, NOW())
     </insert>
+
+    <update id="update" parameterType="com.mytripquest.domain.quest.entity.UserQuest">
+        UPDATE user_quests
+        SET
+            status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            completed_at = NOW(),
+            last_updated_at = NOW()
+        WHERE user_quest_id = #{userQuestId}
+    </update>
+
+    <select id="findUserQuestsByStatus" resultMap="inProgressQuestDtoMap">
+        SELECT
+            uq.quest_id,
+            q.title,
+            uq.status,
+            uq.accepted_at,
+            l.name as location_name
+        FROM
+            user_quests uq
+        JOIN
+            quests q ON uq.quest_id = q.quest_id
+        JOIN
+            locations l ON q.location_id = l.location_id
+        WHERE
+            uq.user_id = #{userId} AND uq.status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+        ORDER BY
+            uq.accepted_at DESC
+    </select>
+
+    <delete id="delete" parameterType="com.mytripquest.domain.quest.entity.UserQuest">
+        DELETE FROM user_quests
+        WHERE user_quest_id = #{userQuestId}
+    </delete>
 
 </mapper>

@@ -1,5 +1,7 @@
 package com.mytripquest.controller;
 
+import com.mytripquest.domain.quest.dto.InProgressQuestDto;
+import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.QuestAcceptRequestDto;
@@ -15,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,7 +26,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -95,5 +100,42 @@ public class QuestController {
         Long userId = getCurrentUserId();
         questService.acceptQuest(questId, userId);
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    /**
+     * 도착 퀘스트를 완료 처리합니다.
+     * @param questId 완료할 퀘스트의 ID
+     * @return 성공 응답
+     */
+    @PostMapping("/quests/{questId}/complete/arrival")
+    public ResponseEntity<ApiResponse<Void>> completeArrivalQuest(@PathVariable long questId, @RequestBody QuestCompleteRequestDto request) {
+        Long userId = getCurrentUserId();
+        questService.completeArrivalQuest(questId, userId, request);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    /**
+     * 사진 퀘스트를 완료 처리합니다.
+     * @param questId 완료할 퀘스트 ID
+     * @param imageFile 사용자가 제출한 인증 사진
+     * @return 성공 응답
+     * @throws IOException
+     */
+    @PostMapping(value = "/quests/{questId}/complete/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<Void>> completePhotoQuest(@PathVariable long questId, @RequestParam("image") MultipartFile imageFile) throws IOException {
+        Long userId = getCurrentUserId();
+        questService.completePhotoQuest(questId, userId, imageFile);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    /**
+     * 현재 사용자가 진행 중인 퀘스트 목록을 조회합니다.
+     * @return 진행 중인 퀘스트 목록
+     */
+    @GetMapping("/quests/in-progress")
+    public ResponseEntity<ApiResponse<List<InProgressQuestDto>>> getInProgressQuests() {
+        Long userId = getCurrentUserId();
+        List<InProgressQuestDto> inProgressQuests = questService.getInProgressQuests(userId);
+        return ResponseEntity.ok(ApiResponse.success(inProgressQuests));
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
     // Global
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자를 찾을 수 없습니다."),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
@@ -17,6 +18,10 @@ public enum ErrorCode {
     QUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 퀘스트를 찾을 수 없습니다."),
     QUEST_ALREADY_ACCEPTED(HttpStatus.CONFLICT, "이미 수락한 퀘스트입니다."),
     PREVIOUS_QUEST_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "선행 퀘스트를 먼저 완료해야 합니다."),
+    DISTANCE_TOO_FAR(HttpStatus.BAD_REQUEST, "퀘스트 완료 장소와 너무 멀리 떨어져 있습니다."),
+    GPS_COORDINATES_REQUIRED(HttpStatus.BAD_REQUEST, "GPS 좌표가 필요합니다."),
+    LOCATION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 장소를 찾을 수 없습니다."),
+    INVALID_PHOTO_PROOF(HttpStatus.BAD_REQUEST, "퀘스트 인증에 실패했습니다. 올바른 장소에서 찍은 사진인지 확인해주세요."),
 
     // Item
     ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 아이템을 찾을 수 없습니다."),
