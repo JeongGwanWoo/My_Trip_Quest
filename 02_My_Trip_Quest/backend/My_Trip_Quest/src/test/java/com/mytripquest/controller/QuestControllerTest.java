@@ -84,6 +84,8 @@ class QuestControllerTest {
         // 'quest_dummy.sql'에서 ID 10번 퀘스트의 장소 좌표가 (37.5796170, 126.9770410)라고 가정
         QuestCompleteRequestDto requestDto = new QuestCompleteRequestDto(37.5796, 126.9770);
         String requestJson = objectMapper.writeValueAsString(requestDto);
+        int initialXp = testUser.getTotalXp();
+        int initialPoints = testUser.getPoints();
 
         // when: '퀘스트 완료' API를 호출하면
         mockMvc.perform(post("/api/v1/quest-map/quests/" + arrivalQuest.getQuestId() + "/complete")
@@ -96,6 +98,11 @@ class QuestControllerTest {
         // then: DB의 퀘스트 상태가 COMPLETED로 변경되었는지 확인한다.
         UserQuest completedUserQuest = userQuestRepository.findByUserIdAndQuestId(testUser.getUserId(), arrivalQuest.getQuestId()).get();
         assertEquals(QuestStatus.COMPLETED, completedUserQuest.getStatus());
+
+        // then: 사용자에게 보상이 정상적으로 지급되었는지 확인한다.
+        User rewardedUser = userMapper.findById(testUser.getUserId()).get();
+        assertEquals(initialXp + arrivalQuest.getRewardXp(), rewardedUser.getTotalXp());
+        assertEquals(initialPoints + arrivalQuest.getRewardPoints(), rewardedUser.getPoints());
     }
 
     @Test

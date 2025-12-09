@@ -9,6 +9,8 @@ import com.mytripquest.domain.quest.entity.QuestStatus;
 import com.mytripquest.domain.quest.entity.UserQuest;
 import com.mytripquest.domain.quest.repository.QuestRepository;
 import com.mytripquest.domain.quest.repository.UserQuestRepository;
+import com.mytripquest.domain.user.entity.User;
+import com.mytripquest.domain.user.repository.UserMapper;
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class QuestServiceImpl implements QuestService {
 
     private final QuestRepository questRepository;
     private final UserQuestRepository userQuestRepository;
+    private final UserMapper userMapper;
     // MVP 단계에서는 지역 정보를 하드코딩하여 사용
     private static final Map<String, String> AREA_CODES;
     private static final Map<String, String> CODE_TO_NAME;
@@ -170,8 +173,28 @@ public class QuestServiceImpl implements QuestService {
         userQuest.setStatus(QuestStatus.COMPLETED);
         userQuestRepository.update(userQuest);
 
-        // TODO: 퀘스트 완료 보상 로직 추가 (경험치, 아이템 등)
+        // 5. 퀘스트 완료 보상 지급
+        grantQuestRewards(userId, quest);
     }
+
+    /**
+     * 사용자에게 퀘스트 완료 보상(XP, Point)을 지급합니다.
+     * @param userId 보상을 받을 사용자 ID
+     * @param quest 완료된 퀘스트 정보
+     */
+    private void grantQuestRewards(long userId, Quest quest) {
+        if (quest.getRewardXp() > 0 || quest.getRewardPoints() > 0) {
+            User user = userMapper.findById(userId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+            User updatedUser = User.builder()
+                    .userId(user.getUserId())
+                    .totalXp(user.getTotalXp() + quest.getRewardXp())
+                    .points(user.getPoints() + quest.getRewardPoints())
+                    .build();
+
+            userMapper.updateUser(updatedUser);
+        }
 
     /**
      * 도착 퀘스트의 완료 조건을 검증합니다 (GPS 좌표 기반).
