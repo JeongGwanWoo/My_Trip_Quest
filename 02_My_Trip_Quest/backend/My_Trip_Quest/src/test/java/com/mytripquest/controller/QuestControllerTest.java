@@ -22,8 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.mytripquest.global.error.exception.BusinessException;
+import com.mytripquest.global.error.exception.ErrorCode;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -52,29 +53,28 @@ class QuestControllerTest {
     private String testToken;
     private Quest arrivalQuest;
 
-    @BeforeEach
-    void setUp() {
-        // 1. 테스트 사용자 생성 및 ID 확인
-        User user = User.builder().email("test@example.com").nickname("tester").passwordHash("password").role(User.Role.USER).build();
-        userMapper.save(user);
-        testUser = userMapper.findByEmail("test@example.com").get(); // save 후 ID가 채워진 객체를 다시 조회
-
-        // 2. JWT 토큰 생성
-        testToken = jwtTokenProvider.createToken(testUser.getEmail(), testUser.getRole().name());
-
-        // 3. 테스트 퀘스트 조회
-        // 'quest_dummy.sql'에 ID=1000, quest_type_id=1인 '도착' 퀘스트가 있다고 가정
-        arrivalQuest = questRepository.findQuestById(10L).get();
-
-        // 4. 사용자가 퀘스트를 수락한 상태로 만듭니다.
-        UserQuest userQuest = UserQuest.builder()
-                .userId(testUser.getUserId())
-                .questId(arrivalQuest.getQuestId()) 
-                .status(QuestStatus.ACCEPTED)
-                .build();
-        userQuestRepository.save(userQuest);
-    }
-
+        @BeforeEach
+        void setUp() {
+            // 1. 테스트 사용자 생성 및 ID 확인
+            User user = User.builder().email("test@example.com").nickname("tester").passwordHash("password").role(User.Role.USER).build();
+            userMapper.save(user);
+            testUser = userMapper.findByEmail("test@example.com").get(); // save 후 ID가 채워진 객체를 다시 조회
+    
+            // 2. JWT 토큰 생성
+            testToken = jwtTokenProvider.createToken(testUser.getEmail(), testUser.getRole().name());
+    
+            // 3. 테스트 퀘스트 조회
+            // 'quest_dummy.sql'에 ID=10, quest_type_id=1인 '도착' 퀘스트가 있다고 가정
+            arrivalQuest = questRepository.findQuestById(10L).get();
+    
+            // 4. 사용자가 퀘스트를 수락한 상태로 만듭니다.
+            UserQuest userQuest = UserQuest.builder()
+                    .userId(testUser.getUserId())
+                    .questId(arrivalQuest.getQuestId())
+                    .status(QuestStatus.ACCEPTED)
+                    .build();
+            userQuestRepository.save(userQuest);
+        }
     @Test
     @DisplayName("도착 퀘스트 완료 성공")
     void completeArrivalQuest_Success() throws Exception {
@@ -108,9 +108,9 @@ class QuestControllerTest {
                         .header("Authorization", "Bearer " + testToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
-                // then: HTTP 400 Bad Request 응답과 에러 코드를 받는다.
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("DISTANCE_TOO_FAR"));
+                // then: BusinessException이 발생하고, 그 원인이 DISTANCE_TOO_FAR인지 확인한다.
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof BusinessException))
+                .andExpect(result -> assertEquals(ErrorCode.DISTANCE_TOO_FAR.getMessage(), result.getResolvedException().getMessage()));
     }
 
     // TODO: 퀘스트 상태가 올바르지 않은 경우 (이미 완료, 수락 안 함) 테스트 추가
