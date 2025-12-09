@@ -4,9 +4,12 @@ import com.mytripquest.domain.item.dto.ItemDto;
 import com.mytripquest.domain.item.dto.ShopItemDto;
 import com.mytripquest.domain.item.entity.UserItem;
 import com.mytripquest.domain.item.service.ItemService;
+import com.mytripquest.domain.user.service.UserService; // Import UserService
 import com.mytripquest.global.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal; // Import AuthenticationPrincipal
+import org.springframework.security.core.userdetails.UserDetails; // Import UserDetails
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +20,7 @@ import java.util.List;
 public class ItemController {
 
     private final ItemService itemService;
+    private final UserService userService; // Inject UserService
 
     /**
      * @deprecated 상점 목록 조회는 /api/v1/items/shop 을 이용해주세요.
@@ -29,25 +33,22 @@ public class ItemController {
     }
 
     @GetMapping("/inventory")
-    public ResponseEntity<List<UserItem>> getMyInventory() {
-        // TODO: 추후 Spring Security 적용 시 로그인한 유저 ID로 변경 필요
-        Long userId = 1L;
+    public ResponseEntity<List<UserItem>> getMyInventory(@AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = userService.findIdByEmail(userDetails.getUsername());
         List<UserItem> myItems = itemService.findMyItems(userId);
         return ResponseEntity.ok(myItems);
     }
 
     @GetMapping("/shop")
-    public ResponseEntity<ApiResponse<List<ShopItemDto>>> getShopItems() {
-        // TODO: 추후 Spring Security 적용 시 로그인한 유저 ID로 변경 필요
-        Long userId = 1L;
+    public ResponseEntity<ApiResponse<List<ShopItemDto>>> getShopItems(@AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = userService.findIdByEmail(userDetails.getUsername());
         List<ShopItemDto> shopItems = itemService.getShopItems(userId);
         return ResponseEntity.ok(ApiResponse.success(shopItems));
     }
 
     @PostMapping("/{itemId}/buy")
-    public ResponseEntity<ApiResponse<Void>> buyItem(@PathVariable Long itemId) {
-        // TODO: 추후 Spring Security 적용 시 로그인한 유저 ID로 변경 필요
-        Long userId = 1L;
+    public ResponseEntity<ApiResponse<Void>> buyItem(@PathVariable Long itemId, @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = userService.findIdByEmail(userDetails.getUsername());
         itemService.buyItem(userId, itemId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }

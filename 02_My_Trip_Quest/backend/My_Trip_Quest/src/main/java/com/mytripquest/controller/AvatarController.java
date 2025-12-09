@@ -4,9 +4,12 @@ import com.mytripquest.domain.avatar.dto.AvatarResponse;
 import com.mytripquest.domain.avatar.dto.EquipRequest;
 import com.mytripquest.domain.avatar.dto.UnequipRequest;
 import com.mytripquest.domain.avatar.service.AvatarService;
+import com.mytripquest.domain.user.service.UserService; // Import UserService
 import com.mytripquest.global.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal; // Import AuthenticationPrincipal
+import org.springframework.security.core.userdetails.UserDetails; // Import UserDetails
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,36 +18,26 @@ import org.springframework.web.bind.annotation.*;
 public class AvatarController {
 
 	private final AvatarService avatarService;
+    private final UserService userService; // Inject UserService
 
-    // 장착 요청 처리 (자동 저장)
     @PostMapping("/equip")
-    public ResponseEntity<String> equipItem(@RequestBody EquipRequest request) {
-        
-        // ★ 테스트용: 1번 유저 고정
-    	// TODO: 추후 Spring Security 적용 시 로그인한 유저 ID로 변경 필요
-        Long userId = 1L;
-        
+    public ResponseEntity<ApiResponse<?>> equipItem(@RequestBody EquipRequest request, @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = userService.findIdByEmail(userDetails.getUsername());
         avatarService.equipItem(userId, request);
-        
-        return ResponseEntity.ok("장착 완료");
+        return ResponseEntity.ok(ApiResponse.successWithoutData());
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<AvatarResponse>> getAvatar(@PathVariable Long userId) {
+    @GetMapping
+    public ResponseEntity<ApiResponse<AvatarResponse>> getMyAvatar(@AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = userService.findIdByEmail(userDetails.getUsername());
         AvatarResponse avatarResponse = avatarService.getAvatar(userId);
         return ResponseEntity.ok(ApiResponse.success(avatarResponse));
     }
-
-    @PostMapping("/{userId}/equip")
-    public ResponseEntity<ApiResponse<?>> equipItem(@PathVariable Long userId, @RequestBody EquipRequest equipRequest) {
-        avatarService.equipItem(userId, equipRequest);
-        return ResponseEntity.ok(ApiResponse.successWithoutData());
-    }
     
     @PostMapping("/unequip")
-    public ResponseEntity<String> unequipItem(@RequestBody UnequipRequest request) {
-        Long userId = 1L; // 테스트용
+    public ResponseEntity<ApiResponse<?>> unequipItem(@RequestBody UnequipRequest request, @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = userService.findIdByEmail(userDetails.getUsername());
         avatarService.unequipSlot(userId, request.getSlot());
-        return ResponseEntity.ok("해제 완료");
+        return ResponseEntity.ok(ApiResponse.successWithoutData());
     }
 }
