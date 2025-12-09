@@ -55,12 +55,12 @@ class QuestControllerTest {
     @BeforeEach
     void setUp() {
         // 1. 테스트 사용자 생성 및 ID 확인
-        User user = User.builder().email("test@example.com").nickname("tester").passwordHash("password").role("USER").build();
+        User user = User.builder().email("test@example.com").nickname("tester").passwordHash("password").role(User.Role.USER).build();
         userMapper.save(user);
         testUser = userMapper.findByEmail("test@example.com").get(); // save 후 ID가 채워진 객체를 다시 조회
 
         // 2. JWT 토큰 생성
-        testToken = jwtTokenProvider.createToken(testUser.getEmail(), testUser.getRole());
+        testToken = jwtTokenProvider.createToken(testUser.getEmail(), testUser.getRole().name());
 
         // 3. 테스트 퀘스트 조회
         // 'quest_dummy.sql'에 ID=1000, quest_type_id=1인 '도착' 퀘스트가 있다고 가정
