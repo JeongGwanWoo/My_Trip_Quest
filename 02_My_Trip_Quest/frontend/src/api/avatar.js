@@ -1,13 +1,13 @@
 import api from './index.js';
 
 /**
- * 사용자의 현재 아바타 정보(착용 아이템 목록)를 가져옵니다.
- * @param {number} userId - 사용자 ID
+ * 현재 로그인한 사용자의 아바타 정보(착용 아이템 목록)를 가져옵니다.
  * @returns {Promise<object>} - API 응답 데이터
  */
-export const getAvatar = async (userId) => {
+export const getAvatar = async () => {
   try {
-    const response = await api.get(`/api/v1/avatar/${userId}`);
+    // The backend now gets the user from the security context, so no userId is needed.
+    const response = await api.get(`/api/v1/avatar`);
     return response.data;
   } catch (error) {
     console.error('Failed to get avatar:', error);

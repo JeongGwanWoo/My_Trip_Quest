@@ -23,4 +23,6 @@ public interface UserMapper {
 
     Optional<UserRankDto> findUserRankById(long userId);
 
+    Optional<Long> findIdByEmail(String email); // Added method
+
 }
