@@ -1,5 +1,6 @@
 package com.mytripquest.domain.quest.service;
 
+import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
 import com.mytripquest.domain.quest.entity.Quest;
@@ -153,5 +154,16 @@ public class QuestServiceImpl implements QuestService {
         userQuestRepository.update(userQuest); // 이 메서드는 다음 단계에서 추가해야 함
 
         // TODO: 퀘스트 완료 보상 로직 추가 (경험치, 아이템 등)
+    }
+
+    /**
+     * 현재 사용자가 진행 중인(ACCEPTED) 퀘스트 목록을 조회합니다.
+     * @param userId 현재 사용자 ID
+     * @return 진행 중인 퀘스트 정보 DTO 리스트
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<InProgressQuestDto> getInProgressQuests(Long userId) {
+        return userQuestRepository.findUserQuestsByStatus(userId, QuestStatus.ACCEPTED);
     }
 }

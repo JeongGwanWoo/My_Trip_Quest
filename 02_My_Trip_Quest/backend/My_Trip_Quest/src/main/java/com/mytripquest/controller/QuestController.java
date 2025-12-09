@@ -1,5 +1,6 @@
 package com.mytripquest.controller;
 
+import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.QuestAcceptRequestDto;
@@ -107,5 +108,16 @@ public class QuestController {
         Long userId = getCurrentUserId();
         questService.completeQuest(questId, userId);
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    /**
+     * 현재 사용자가 진행 중인 퀘스트 목록을 조회합니다.
+     * @return 진행 중인 퀘스트 목록
+     */
+    @GetMapping("/quests/in-progress")
+    public ResponseEntity<ApiResponse<List<InProgressQuestDto>>> getInProgressQuests() {
+        Long userId = getCurrentUserId();
+        List<InProgressQuestDto> inProgressQuests = questService.getInProgressQuests(userId);
+        return ResponseEntity.ok(ApiResponse.success(inProgressQuests));
     }
 }
