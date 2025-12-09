@@ -1,6 +1,7 @@
 package com.mytripquest.domain.quest.service;
 
 import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
+import com.mytripquest.domain.ai.service.AIVisionService;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
@@ -16,7 +17,9 @@ import com.mytripquest.global.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,6 +39,7 @@ public class QuestServiceImpl implements QuestService {
     private final QuestRepository questRepository;
     private final UserQuestRepository userQuestRepository;
     private final UserMapper userMapper;
+    private final AIVisionService aiVisionService;
     // MVP 단계에서는 지역 정보를 하드코딩하여 사용
     private static final Map<String, String> AREA_CODES;
     private static final Map<String, String> CODE_TO_NAME;
@@ -141,7 +145,22 @@ public class QuestServiceImpl implements QuestService {
      * @param userId 완료하는 사용자 ID
      */
     @Override
-    public void completeQuest(long questId, long userId, QuestCompleteRequestDto request) {
+    public void completeArrivalQuest(long questId, long userId, QuestCompleteRequestDto request) {
+        completeQuest(questId, userId, () -> verifyArrivalQuest(questId, request));
+    }
+
+    @Override
+    public void completePhotoQuest(long questId, long userId, MultipartFile imageFile) throws IOException {
+        completeQuest(questId, userId, () -> verifyPhotoQuest(questId, imageFile));
+    }
+
+    /**
+     * 퀘스트 완료의 공통 로직을 처리하는 private 메서드.
+     * @param questId 완료할 퀘스트 ID
+     * @param userId 완료하는 사용자 ID
+     * @param verification 퀘스트 타입별 검증 로직을 담은 `Runnable`
+     */
+    private void completeQuest(long questId, long userId, Runnable verification) {
         // 1. 퀘스트 및 사용자-퀘스트 정보 조회
         Quest quest = questRepository.findQuestById(questId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_FOUND));
@@ -156,18 +175,8 @@ public class QuestServiceImpl implements QuestService {
             throw new BusinessException(ErrorCode.QUEST_NOT_ACCEPTED);
         }
 
-        // 3. 퀘스트 타입별 완료 조건 검증
-        switch (quest.getQuestTypeId()) {
-            case 1: // 도착 퀘스트
-                verifyArrivalQuest(quest, request);
-                break;
-            case 2: // 사진 퀘스트 (향후 구현)
-                // verifyPhotoQuest(quest, request);
-                break;
-            default:
-                // 지원하지 않는 퀘스트 타입 처리
-                break;
-        }
+        // 3. 퀘스트 타입별 완료 조건 검증 (전략 실행)
+        verification.run();
 
         // 4. 퀘스트 상태를 COMPLETED로 업데이트
         userQuest.setStatus(QuestStatus.COMPLETED);
@@ -175,6 +184,31 @@ public class QuestServiceImpl implements QuestService {
 
         // 5. 퀘스트 완료 보상 지급
         grantQuestRewards(userId, quest);
+    }
+
+    /**
+     * 사진 퀘스트의 완료 조건을 검증합니다 (AI Vision API 기반).
+     */
+    private void verifyPhotoQuest(long questId, MultipartFile imageFile) {
+        try {
+            if (imageFile == null || imageFile.isEmpty()) {
+                throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF); // 또는 FILE_EMPTY
+            }
+
+            // 퀘스트에 연결된 장소 정보 조회
+            Quest quest = questRepository.findQuestById(questId).get(); // 이미 조회했지만, 장소 이름이 필요
+            LocationWithQuestCountDto location = questRepository.findLocationById(quest.getLocationId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
+
+            // AI Vision Service 호출
+            boolean isVerified = aiVisionService.isPhotoOfLandmark(imageFile.getBytes(), location.getTitle());
+
+            if (!isVerified) {
+                throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF);
+            }
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR); // 또는 FILE_PROCESSING_ERROR
+        }
     }
 
     /**
@@ -195,6 +229,7 @@ public class QuestServiceImpl implements QuestService {
 
             userMapper.updateUser(updatedUser);
         }
+    }
 
     /**
      * 도착 퀘스트의 완료 조건을 검증합니다 (GPS 좌표 기반).
