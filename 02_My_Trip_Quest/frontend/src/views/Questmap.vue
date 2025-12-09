@@ -121,8 +121,7 @@ const handleAreaClick = (areaCode) => {
 
 onMounted(async () => {
   try {
-    const userId = 1;
-    const response = await api.get(`/api/v1/quest-map/areas?userId=${userId}`);
+    const response = await api.get(`/api/v1/quest-map/areas`);
     areas.value = response.data.data;
     quests.value = response.data.data.map(item => {
       const completedCount = item.totalLocationCount - item.incompleteLocationCount;
@@ -158,8 +157,7 @@ const fetchLocations = async (areaCode) => {
     return;
   }
   try {
-    const userId = 1;
-    const response = await api.get(`/api/v1/quest-map/areas/${areaCode}?userId=${userId}`);
+    const response = await api.get(`/api/v1/quest-map/areas/${areaCode}`);
     areaLocations.value = response.data.data;
     selectedAreaCode.value = areaCode;
   } catch (error) {
@@ -181,8 +179,7 @@ const fetchQuestsForModal = async (location) => {
 
 const acceptQuest = async (questId) => {
   try {
-    const userId = 1;
-    await api.post(`/api/v1/quest-map/quests/${questId}/accept`, { userId });
+    await api.post(`/api/v1/quest-map/quests/${questId}/accept`);
     alert(`퀘스트 #${questId}를 수락했습니다!`);
   } catch (error) {
     console.error(`퀘스트 #${questId} 수락 중 오류 발생:`, error);
