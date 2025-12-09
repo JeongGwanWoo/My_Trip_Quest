@@ -64,12 +64,12 @@ class QuestControllerTest {
 
         // 3. 테스트 퀘스트 조회
         // 'quest_dummy.sql'에 ID=1000, quest_type_id=1인 '도착' 퀘스트가 있다고 가정
-        arrivalQuest = questRepository.findQuestById(1000L).get();
+        arrivalQuest = questRepository.findQuestById(10L).get();
 
         // 4. 사용자가 퀘스트를 수락한 상태로 만듭니다.
         UserQuest userQuest = UserQuest.builder()
                 .userId(testUser.getUserId())
-                .questId(arrivalQuest.getQuestId())
+                .questId(arrivalQuest.getQuestId()) 
                 .status(QuestStatus.ACCEPTED)
                 .build();
         userQuestRepository.save(userQuest);
@@ -79,8 +79,8 @@ class QuestControllerTest {
     @DisplayName("도착 퀘스트 완료 성공")
     void completeArrivalQuest_Success() throws Exception {
         // given: 사용자의 위치가 퀘스트 장소와 가까울 때
-        // 'quest_dummy.sql'에서 ID 1000번 퀘스트의 장소(location_id=1) 좌표가 (37.566826, 126.9786567)라고 가정
-        QuestCompleteRequestDto requestDto = new QuestCompleteRequestDto(37.5668, 126.9786);
+        // 'quest_dummy.sql'에서 ID 10번 퀘스트의 장소 좌표가 (37.5796170, 126.9770410)라고 가정
+        QuestCompleteRequestDto requestDto = new QuestCompleteRequestDto(37.5796, 126.9770);
         String requestJson = objectMapper.writeValueAsString(requestDto);
 
         // when: '퀘스트 완료' API를 호출하면
