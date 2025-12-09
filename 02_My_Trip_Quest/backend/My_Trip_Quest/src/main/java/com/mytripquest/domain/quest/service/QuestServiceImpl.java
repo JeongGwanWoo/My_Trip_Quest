@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -182,7 +183,11 @@ public class QuestServiceImpl implements QuestService {
 
         // 퀘스트에 연결된 장소 정보 조회
         LocationWithQuestCountDto location = questRepository.findLocationById(quest.getLocationId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND)); // 또는 LOCATION_NOT_FOUND
+                .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
+
+        if (location.getLatitude() == null || location.getLongitude() == null) {
+            throw new BusinessException(ErrorCode.GPS_COORDINATES_REQUIRED); // 장소에 좌표가 없는 경우
+        }
 
         // 거리 계산 (미터 단위)
         double distance = calculateDistance(request.getLatitude(), request.getLongitude(),
@@ -198,13 +203,22 @@ public class QuestServiceImpl implements QuestService {
     /**
      * 두 지점 간의 거리를 미터 단위로 계산합니다 (Haversine formula).
      */
-    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    private double calculateDistance(Double lat1, Double lon1, BigDecimal lat2, BigDecimal lon2) {
+        if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) {
+            throw new BusinessException(ErrorCode.GPS_COORDINATES_REQUIRED);
+        }
+
         final int R = 6371; // 지구 반지름 (킬로미터)
 
-        double latDistance = Math.toRadians(lat2 - lat1);
-        double lonDistance = Math.toRadians(lon2 - lon1);
+        double dLat1 = Math.toRadians(lat1);
+        double dLon1 = Math.toRadians(lon1);
+        double dLat2 = Math.toRadians(lat2.doubleValue());
+        double dLon2 = Math.toRadians(lon2.doubleValue());
+
+        double latDistance = dLat2 - dLat1;
+        double lonDistance = dLon2 - dLon1;
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                + Math.cos(dLat1) * Math.cos(dLat2)
                 * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
