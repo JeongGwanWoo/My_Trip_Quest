@@ -21,10 +21,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import org.junit.jupiter.api.Disabled;
-import org.springframework.mock.web.MockMultipartFile;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
@@ -181,6 +180,8 @@ class QuestControllerTest {
                 // then: BusinessException이 발생하고, 그 원인이 QUEST_NOT_ACCEPTED인지 확인한다.
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof BusinessException))
                 .andExpect(result -> assertEquals(ErrorCode.QUEST_NOT_ACCEPTED.getMessage(), result.getResolvedException().getMessage()));
+    }
+    
     @Disabled // 실제 Gemini API를 호출하므로, CI/CD 환경에서는 실행하지 않도록 비활성화합니다. 로컬에서 수동으로 실행하여 확인할 수 있습니다.
     @Test
     @DisplayName("사진 퀘스트 완료 성공 (실제 API 호출)")
