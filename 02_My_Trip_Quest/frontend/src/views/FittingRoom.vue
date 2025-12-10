@@ -1,67 +1,110 @@
 <template>
   <div class="fitting-page">
     <div class="content-container">
+      
+      <header class="page-header">
+        <div class="badge">
+          <span class="badge-dot"></span> FITTING ROOM
+        </div>
+        <h2 class="page-title">나만의 스타일 꾸미기</h2>
+      </header>
 
-      <section class="preview-section">
-        <h2 class="section-label">CHARACTER PREVIEW</h2>
-        
-        <div class="avatar-display">
-          <div class="avatar-layers">
-            <div class="layer skin">
-              <img :src="equipped.SKIN?.image || '/assets/avatar/avatar-base.png'" alt="skin"/>
-            </div>
-            <div class="layer bottom" v-if="equipped.BOTTOM"><img :src="equipped.BOTTOM.image" alt="bottom"/></div>
-            <div class="layer top" v-if="equipped.TOP"><img :src="equipped.TOP.image" alt="top"/></div>
-            <div class="layer hair" v-if="equipped.HAIR"><img :src="equipped.HAIR.image" alt="hair"/></div>
-            <div class="layer hat" v-if="equipped.HAT"><img :src="equipped.HAT.image" alt="hat"/></div>
-            <div class="layer face" v-if="equipped.FACE"><img :src="equipped.FACE.image" alt="face"/></div>
+      <div class="main-layout">
+        <section class="preview-card">
+          <div class="preview-header">
+            <h3>CHARACTER PREVIEW</h3>
           </div>
-        </div>
-
-        <div class="username">TRAVELMASTER</div>
-      </section>
-
-      <section class="customize-section">
-        <h2 class="section-label">
-          <span class="sparkle-icon">✨</span> CUSTOMIZE YOUR CHARACTER
-        </h2>
-
-        <div class="action-bar" style="margin-bottom: 15px; text-align: right;">
-          <button @click="saveCurrentAvatar" class="save-btn">
-            💾 현재 코디 저장하기
-          </button>
-        </div>
-
-        <div class="tab-bar">
-          <button 
-            v-for="tab in tabs" 
-            :key="tab.id"
-            class="tab-btn"
-            :class="{ active: currentTab === tab.id }"
-            @click="currentTab = tab.id"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
-
-        <div class="items-area">
-          <div v-if="isLoading" style="color: white;">로딩 중...</div>
-          <div v-else-if="currentItems.length === 0" style="color: #ddd;">아이템이 없습니다.</div>
           
-          <div 
-            v-for="item in currentItems" 
-            :key="item.id"
-            class="item-card"
-            :class="{ selected: isEquipped(item) }"
-            @click="equipItem(item)"
-          >
-            <div v-if="isEquipped(item)" class="check-mark">✔</div>
-            
-            <div class="item-img"><img :src="item.image" :alt="item.name"/></div>
-            <div class="item-name">{{ item.name }}</div>
+          <div class="preview-content-wrapper">
+            <div class="avatar-stage">
+              <div class="stage-bg"></div>
+              <div class="avatar-layers">
+                <div class="layer skin">
+                  <img :src="equipped.SKIN?.image || '/assets/avatar/avatar-base.png'" alt="skin"/>
+                </div>
+                <div class="layer bottom" v-if="equipped.BOTTOM">
+                  <img :src="equipped.BOTTOM.image" alt="bottom"/>
+                </div>
+                <div class="layer top" v-if="equipped.TOP">
+                  <img :src="equipped.TOP.image" alt="top"/>
+                </div>
+                <div class="layer hair" v-if="equipped.HAIR">
+                  <img :src="equipped.HAIR.image" alt="hair"/>
+                </div>
+                <div class="layer face" v-if="equipped.FACE">
+                  <img :src="equipped.FACE.image" alt="face"/>
+                </div>
+                <div class="layer hat" v-if="equipped.HAT">
+                  <img :src="equipped.HAT.image" alt="hat"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="preview-actions">
+              <div class="character-info">
+                <span class="role-badge">TRAVELER</span>
+                <span class="username">TRAVELMASTER</span>
+              </div>
+
+              <button @click="saveCurrentAvatar" class="btn-save">
+                <span>💾 스타일 저장하기</span>
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <section class="inventory-card">
+          <div class="inventory-header">
+            <h3 class="card-title">보유 아이템</h3>
+            <span class="item-count">전체 {{ currentItems.length }}개</span>
+          </div>
+
+          <nav class="category-tabs">
+            <button 
+              v-for="tab in tabs" 
+              :key="tab.id"
+              class="tab-btn"
+              :class="{ active: currentTab === tab.id }"
+              @click="currentTab = tab.id"
+            >
+              {{ tab.label }}
+            </button>
+          </nav>
+
+          <div class="items-area-wrapper">
+            <div v-if="isLoading" class="state-msg">
+              <div class="spinner"></div>
+              <p>옷장을 여는 중...</p>
+            </div>
+            
+            <div v-else-if="currentItems.length === 0" class="state-msg">
+              <span class="empty-icon">👕</span>
+              <p>이 카테고리에 아이템이 없습니다.</p>
+            </div>
+            
+            <div v-else class="items-grid">
+              <div 
+                v-for="item in currentItems" 
+                :key="item.id"
+                class="item-card"
+                :class="{ selected: isEquipped(item) }"
+                @click="equipItem(item)"
+              >
+                <div class="item-img-box">
+                  <img :src="item.image" :alt="item.name"/>
+                </div>
+                <div class="item-info">
+                  <span class="item-name">{{ item.name }}</span>
+                </div>
+                
+                <div v-if="isEquipped(item)" class="check-overlay">
+                  <span class="check-icon">✓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
 
     </div>
   </div>
@@ -71,13 +114,11 @@
 import { ref, computed, onMounted } from 'vue';
 import { getMyInventory, equipItemApi, unequipItemApi  } from '@/api/items';
 
-
 const currentTab = ref('recent');
 const allBackendItems = ref([]); 
 const isLoading = ref(true);
 const error = ref(null);
 
-// 장착 상태 관리
 const equipped = ref({
   SKIN: { id: null, type: 'SKIN', name: '기본 스킨', image: '/assets/avatar/avatar-base.png' },
   HAIR: null,
@@ -88,8 +129,8 @@ const equipped = ref({
 });
 
 const tabs = [
-  { id: 'recent', label: '모두' },
-  { id: 'HAIR', label: '머리' },
+  { id: 'recent', label: '전체' },
+  { id: 'HAIR', label: '헤어' },
   { id: 'HAT', label: '모자' },
   { id: 'TOP', label: '상의' },
   { id: 'BOTTOM', label: '하의' },
@@ -97,7 +138,6 @@ const tabs = [
   { id: 'SKIN', label: '스킨' },
 ];
 
-// 1. 목록 데이터 가공
 const categorizedInventory = computed(() => {
   const inventory = {
     SKIN: [], HAIR: [], HAT: [], TOP: [], BOTTOM: [], FACE: [],
@@ -137,7 +177,6 @@ const isEquipped = (item) => {
   return current && current.id === item.id;
 };
 
-// 2. 옷 입히기 (화면 반영)
 const equipItem = (item) => {
   if (isEquipped(item)) {
     if (item.type !== 'SKIN') {
@@ -148,36 +187,28 @@ const equipItem = (item) => {
   }
 };
 
-// 3. 저장 버튼 기능
 const saveCurrentAvatar = async () => {
-  if (!confirm('현재 착용한 모습을 저장하시겠습니까?')) return;
+  if (!confirm('현재 스타일을 저장하시겠습니까?')) return;
   
   try {
     const promises = [];
-
-    // ★ [핵심 변경] 모든 슬롯을 순회하며 검사합니다.
-    // SKIN은 벗을 수 없으니 제외하고 나머지 슬롯만 체크
     const slotsToCheck = ['HAIR', 'HAT', 'TOP', 'BOTTOM', 'FACE'];
 
     for (const slot of slotsToCheck) {
       const currentItem = equipped.value[slot];
-
       if (currentItem && currentItem.id) {
-        // 1. 입고 있는 게 있으면 -> 장착 요청 (Equip)
         promises.push(equipItemApi(currentItem.id));
       } else {
-        // 2. 입고 있는 게 없으면(null) -> 해제 요청 (Unequip)
         promises.push(unequipItemApi(slot));
       }
     }
     
-    // (스킨은 무조건 장착되어 있다고 가정하거나, 별도 처리)
     if (equipped.value.SKIN && equipped.value.SKIN.id) {
         promises.push(equipItemApi(equipped.value.SKIN.id));
     }
 
     await Promise.all(promises);
-    alert('성공적으로 저장되었습니다! (벗은 것도 반영됨)');
+    alert('스타일이 저장되었습니다!');
 
   } catch (err) {
     console.error(err);
@@ -185,20 +216,16 @@ const saveCurrentAvatar = async () => {
   }
 };
 
-// ★★★ 4. [핵심] 페이지 로딩 시 장착 아이템 불러오기
 onMounted(async () => {
   try {
     const data = await getMyInventory();
     allBackendItems.value = data;
 
     data.forEach(userItem => {
-      // ★ 핵심: 백엔드에서 온 변수명(equipped) 또는 (isEquipped) 둘 다 체크
       const isOn = userItem.equipped || userItem.isEquipped;
 
       if (isOn && userItem.item) {
         const itemDetail = userItem.item;
-        
-        // 슬롯 이름 대문자 변환 (안전하게)
         const slotName = itemDetail.slot ? itemDetail.slot.toUpperCase() : null;
 
         if (slotName) {
@@ -213,237 +240,282 @@ onMounted(async () => {
     });
 
   } catch (err) {
-    error.value = '아이템 로딩 실패: ' + err.message;
+    error.value = err.message;
     console.error(err);
   } finally {
     isLoading.value = false;
   }
 });
-
-
 </script>
 
 <style scoped>
-/* 기존 스타일 그대로 유지 */
+/* 1. 박스 사이징 초기화 */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* 기본 페이지 설정 */
 .fitting-page {
+  font-family: "Pretendard", sans-serif;
   width: 100%;
+  /* 높이 100% 고정을 풀고 최소 높이만 지정 -> 스크롤은 App.vue에서 처리 */
+  min-height: 100%; 
   display: flex;
   justify-content: center;
-  color: #1e1e1e;
-  padding-top: 20px;
+  background-color: #f5f7fb;
 }
 
 .content-container {
-  max-width: 1000px;
+  max-width: 1100px;
   width: 100%;
-  padding: 20px;
+  padding: 40px 20px;
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 24px;
+  height: fit-content;
 }
 
-.preview-section {
-  background-color: #8b5cf6;
-  border: 4px solid #000;
-  padding: 30px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 6px 6px 0 rgba(0,0,0,0.2);
-  color: white;
+/* --- Header --- */
+.page-header { margin-bottom: 8px; }
+
+.badge {
+  display: inline-flex; align-items: center; background: #e0e7ff; color: #3730a3;
+  padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 12px;
+}
+.badge-dot { width: 6px; height: 6px; background-color: #4f46e5; border-radius: 50%; margin-right: 6px; }
+
+.page-title {
+  font-size: 32px; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.5px;
 }
 
-.section-label {
-  font-size: 14px;
-  margin-bottom: 20px;
-  text-shadow: 2px 2px 0 #000;
-  letter-spacing: 2px;
-  font-weight: bold;
+/* --- Main Layout --- */
+.main-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  align-items: start;
+  width: 100%;
 }
 
-.avatar-display {
-  width: 150px;
-  height: 150px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 20px;
+/* --- 1. Preview Card --- */
+.preview-card {
+  background: #fff; border-radius: 24px; padding: 32px 24px;
+  display: flex; flex-direction: column; align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid #eef2ff;
+  position: sticky; top: 24px; width: 100%;
+}
+
+.preview-header h3 {
+  font-size: 14px; font-weight: 700; color: #94a3b8; letter-spacing: 1px;
+  margin-bottom: 24px; width: 100%; text-align: center;
+}
+
+.preview-content-wrapper {
+  display: flex; flex-direction: column; align-items: center; width: 100%;
+}
+
+/* ------------------------------------------------ */
+/* ★ 아바타 위치 정렬 수정 (이미지 크기 동일할 때) ★ */
+/* ------------------------------------------------ */
+.avatar-stage {
+  width: 280px; /* 아바타가 보일 영역 크기 */
+  height: 280px; 
   position: relative;
-  box-shadow: 0 0 20px rgba(0,0,0,0.2);
-  overflow: hidden;
+  display: block; /* Flex 제거 */
+  margin: 0 auto 24px;
 }
 
-.avatar-layers {
-  position: relative;
-  width: 100px; 
-  height: 100px;
+.stage-bg {
+  position: absolute; 
+  top: 50%; left: 50%; 
+  transform: translate(-50%, -50%);
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, #eff6ff 0%, #fff 70%);
+  border-radius: 50%; 
+  z-index: 0;
+}
+
+.avatar-layers { 
+  position: absolute; 
+  top: 0; left: 0; 
+  width: 100%; height: 100%; 
+  z-index: 1; 
 }
 
 .layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  position: absolute; 
+  top: 0; left: 0; 
+  width: 100%; height: 100%;
+  /* Flex 제거: 이미지가 캔버스 크기대로 꽉 차게 둠 */
 }
 
 .layer > img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.3));
+  width: 100%; height: 100%; 
+  object-fit: contain; /* 이미지 비율 유지하며 꽉 채움 */
+  display: block;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
 }
 
+/* 레이어 순서 (Z-Index) */
 .layer.skin { z-index: 10; }
-.layer.bottom { z-index: 20; }
-.layer.top { z-index: 30; }
-.layer.face { z-index: 40; }
+.layer.face { z-index: 20; }
+.layer.bottom { z-index: 30; }
+.layer.top { z-index: 40; }
 .layer.hair { z-index: 50; }
 .layer.hat { z-index: 60; }
 
-.username {
-  font-size: 18px;
-  font-weight: bold;
-  text-shadow: 2px 2px 0 #000;
-  letter-spacing: 1px;
+/* ------------------------------------------------ */
+
+.preview-actions { width: 100%; text-align: center; }
+.character-info { margin-bottom: 32px; }
+.role-badge {
+  display: inline-block; background: #f1f5f9; color: #64748b;
+  font-size: 11px; font-weight: 700; padding: 4px 8px;
+  border-radius: 6px; margin-bottom: 8px;
+}
+.username { display: block; font-size: 20px; font-weight: 800; color: #1e293b; }
+
+.btn-save {
+  width: 100%; background: #2563eb; color: #fff; border: none;
+  border-radius: 12px; padding: 16px; font-size: 16px; font-weight: 600;
+  cursor: pointer; transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+.btn-save:hover { background: #1d4ed8; transform: translateY(-1px); }
+.btn-save:active { transform: translateY(0); }
+
+/* --- 2. Inventory Card --- */
+.inventory-card {
+  background: #fff; border-radius: 24px; padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid #eef2ff;
+  min-height: 600px; display: flex; flex-direction: column; width: 100%;
 }
 
-.customize-section {
-  background-color: #ec4899;
-  border: 4px solid #000;
-  padding: 20px;
-  box-shadow: 6px 6px 0 rgba(0,0,0,0.2);
-  min-height: 400px;
+.inventory-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
 }
+.card-title { font-size: 20px; font-weight: 800; color: #1e293b; margin: 0; }
+.item-count { font-size: 14px; color: #64748b; }
 
-.customize-section .section-label {
-  font-size: 16px;
-  margin: 0 0 20px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: white;
-  text-shadow: 2px 2px 0 #000;
+.category-tabs {
+  display: flex; gap: 8px; margin-bottom: 24px;
+  overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;
 }
-
-.tab-bar {
-  background-color: #1e293b;
-  padding: 10px;
-  border: 4px solid #fbbf24;
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
+.category-tabs::-webkit-scrollbar { display: none; }
 
 .tab-btn {
-  background: transparent;
-  border: 2px solid transparent;
-  color: #94a3b8;
-  padding: 8px 16px;
-  font-size: 12px;
-  font-weight: bold;
-  cursor: pointer;
-  text-transform: uppercase;
+  background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0;
+  padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;
 }
+.tab-btn:hover { background: #f1f5f9; color: #334155; }
+.tab-btn.active { background: #1e293b; color: #fff; border-color: #1e293b; }
 
-.tab-btn:hover { color: white; }
+.items-area-wrapper { flex-grow: 1; }
 
-.tab-btn.active {
-  background-color: #fbbf24;
-  color: #000;
-  border: 2px solid #000;
-  box-shadow: 2px 2px 0 #000;
-}
-
-.items-area {
+.items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 15px;
-  padding: 10px;
+  /* 기본 그리드 설정 */
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 16px;
 }
 
 .item-card {
-  background-color: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(0,0,0,0.1);
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  position: relative;
-  transition: transform 0.1s;
-  border-radius: 8px;
+  background: #fff; border: 1px solid #f1f5f9; border-radius: 16px;
+  padding: 12px; cursor: pointer; transition: all 0.2s; position: relative;
+  display: flex; flex-direction: column; align-items: center;
 }
+.item-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06); }
+.item-card.selected { border: 2px solid #3b82f6; background: #eff6ff; }
 
-.item-card:hover {
-  transform: translateY(-3px);
-  background-color: rgba(255, 255, 255, 0.4);
+.item-img-box {
+  width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 8px; background: #f8fafc; border-radius: 12px;
 }
+.item-img-box img { width: 100%; height: 100%; object-fit: contain; }
 
-.item-card.selected {
-  background-color: #22c55e;
-  border: 3px solid #fbbf24;
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
-}
-
-.check-mark {
-  position: absolute;
-  top: 3px;
-  right: 5px;
-  color: #fbbf24;
-  font-size: 12px;
-  text-shadow: 1px 1px 0 #000;
-}
-
-.item-img {
-  width: 50px;
-  height: 50px;
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.item-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.2));
-}
-
+.item-info { text-align: center; width: 100%; }
 .item-name {
-  font-size: 10px;
-  color: white;
-  text-shadow: 1px 1px 0 #000;
-  text-align: center;
-  word-break: keep-all;
+  font-size: 13px; color: #334155; font-weight: 500; display: block;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
-.save-btn {
-  background-color: #fbbf24; /* 노란색 포인트 */
-  color: #000;
-  border: 3px solid #000;
-  padding: 10px 20px;
-  font-weight: bold;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
-  transition: transform 0.1s, box-shadow 0.1s;
-  font-family: inherit; /* 폰트 상속 */
+.check-overlay {
+  position: absolute; top: -6px; right: -6px;
+  background: #3b82f6; color: #fff; width: 20px; height: 20px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; border: 2px solid #fff;
 }
 
-.save-btn:active {
-  transform: translate(2px, 2px); /* 눌리는 효과 */
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+.state-msg {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 0; color: #94a3b8; height: 100%;
+}
+.spinner {
+  width: 32px; height: 32px; border: 3px solid #e2e8f0;
+  border-top-color: #3b82f6; border-radius: 50%;
+  animation: spin 1s linear infinite; margin-bottom: 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
+
+/* ------------------------------------------- */
+/* ★ 반응형 미디어 쿼리 (화면 잘림 해결) ★ */
+/* ------------------------------------------- */
+
+/* 태블릿 (1024px 이하) */
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr; /* 세로 배치 */
+    gap: 20px;
+  }
+  .preview-card { position: static; padding: 20px; }
+  .preview-content-wrapper { flex-direction: row; justify-content: center; gap: 32px; }
+  .avatar-stage { margin: 0; width: 220px; height: 220px; }
+  .stage-bg { width: 180px; height: 180px; }
+  .preview-actions { width: auto; text-align: left; }
+  .character-info { margin-bottom: 16px; text-align: left; }
+  .btn-save { width: auto; min-width: 200px; }
 }
 
-.save-btn:hover {
-  background-color: #f59e0b;
+/* 모바일 (600px 이하) - 핵심 수정 구간 */
+@media (max-width: 600px) {
+  .content-container {
+    padding: 24px 16px; /* 좌우 패딩 축소 */
+  }
+
+  .preview-card {
+    padding: 20px 16px;
+  }
+
+  /* 미리보기 다시 세로 배치 */
+  .preview-content-wrapper {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .preview-actions { text-align: center; }
+  .character-info { text-align: center; }
+  .btn-save { width: 100%; }
+
+  .inventory-card {
+    padding: 20px 12px; /* 패딩 더 축소 */
+    min-height: auto;
+  }
+
+  /* 그리드 수정: 최소 너비를 줄여서 화면 밖으로 밀려나지 않게 함 */
+  .items-grid {
+    /* 100px -> 85px로 축소하여 작은 화면에서도 3열 유지 가능성 높임 */
+    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); 
+    gap: 10px;
+  }
+
+  .item-img-box {
+    width: 100%;
+    height: 60px; /* 이미지 박스 높이 줄임 */
+  }
+  
+  .item-name {
+    font-size: 11px; /* 폰트 사이즈 조절 */
+  }
 }
 </style>
