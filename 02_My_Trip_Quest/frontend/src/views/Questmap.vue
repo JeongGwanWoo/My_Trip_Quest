@@ -1,106 +1,164 @@
 <template>
   <div class="quest-map-page">
     <div class="content-container">
-      <section class="map-section">
-        <h2 class="section-title">📍 퀘스트 지도</h2>
-        <div class="map-board">
-          <MapComponent :areas="areas" @area-clicked="handleAreaClick" />
-          <div class="map-legend">
-            <div class="legend-item"><span class="dot yellow"></span> 진행중</div>
-            <div class="legend-item"><span class="dot green"></span> 완료</div>
+      
+      <section class="map-card-wrapper">
+        
+        <div class="map-frame">
+          <MapComponent :areas="areas" @area-clicked="handleAreaClick" class="map-component" />
+        </div>
+        
+        <div class="map-legend">
+          <div class="legend-header">상태 안내</div>
+          <div class="legend-item">
+            <span class="status-dot yellow"></span>
+            <span class="label">진행중</span>
+          </div>
+          <div class="legend-item">
+            <span class="status-dot green"></span>
+            <span class="label">완료됨</span>
           </div>
         </div>
-      </section>
+
+        <BottomSheet v-model:isOpen="isSheetOpen" class="map-bottom-sheet">
+          <div class="sheet-content">
+            <div class="sheet-header">
+              <div class="header-top-row">
+                <div class="badge">
+                  <span class="badge-dot"></span> QUEST LIST
+                </div>
+                <button @click="isSheetOpen = false" class="btn-close" title="닫기">
+                  ✕
+                </button>
+              </div>
+              <h2 class="section-title">탐험할 지역을 선택하세요</h2>
+            </div>
+
+            <div class="quest-list">
+              <template v-for="quest in quests" :key="quest.id">
+                <div
+                  class="quest-card"
+                  :class="[quest.colorClass, { 'is-active': selectedAreaCode === quest.id }]"
+                  @click="fetchLocations(quest.id)"
+                >
+                  <div class="card-left">
+                    <div class="quest-icon-box">{{ quest.icon }}</div>
+                    <div class="quest-text">
+                      <div class="quest-name">{{ quest.name }}</div>
+                      <div class="quest-sub">
+                        총 {{ quest.total }}개 중 <span class="accent-text">{{ quest.completed }}개 완료</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-right">
+                    <div class="progress-circle" :style="`--progress: ${quest.percentage}%`">
+                      <span>{{ quest.percentage }}%</span>
+                    </div>
+                    <button class="arrow-btn" :class="{ 'expanded': selectedAreaCode === quest.id }">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <Transition name="slide-fade">
+                  <div v-if="selectedAreaCode === quest.id" class="location-list-container">
+                    <div class="location-list-connector"></div>
+                    <div class="location-list">
+                      <div
+                        v-for="(location, index) in areaLocations"
+                        :key="location.locationId"
+                        class="location-item"
+                        @click.stop="fetchQuestsForModal(location)"
+                      >
+                        <div class="location-info">
+                          <span class="bullet-point" :class="getLocationColorClass(index)"></span>
+                          <span class="location-name">{{ location.title }}</span>
+                        </div>
+                        <div class="quest-count-badge">
+                          퀘스트 {{ location.questCount }}개
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Transition>
+              </template>
+            </div>
+          </div>
+        </BottomSheet>
+
+      </section> 
     </div>
 
-    <BottomSheet v-model:isOpen="isSheetOpen">
-      <div class="sheet-content">
-        <h2 class="section-title">🎯 퀘스트 목록</h2>
-        <div class="quest-list">
-          <template v-for="quest in quests" :key="quest.id">
-            <!-- Area Summary Card -->
-            <div
-              class="quest-card"
-              :class="quest.colorClass"
-              @click="fetchLocations(quest.id)"
-            >
-              <div class="quest-info">
-                <div class="quest-icon">{{ quest.icon }}</div>
-                <div class="quest-text">
-                  <div class="quest-name">{{ quest.name }}</div>
-                  <div class="quest-sub">
-                    {{ quest.completed }}/{{ quest.total }} 지역 완료
-                  </div>
-                </div>
-              </div>
-              <div class="quest-status">
-                <div class="percentage-badge">{{ quest.percentage }}%</div>
-                <button class="arrow-btn" :class="{ 'expanded': selectedAreaCode === quest.id }">⌄</button>
-              </div>
-            </div>
-
-            <!-- Location Detail List (conditionally displayed) -->
-            <Transition name="slide-fade">
-              <div v-if="selectedAreaCode === quest.id" class="location-list">
-                <div
-                  v-for="(location, index) in areaLocations"
-                  :key="location.locationId"
-                  class="location-card"
-                  :class="locationColor(index)"
-                >
-                  <div class="location-name">{{ location.title }}</div>
-                  <div class="location-quest-count" @click.stop="fetchQuestsForModal(location)">
-                    {{ location.questCount }} 퀘스트
-                  </div>
-                </div>
-              </div>
-            </Transition>
-          </template>
-        </div>
-      </div>
-    </BottomSheet>
-
-    <!-- 통합 모달 -->
     <BaseModal :show="isModalVisible" @close="closeModal">
-      <!-- 퀘스트 목록 표시 -->
-      <div v-if="modalContentType === 'questList' && selectedLocationForModal">
-        <h3>{{ selectedLocationForModal.title }} 퀘스트 목록</h3>
-        <div class="nested-quest-list">
-          <div v-if="locationQuests.length === 0" class="nested-quest-item no-quests">
-            퀘스트가 없습니다.
+      <div class="modal-inner">
+        <div v-if="modalContentType === 'questList' && selectedLocationForModal">
+          <div class="modal-header">
+            <h3>{{ selectedLocationForModal.title }}</h3>
+            <span class="modal-subtitle">수행 가능한 퀘스트 목록입니다.</span>
           </div>
-          <div v-for="quest in locationQuests" :key="quest.questId" class="nested-quest-item">
-            <span class="quest-title-text">- {{ quest.title }}</span>
-            <div class="quest-actions">
-              <button class="quest-action-btn details-btn" @click.stop="showQuestDetails(quest)">자세히</button>
-              <button class="quest-action-btn accept-btn" @click.stop="acceptQuest(quest.questId)">수락</button>
+          
+          <div class="nested-quest-list">
+            <div v-if="locationQuests.length === 0" class="empty-state">
+              <span>📭</span>
+              <p>현재 수행 가능한 퀘스트가 없습니다.</p>
+            </div>
+            
+            <div v-else v-for="quest in locationQuests" :key="quest.questId" class="nested-quest-item">
+              <div class="quest-item-content">
+                <span class="quest-title-text">{{ quest.title }}</span>
+              </div>
+              <div class="quest-actions">
+                <button class="btn-text" @click.stop="showQuestDetails(quest)">상세보기</button>
+                <button class="btn-primary-sm" @click.stop="acceptQuest(quest.questId)">수락</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <!-- 퀘스트 상세 정보 표시 -->
-      <div v-else-if="modalContentType === 'questDetails' && selectedQuestForModal">
-        <h3>퀘스트 상세 정보</h3>
-        <p><strong>제목:</strong> {{ selectedQuestForModal.title }}</p>
-        <p><strong>설명:</strong> {{ selectedQuestForModal.description }}</p>
-        <p><strong>난이도:</strong> {{ selectedQuestForModal.difficulty }}</p>
-        <p><strong>보상 경험치:</strong> {{ selectedQuestForModal.rewardXp }}</p>
-        <p><strong>보상 포인트:</strong> {{ selectedQuestForModal.rewardPoints }}</p>
-      </div>
-      <div v-else>
-        <p>정보를 불러오는 중...</p>
+
+        <div v-else-if="modalContentType === 'questDetails' && selectedQuestForModal">
+          <div class="modal-header">
+            <h3>퀘스트 상세 정보</h3>
+          </div>
+          <div class="quest-detail-content">
+            <h4 class="detail-title">{{ selectedQuestForModal.title }}</h4>
+            <p class="detail-desc">{{ selectedQuestForModal.description }}</p>
+            
+            <div class="detail-grid">
+              <div class="detail-box">
+                <span class="label">난이도</span>
+                <span class="value">{{ selectedQuestForModal.difficulty }}</span>
+              </div>
+              <div class="detail-box">
+                <span class="label">보상 경험치</span>
+                <span class="value xp">+{{ selectedQuestForModal.rewardXp }} XP</span>
+              </div>
+              <div class="detail-box">
+                <span class="label">보상 포인트</span>
+                <span class="value point">{{ selectedQuestForModal.rewardPoints }} P</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="loading-state">
+          <div class="spinner"></div>
+          <p>정보를 불러오는 중...</p>
+        </div>
       </div>
     </BaseModal>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import MapComponent from "@/components/map/MapComponent.vue";
 import BaseModal from "@/components/ui/BaseModal.vue";
 import BottomSheet from "@/components/ui/BottomSheet.vue";
 import api from "@/api";
 
+// --- State ---
 const isSheetOpen = ref(false);
 const areas = ref([]);
 const quests = ref([]);
@@ -108,12 +166,13 @@ const areaLocations = ref([]);
 const locationQuests = ref([]);
 const selectedAreaCode = ref(null);
 
-// Modal state
+// Modal State
 const isModalVisible = ref(false);
 const modalContentType = ref('');
 const selectedQuestForModal = ref(null);
 const selectedLocationForModal = ref(null);
 
+// --- Methods ---
 const handleAreaClick = (areaCode) => {
   fetchLocations(areaCode);
   isSheetOpen.value = true;
@@ -135,20 +194,22 @@ onMounted(async () => {
       };
     });
   } catch (error) {
-    console.error("미션 지역 데이터를 가져오는 중 오류 발생:", error);
+    console.error("Error fetching areas:", error);
   }
 });
 
 const getQuestStyle = (areaName) => {
   switch (areaName) {
-    case '서울특별시': return { colorClass: 'bg-red', icon: '🏙️' };
-    case '광주광역시': return { colorClass: 'bg-blue', icon: '🌊' };
-    default: return { colorClass: 'bg-gray', icon: '❔' };
+    case '서울특별시': return { colorClass: 'accent-red', icon: '🏙️' };
+    case '광주광역시': return { colorClass: 'accent-blue', icon: '🌊' };
+    default: return { colorClass: 'accent-gray', icon: '📍' };
   }
 };
 
-const locationColors = ['border-l-red', 'border-l-blue', 'border-l-green', 'border-l-purple'];
-const locationColor = (index) => locationColors[index % locationColors.length];
+const getLocationColorClass = (index) => {
+    const colors = ['dot-red', 'dot-blue', 'dot-green', 'dot-purple'];
+    return colors[index % colors.length];
+};
 
 const fetchLocations = async (areaCode) => {
   if (selectedAreaCode.value === areaCode) {
@@ -161,7 +222,7 @@ const fetchLocations = async (areaCode) => {
     areaLocations.value = response.data.data;
     selectedAreaCode.value = areaCode;
   } catch (error) {
-    console.error(`'${areaCode}' 지역의 관광지 목록을 가져오는 중 오류 발생:`, error);
+    console.error(`Error fetching locations for area ${areaCode}:`, error);
   }
 };
 
@@ -173,7 +234,7 @@ const fetchQuestsForModal = async (location) => {
     modalContentType.value = 'questList';
     isModalVisible.value = true;
   } catch (error) {
-    console.error(`'${location.locationId}' 관광지의 퀘스트 목록을 가져오는 중 오류 발생:`, error);
+    console.error(`Error fetching quests:`, error);
   }
 };
 
@@ -182,16 +243,13 @@ const acceptQuest = async (questId) => {
     await api.post(`/api/v1/quest-map/quests/${questId}/accept`);
     alert(`퀘스트 #${questId}를 수락했습니다!`);
   } catch (error) {
-    console.error(`퀘스트 #${questId} 수락 중 오류 발생:`, error);
-    alert(`퀘스트 수락에 실패했습니다: ${error.response?.data?.message || error.message}`);
+    console.error(`Error accepting quest:`, error);
+    alert(`실패: ${error.response?.data?.message || error.message}`);
   }
 };
 
-// 퀘스트 상세 모달을 여는 함수
 const showQuestDetails = (quest) => {
-  // 모달 내용을 바꾸기 전에 잠시 닫아서 애니메이션을 다시 트리거합니다.
   isModalVisible.value = false;
-
   nextTick(() => {
     selectedQuestForModal.value = quest;
     modalContentType.value = 'questDetails';
@@ -209,138 +267,216 @@ const closeModal = () => {
 </script>
 
 <style scoped>
+/* 페이지 레이아웃 */
 .quest-map-page {
+  font-family: "Pretendard", sans-serif;
   width: 100%;
-  height: 100vh; /* Full viewport height */
+  flex-grow: 1; /* 부모 높이 채움 */
   display: flex;
   flex-direction: column;
+  background-color: #f5f7fb;
+  padding: 24px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .content-container {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  position: relative;
+  height: 100%;
+  min-height: 0; /* Flexbox 버그 방지 */
 }
 
-.map-section {
+/* 지도 카드 래퍼 (바텀시트의 부모 기준점) */
+.map-card-wrapper {
   flex-grow: 1;
-  position: relative; /* For map legend positioning */
-}
-
-.map-board {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border: none; /* No border for full-screen map */
-  padding: 0;
-}
-
-.map-legend {
-  position: absolute;
-  z-index: 10;
-  top: 20px; /* Moved to top */
-  right: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 10px;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column; /* Vertical legend */
-  gap: 8px;
-  font-size: 12px;
-  color: #334155;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border: 2px solid #334155;
-  border-radius: 50%;
-}
-.dot.yellow { background: #fbbf24; }
-.dot.green { background: #22c55e; }
-
-/* Styles for content inside the bottom sheet */
-.sheet-content {
-  padding: 0 20px 20px 20px;
-}
-
-.section-title {
-  font-size: 18px;
-  margin-bottom: 20px;
-}
-
-.quest-list {
+  position: relative; /* 중요: 자식 absolute 요소들의 기준 */
+  width: 100%;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden; /* 중요: 바텀시트가 사이드바 쪽으로 넘치지 않게 자름 */
+  border: 1px solid #eef2ff;
   display: flex;
   flex-direction: column;
-  gap: 15px;
 }
-/* ... (All other specific styles like .quest-card, .location-card, etc., remain largely the same) */
-.quest-card {
+
+/* 지도 프레임 */
+.map-frame {
+  flex-grow: 1; /* 지도가 빈 공간을 모두 차지 */
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* 지도 컴포넌트 */
+:deep(.map-component),
+.map-component {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ----------------------------------------------------- */
+/* ★ 바텀 시트 스타일 재정의 (적절한 높이, 클릭 가능) */
+/* ----------------------------------------------------- */
+
+/* 1. 바텀시트 컨테이너 */
+/* 1. 바텀시트 컨테이너 */
+:deep(.bottom-sheet-container),
+.map-bottom-sheet {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 100;
+  pointer-events: auto !important; /* 전체 영역 클릭 활성화 */
+}
+
+/* 2. 어두운 배경 (오버레이) */
+:deep(.sheet-overlay) {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 101;
+  pointer-events: auto !important; /* 오버레이 클릭으로 닫기 가능 */
+}
+
+/* 3. 실제 올라오는 하얀색 시트 (내용물) */
+:deep(.sheet-content-wrapper) {
+  position: absolute !important;
+  top: auto !important;
+  bottom: 0 !important;
+  left: 0;
+  width: 100% !important;
+  max-width: none !important;
+  height: 50vh !important; /* 화면의 50% 높이로 적절하게 조정 */
+  max-height: none !important;
+  
+  z-index: 102; /* 오버레이보다 높게 */
+  
+  /* 스타일 */
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  background-color: white;
+  
+  /* 클릭 활성화 */
+  pointer-events: auto !important;
+  
+  /* 부드러운 애니메이션 */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* 스크롤 가능하도록 */
+  overflow: hidden;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border: 4px solid #1e293b;
-  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
-  color: white;
-  cursor: pointer;
-  transition: transform 0.1s;
+  flex-direction: column;
 }
 
-.quest-card:active {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px rgba(0,0,0,0.2);
+/* 닫힌 상태 */
+:deep(.bottom-sheet-container:not(.is-open) .sheet-content-wrapper) {
+  transform: translateY(100%);
 }
 
-.bg-red { background-color: #ef4444; }
-.bg-blue { background-color: #3b82f6; }
-.bg-green { background-color: #22c55e; }
-.bg-purple { background-color: #a855f7; }
-.border-l-red { border-left-color: #ef4444; }
-.border-l-blue { border-left-color: #3b82f6; }
-.border-l-green { border-left-color: #22c55e; }
-.border-l-purple { border-left-color: #a855f7; }
-.bg-gray { background-color: #6b7280; }
+/* 열린 상태 */
+:deep(.bottom-sheet-container.is-open .sheet-content-wrapper) {
+  transform: translateY(0);
+}
 
-.quest-info { display: flex; align-items: center; gap: 20px; }
-.quest-icon { font-size: 24px; background: rgba(255, 255, 255, 0.2); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(0, 0, 0, 0.2); border-radius: 4px; }
-.quest-text { display: flex; flex-direction: column; gap: 8px; }
-.quest-name { font-size: 14px; text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3); }
-.quest-sub { font-size: 12px; opacity: 0.9; }
-.quest-status { display: flex; align-items: center; gap: 15px; }
-.percentage-badge { background: #fbbf24; color: black; border: 2px solid black; padding: 6px 10px; font-size: 10px; border-radius: 20px; box-shadow: 2px 2px 0px rgba(0,0,0,0.3); }
+/* ----------------------------------------------------- */
 
-.arrow-btn { background: transparent; border: none; color: white; font-family: inherit; font-size: 24px; cursor: pointer; transition: transform 0.3s ease; }
-.arrow-btn.expanded { transform: rotate(180deg); }
+/* 지도 위 범례 (Legend) */
+.map-legend {
+  position: absolute;
+  top: 24px; right: 24px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex; flex-direction: column; gap: 10px;
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  min-width: 140px;
+}
+.legend-header { font-size: 13px; font-weight: 700; color: #94a3b8; margin-bottom: 4px; }
+.legend-item { display: flex; align-items: center; gap: 10px; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5); }
+.status-dot.yellow { background: #fbbf24; }
+.status-dot.green { background: #22c55e; }
+.legend-item .label { font-size: 14px; color: #334155; font-weight: 500; }
 
-.location-list { padding: 10px; background-color: #f1f5f9; margin: 0 5px 15px 5px; border: 4px solid #1e293b; box-shadow: 6px 6px 0px rgba(0,0,0,0.2); }
-.location-card { padding: 12px 15px; background: white; border-bottom: 2px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #334155; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; border-left: 8px solid transparent; min-height: 50px; }
-.location-card:active { transform: translate(-2px, -2px); box-shadow: 3px 3px 0px rgba(0,0,0,0.1); }
-.location-card:last-child { border-bottom: none; }
-.location-quest-count { font-size: 12px; color: #64748b; background: #e2e8f0; padding: 4px 8px; border-radius: 12px; cursor: pointer; transition: background-color 0.2s; }
-.location-quest-count:hover { background-color: #cbd5e1; color: #1e293b; }
+/* 시트 내부 스타일 */
+.sheet-content { padding: 24px; background-color: #fff; height: 100%; overflow-y: auto; }
+.sheet-header { margin-bottom: 24px; }
+.header-top-row { display: flex; justify-content: space-between; align-items: flex-start; }
+.btn-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8; padding: 4px; }
+.btn-close:hover { color: #64748b; }
 
-.nested-quest-list { display: flex; flex-direction: column; gap: 5px; margin-top: 15px; }
-.nested-quest-item { font-size: 14px; color: #475569; padding: 10px; border-radius: 5px; background-color: #f8fafc; border: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
-.nested-quest-item.no-quests { justify-content: center; color: #94a3b8; }
-.quest-title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; padding-right: 10px; }
-.quest-actions { display: flex; gap: 8px; flex-shrink: 0; }
-.quest-action-btn { border: none; padding: 4px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; transition: background-color 0.2s; }
-.details-btn { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
-.details-btn:hover { background-color: #e2e8f0; }
-.accept-btn { background-color: #3b82f6; color: white; border: 1px solid #2563eb; }
-.accept-btn:hover { background-color: #2563eb; }
-.nested-quest-item:last-child { border-bottom: none; }
+.badge { display: inline-flex; align-items: center; background: #e0e7ff; color: #3730a3; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
+.badge-dot { width: 6px; height: 6px; background-color: #4f46e5; border-radius: 50%; margin-right: 6px; }
+.section-title { font-size: 20px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; margin: 0; }
 
-.slide-fade-enter-active { transition: all 0.3s ease-out; }
-.slide-fade-leave-active { transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1); }
-.slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(-10px); opacity: 0; }
+/* 퀘스트 리스트 스타일 */
+.quest-list { display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px; }
+.quest-card { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #fff; border: 1px solid #f1f5f9; border-radius: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); cursor: pointer; transition: all 0.2s ease; position: relative; overflow: hidden; }
+.quest-card:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08); border-color: #e2e8f0; }
+.quest-card.is-active { border-color: #3b82f6; background-color: #eff6ff; }
+.quest-card.accent-red::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #ef4444; }
+.quest-card.accent-blue::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #3b82f6; }
+.quest-card.accent-gray::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #94a3b8; }
+.card-left { display: flex; align-items: center; gap: 16px; }
+.quest-icon-box { width: 48px; height: 48px; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.quest-name { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+.quest-sub { font-size: 13px; color: #64748b; }
+.accent-text { color: #3b82f6; font-weight: 600; }
+.card-right { display: flex; align-items: center; gap: 16px; }
+.arrow-btn { background: transparent; border: none; color: #94a3b8; cursor: pointer; transition: transform 0.3s ease; padding: 4px; }
+.arrow-btn.expanded { transform: rotate(180deg); color: #3b82f6; }
+
+.location-list-container { margin-top: -8px; margin-bottom: 8px; padding-left: 24px; }
+.location-list-connector { width: 2px; height: 16px; background: #e2e8f0; margin-left: 23px; margin-bottom: 4px; }
+.location-list { background: #f8fafc; border-radius: 12px; padding: 8px; border: 1px solid #e2e8f0; }
+.location-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+.location-item:hover { background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.location-info { display: flex; align-items: center; gap: 10px; }
+.location-name { font-size: 14px; font-weight: 500; color: #334155; }
+.bullet-point { width: 8px; height: 8px; border-radius: 2px; }
+.dot-red { background: #fca5a5; }
+.dot-blue { background: #93c5fd; }
+.dot-green { background: #86efac; }
+.dot-purple { background: #d8b4fe; }
+.quest-count-badge { font-size: 12px; color: #64748b; background: #e2e8f0; padding: 4px 8px; border-radius: 6px; }
+
+/* Modal & Transition */
+.modal-inner { padding: 10px; }
+.modal-header h3 { font-size: 20px; font-weight: 800; color: #1e293b; margin: 0 0 4px 0; }
+.modal-subtitle { font-size: 14px; color: #64748b; }
+.nested-quest-list { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
+.empty-state { text-align: center; padding: 40px 0; color: #94a3b8; }
+.nested-quest-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; transition: border-color 0.2s; }
+.nested-quest-item:hover { border-color: #cbd5e1; }
+.quest-title-text { font-weight: 600; color: #334155; font-size: 15px; }
+.quest-actions { display: flex; gap: 8px; }
+.btn-text { background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; font-weight: 500; }
+.btn-text:hover { color: #334155; }
+.btn-primary-sm { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.btn-primary-sm:hover { background: #1d4ed8; }
+.quest-detail-content { margin-top: 24px; }
+.detail-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+.detail-desc { font-size: 15px; color: #4b5563; line-height: 1.6; margin-bottom: 24px; }
+.detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.detail-box { background: #f1f5f9; padding: 12px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; gap: 4px; }
+.detail-box .label { font-size: 12px; color: #64748b; }
+.detail-box .value { font-size: 15px; font-weight: 700; color: #334155; }
+.detail-box .value.xp { color: #8b5cf6; }
+.detail-box .value.point { color: #f59e0b; }
+.slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s ease; }
+.slide-fade-enter-from, .slide-fade-leave-to { opacity: 0; transform: translateY(-10px); }
 </style>

@@ -1,319 +1,279 @@
 <template>
-  <div class="page">
-    
-    <div class="cloud cloud-1"></div>
-    <div class="cloud cloud-2"></div>
-    <div class="cloud cloud-3"></div>
-    <div class="cloud cloud-4"></div>
-    <div class="cloud cloud-5"></div>
-
-    
-    <main class="hero">
-      <header class="hero-header">
-        <span class="hero-logo">🗺️ MYTRIPQUEST</span>
-      </header>
-
-      <section class="hero-center">
-        <p class="hero-label-top">TRAVEL QUEST</p>
-
-        <h1 class="hero-title">
-          MYTRIPQUEST
-          <span class="hero-title-sub">COIN</span>
+    <main class="main-content">
+      <section class="text-section">
+        <div class="badge">
+          <span class="badge-dot"></span> TEXTOK
+        </div>
+        
+        <h1 class="main-title">
+          MyTripQuest<br />
+          여행에서 또다른 즐거움이 생기다
         </h1>
-
-        <p class="hero-desc">
-          여행하며 미션을 완료하고 코인을 획득하세요!<br />
-          한국의 아름다운 도시를 탐험하고 캐릭터를 꾸며보세요! 👾
+        
+        <p class="sub-desc">
+          📍 위치 기반 퀘스트로 여행을 더 흥미롭게<br /><br />
+          🗺️ 사용자가 직접 참여하는 여행 미션<br /><br />
+          🎉 즐기면서 완성하는 나만의 여행 기록
         </p>
 
-        
-        <div class="hero-bottom">
-            <div class="hero-chip" @click="goNext">
-            START
-            </div>
+        <div class="stats-row">
+          <div class="stat-item">
+            <strong class="stat-num">1,000+</strong>
+            <span class="stat-label">누적 사용자</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <strong class="stat-num">3,200+</strong>
+            <span class="stat-label">완료된 퀘스트</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <strong class="stat-num">850+</strong>
+            <span class="stat-label">등록된 여행 미션</span>
+          </div>
         </div>
+
+        <button class="btn-cta" @click="handleCtaClick">
+          {{ isLoggedIn ? '여행 시작하기 🚀' : '로그인 하러가기 →' }}
+        </button>
+      </section>
+
+      <section class="image-section">
+        <img 
+          :src="heroImage" 
+          alt="Travel Image" 
+          class="hero-image"
+        />
       </section>
     </main>
-  </div>
 </template>
 
-
 <script setup>
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth' // Auth 스토어 import
+import heroImage from '@/assets/images/main-hero.png';
 
 const router = useRouter()
+const authStore = useAuthStore()
 
-const goNext = () => {
-  router.push('/main-menu')
+// 로그인 여부 확인
+const isLoggedIn = computed(() => !!authStore.token)
+
+// 버튼 클릭 핸들러
+const handleCtaClick = () => {
+  if (isLoggedIn.value) {
+    // 로그인이 되어 있다면 -> 여행 지도(퀘스트 맵)로 이동
+    router.push('/quest-map')
+  } else {
+    // 로그인이 안 되어 있다면 -> 로그인 페이지로 이동
+    router.push('/login')
+  }
 }
 </script>
 
 <style scoped>
-
-.page {
-  width: 100%;
-  min-height: 100vh;
-  overflow: hidden;
-  position: relative;
-
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-
-  
-  background: linear-gradient(
-    180deg,
-    #4d2aa8 0%,
-    #7c3bbf 20%,
-    #ff5fa2 45%,
-    #ff975c 70%,
-    #ffe6a0 100%
-  );
-}
-
-
-.hero {
+/* --- 메인 콘텐츠 (PC 기본) --- */
+.main-content {
   flex: 1;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 32px 40px 48px;
-  position: relative;
-}
-
-
-.hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(#ffffffcc 1px, transparent 1px),
-    radial-gradient(#ffffff88 1px, transparent 1px);
-  background-size: 80px 80px, 120px 120px;
-  background-position: 10px 10px, 40px 40px;
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-
-.cloud {
-  position: absolute;
-  width: 160px;
-  height: 60px;
-  background: #ffffff;
-  border-radius: 40px;
-  box-shadow:
-    30px 10px 0 #ffffff,
-    60px 0 0 #ffffff;
-  opacity: 0.9;
-}
-
-.cloud-1 { top: 12%; left: 8%; transform: scale(0.9); }
-.cloud-2 { top: 18%; right: 10%; transform: scale(0.8); }
-.cloud-3 { top: 35%; left: 18%; transform: scale(0.7); }
-.cloud-4 { top: 42%; right: 20%; transform: scale(0.6); }
-.cloud-5 { bottom: 12%; left: 60%; transform: scale(0.5); }
-
-
-.hero-header {
-  position: relative;
-  z-index: 1;
   display: flex;
-  justify-content: flex-start;
+  background-color: #f5f7fb;
+  height: 100%; /* 부모 높이 상속 */
+  overflow: hidden; /* 스크롤 방지 (필요 시 제거) */
 }
 
-.hero-logo {
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: #00000066;
-  color: #ffffff;
-  font-size: 14px;
-}
-
-.hero-center {
-  position: relative;
-  z-index: 1;
-
-  height: calc(100vh - 120px);
-  max-height: 800px;
-  margin-top: 12px;
-
+.text-section {
+  flex: 1;
+  padding: 80px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  text-align: center;
+  max-width: 720px;
 }
 
-.hero-label-top {
-  font-size: 14px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: #ffe9ff;
-  margin-bottom: 12px;
-}
-
-.hero-title {
-  margin: 0 0 16px;
-  font-size: clamp(40px, 7vw, 80px);
-  font-weight: 900;
-  text-transform: uppercase;
-  color: #ffffff;
-
-  text-shadow:
-    0 4px 0 #2b135b,
-    0 8px 0 #16092e;
-}
-
-.hero-title-sub {
-  display: block;
-  margin-top: 8px;
-  font-size: 0.5em;
-  letter-spacing: 0.3em;
-  color: #ffe56f;
-  text-shadow:
-    0 3px 0 #2b135b,
-    0 6px 0 #16092e;
-}
-
-.hero-desc {
-  margin: 12px 0 24px;
-  font-size: 15px;
-  line-height: 1.8;
-  color: #fff7ff;
-}
-
-.hero-chip {
+.badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-
-  margin-bottom: 40px;
-  padding: 10px 32px;
-  border-radius: 999px;
-
-  background: #ffffffee;
-  color: #3c1a6a;
-  font-size: 14px;
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
   font-weight: 700;
-  text-transform: uppercase;
-
-  border: 3px solid #000000;
-  box-shadow: 0 6px 0 #9d4b3b;
+  margin-bottom: 28px;
+  width: fit-content;
+}
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #4f46e5;
+  border-radius: 50%;
+  margin-right: 6px;
 }
 
-
-.hero-bottom {
-  margin-top: 120px;
+.main-title {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1.4;
+  margin-bottom: 32px;
+  color: #1e293b;
+  letter-spacing: -0.5px;
 }
 
-@media (max-width: 640px) {
-  .hero-bottom {
-    margin-top: 60px;
-  }
+.sub-desc {
+  font-size: 17px;
+  line-height: 1.7;
+  color: #4b5563;
+  margin-bottom: 60px;
+  font-weight: 400;
+  word-break: keep-all; /* 한글 줄바꿈 개선 */
 }
 
-
-.page {
-  font-family: 'Press Start 2P', monospace;
-  image-rendering: pixelated;
+.stats-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 80px;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 40px;
+}
+.stat-item:last-child {
+  padding-right: 0;
+}
+.stat-num {
+  font-size: 32px;
+  font-weight: 800;
+  color: #2563eb;
+  letter-spacing: -1px;
+}
+.stat-label {
+  font-size: 15px;
+  color: #6b7280;
+  font-weight: 500;
+}
+.stat-divider {
+  width: 1px;
+  height: 40px;
+  background-color: #d1d5db;
+  margin-right: 40px;
 }
 
-.hero-title {
-  font-family: 'Press Start 2P', monospace;
-  letter-spacing: 0.15em;
-  text-shadow:
-    3px 3px 0 #2b135b,
-    6px 6px 0 #16092e;
+.btn-cta {
+  background-color: #1e293b;
+  color: white;
+  padding: 18px 40px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  width: fit-content;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+.btn-cta:hover {
+  background-color: #374151;
 }
 
-.hero-title-sub {
-  font-family: 'Press Start 2P', monospace;
+.image-section {
+  flex: 0.8; /* 이미지 영역 비율 */
+  position: relative;
+  overflow: hidden;
+}
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.hero-desc,
-.hero-label-top {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 12px;
-}
-
-.hero-chip {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  border: 3px solid black;
-  box-shadow:
-    4px 4px 0 #000;
-  background: #fff;
-}
-
-.feature-panel {
-  border: 4px solid black;
-  box-shadow:
-    8px 8px 0 #000;
-  background: #fff;
-}
-
-.feature-card {
-  border: 3px solid black;
-  box-shadow:
-    4px 4px 0 #000;
-}
-
-.feature-title,
-.feature-desc {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 11px;
-}
-
-.cloud {
-  filter: pixelate(2px);
-  image-rendering: pixelated;
-}
-
-
+/* ---------------------------------------------------- */
+/* ★ 태블릿 및 작은 노트북 (1024px 이하) 반응형 수정 ★ */
+/* ---------------------------------------------------- */
 @media (max-width: 1024px) {
-  .hero {
-    padding: 24px 18px 32px;
+  .main-content {
+    flex-direction: column; /* 세로 배치로 변경 */
+    height: auto; /* 내용만큼 늘어나게 */
+    overflow-y: auto; /* 세로 스크롤 허용 */
   }
 
-  .feature-panel {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* 이미지 섹션: 상단 배치 및 높이 조절 */
+  .image-section {
+    order: -1; /* 순서 맨 위로 */
+    width: 100%;
+    height: 40vh; /* 화면 높이의 40%만 차지 */
+    flex: none;
+  }
+
+  /* 텍스트 섹션: 중앙 정렬 및 여백 축소 */
+  .text-section {
+    padding: 40px 24px 60px 24px;
+    align-items: center; /* 가로 중앙 정렬 */
+    text-align: center; /* 텍스트 중앙 정렬 */
+    max-width: 100%;
+  }
+
+  /* 타이틀 크기 줄임 */
+  .main-title {
+    font-size: 32px; 
+    margin-bottom: 20px;
+  }
+
+  .badge {
+    margin-bottom: 20px;
+  }
+
+  .sub-desc {
+    font-size: 15px;
+    margin-bottom: 40px;
+  }
+
+  /* 통계 영역 간격 및 정렬 수정 */
+  .stats-row {
+    margin-bottom: 40px;
+    justify-content: center; /* 중앙 정렬 */
+  }
+  
+  .stat-item {
+    padding-right: 0;
+    align-items: center; /* 스탯 텍스트 중앙 */
+  }
+  
+  .stat-divider {
+    margin: 0 20px; /* 구분선 간격 축소 */
+  }
+  
+  .stat-num {
+    font-size: 24px;
+  }
+  
+  .stat-label {
+    font-size: 13px;
   }
 }
 
-@media (max-width: 640px) {
-  .cloud { display: none; }
-
-  .hero-center {
-    height: auto;
-    padding-top: 40px;
-    padding-bottom: 40px;
+/* 모바일 (600px 이하) 추가 최적화 */
+@media (max-width: 600px) {
+  .image-section {
+    height: 35vh; /* 이미지를 좀 더 줄임 */
   }
-
-  .feature-panel {
-    grid-template-columns: 1fr;
+  
+  .main-title {
+    font-size: 28px;
+  }
+  
+  .stats-row {
+    gap: 10px;
+  }
+  
+  .stat-divider {
+    margin: 0 10px;
+  }
+  
+  .btn-cta {
+    width: 100%; /* 버튼 꽉 차게 */
   }
 }
-
-.page::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      rgba(255,255,255,0.04) 0px,
-      rgba(255,255,255,0.04) 1px,
-      transparent 1px,
-      transparent 4px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(255,255,255,0.04) 0px,
-      rgba(255,255,255,0.04) 1px,
-      transparent 1px,
-      transparent 4px
-    );
-  pointer-events: none;
-}
-
 </style>
