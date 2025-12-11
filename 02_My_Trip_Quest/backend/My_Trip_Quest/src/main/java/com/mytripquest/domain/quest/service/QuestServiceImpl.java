@@ -182,6 +182,21 @@ public class QuestServiceImpl implements QuestService {
         userQuestRepository.save(newUserQuest);
     }
 
+    @Override
+    public void forfeitQuest(long questId, long userId) {
+        // 1. 사용자 퀘스트 정보 조회
+        UserQuest userQuest = userQuestRepository.findByUserIdAndQuestId(userId, questId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_ACCEPTED)); // 수락한 적 없는 퀘스트
+
+        // 2. 퀘스트 상태 확인
+        if (userQuest.getStatus() != QuestStatus.ACCEPTED) {
+            throw new BusinessException(ErrorCode.QUEST_NOT_IN_FORFEITABLE_STATE); // 이미 진행 중이거나 완료된 퀘스트
+        }
+
+        // 3. 퀘스트 포기 처리 (레코드 삭제)
+        userQuestRepository.delete(userQuest);
+    }
+
     /**
      * 사용자가 퀘스트를 완료 처리합니다.
      * @param questId 완료할 퀘스트 ID
