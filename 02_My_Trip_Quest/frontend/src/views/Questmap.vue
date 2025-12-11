@@ -117,8 +117,8 @@
                   <button v-if="quest.questTypeId === 1" class="btn-primary-sm" @click.stop="handleCompleteArrival(quest.questId)">
                     완료하기
                   </button>
-                  <button v-else-if="quest.questTypeId === 2" class="btn-primary-sm" @click.stop="handleCompletePhoto(quest.questId)">
-                    사진찍기
+                  <button v-else-if="quest.questTypeId === 2" class="btn-primary-sm" @click.stop="triggerFileInput(quest.questId)">
+                    사진 업로드
                   </button>
                 </template>
 
@@ -137,6 +137,17 @@
                 </template>
               </div>
             </div>
+          </div>
+          
+          <!-- Hidden file input for photo quests -->
+          <input type="file" ref="fileInputRef" @change="handleFileSelect" accept="image/*" style="display: none;">
+
+          <!-- "내 위치 가져오기" button for photo quests without metadata -->
+          <div v-if="showGeolocationButton && selectedQuestForModal?.questTypeId === 2" class="manual-location-action">
+              <p>사진에서 위치 정보를 찾을 수 없습니다.</p>
+              <button class="btn-primary-sm" @click="handleGetLocationAndUpload(selectedQuestForModal.questId)">
+                내 현재 위치로 인증하기
+              </button>
           </div>
         </div>
 
@@ -181,6 +192,7 @@ import BaseModal from "@/components/ui/BaseModal.vue";
 import BottomSheet from "@/components/ui/BottomSheet.vue";
 import api from "@/api";
 import { completeArrivalQuest } from "@/api/quest";
+import { completePhotoQuest } from "@/api/photoQuest"; // ★ Add this import
 
 // --- State ---
 const isSheetOpen = ref(false);
@@ -195,6 +207,11 @@ const isModalVisible = ref(false);
 const modalContentType = ref('');
 const selectedQuestForModal = ref(null);
 const selectedLocationForModal = ref(null);
+
+// ★ New states for photo quest
+const fileInputRef = ref(null); // Reference to the hidden file input
+const selectedImageFile = ref(null); // Temporarily store the selected image file
+const showGeolocationButton = ref(false); // Controls visibility of "Get My Location" button
 
 // --- Methods ---
 const handleAreaClick = (areaCode) => {
@@ -289,7 +306,6 @@ const handleCompleteArrival = async (questId) => {
       try {
         await completeArrivalQuest(questId, latitude, longitude);
         alert(`퀘스트 #${questId} 완료!`);
-        // 퀘스트 목록을 새로고침하여 버튼 상태를 업데이트합니다.
         if (selectedLocationForModal.value) {
           await fetchQuestsForModal(selectedLocationForModal.value);
         }
@@ -305,9 +321,73 @@ const handleCompleteArrival = async (questId) => {
   );
 };
 
-// '사진찍기' 퀘스트를 위한 임시 핸들러
-const handleCompletePhoto = (questId) => {
-  alert(`'사진찍기' 퀘스트(${questId})는 아직 구현되지 않았습니다.`);
+// ★ New methods for photo quest
+const triggerFileInput = (questId) => {
+  selectedQuestForModal.value = { ...selectedQuestForModal.value, questId: questId }; // Store current questId
+  fileInputRef.value.click();
+};
+
+const uploadPhotoForQuest = async (questId, imageFile, latitude = null, longitude = null) => {
+  try {
+    showGeolocationButton.value = false; // Reset button visibility
+    await completePhotoQuest(questId, imageFile, latitude, longitude);
+    alert(`사진 퀘스트 #${questId} 완료!`);
+    if (selectedLocationForModal.value) {
+      await fetchQuestsForModal(selectedLocationForModal.value);
+    }
+    // Reset temporary states
+    selectedImageFile.value = null;
+  } catch (error) {
+    console.error(`Error completing photo quest:`, error);
+    const errorMessage = error.response?.data?.message || error.message;
+
+    if (error.response?.data?.code === 'PHOTO_METADATA_MISSING') {
+      alert("사진에 위치 정보가 없습니다. 현재 위치로 인증하시겠습니까?");
+      selectedImageFile.value = imageFile; // Store file for re-upload with manual location
+      showGeolocationButton.value = true;
+    } else {
+      alert(`사진 퀘스트 완료 실패: ${errorMessage}`);
+      // Reset temporary states
+      selectedImageFile.value = null;
+      showGeolocationButton.value = false;
+    }
+  }
+};
+
+const handleFileSelect = async (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    // Make sure we have the correct questId in selectedQuestForModal
+    if (selectedQuestForModal.value && selectedQuestForModal.value.questId) {
+      await uploadPhotoForQuest(selectedQuestForModal.value.questId, file);
+    } else {
+      alert("퀘스트 정보가 불충분합니다. 다시 시도해주세요.");
+    }
+  }
+  // Clear file input regardless of selection to allow re-selection of the same file
+  event.target.value = null;
+};
+
+const handleGetLocationAndUpload = async (questId) => {
+  if (!navigator.geolocation) {
+    alert("이 브라우저에서는 위치 정보 서비스를 사용할 수 없습니다.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+      if (selectedImageFile.value) {
+        await uploadPhotoForQuest(questId, selectedImageFile.value, latitude.toString(), longitude.toString());
+      } else {
+        alert("업로드할 사진 파일을 찾을 수 없습니다. 다시 시도해주세요.");
+      }
+    },
+    (error) => {
+      console.error("Error getting location for photo upload:", error);
+      alert(`위치 정보를 가져오는 데 실패했습니다: ${error.message}`);
+    }
+  );
 };
 
 const showQuestDetails = (quest) => {
@@ -325,6 +405,9 @@ const closeModal = () => {
   selectedLocationForModal.value = null;
   locationQuests.value = [];
   modalContentType.value = '';
+  // ★ Reset photo quest specific states
+  selectedImageFile.value = null;
+  showGeolocationButton.value = false;
 };
 </script>
 
