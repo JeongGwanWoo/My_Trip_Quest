@@ -185,6 +185,12 @@
                 <span class="value point">{{ selectedQuestForModal.rewardPoints }} P</span>
               </div>
             </div>
+
+            <div class="detail-actions" v-if="selectedQuestForModal.status === 'ACCEPTED' || selectedQuestForModal.status === 'IN_PROGRESS'">
+              <button class="btn-danger-sm" @click="handleForfeitQuest(selectedQuestForModal.questId)">
+                퀘스트 포기하기
+              </button>
+            </div>
           </div>
         </div>
 
@@ -203,7 +209,7 @@ import MapComponent from "@/components/map/MapComponent.vue";
 import BaseModal from "@/components/ui/BaseModal.vue";
 import BottomSheet from "@/components/ui/BottomSheet.vue";
 import api from "@/api";
-import { completeArrivalQuest } from "@/api/quest";
+import { completeArrivalQuest, forfeitQuest } from "@/api/quest";
 import { completePhotoQuest } from "@/api/photoQuest"; // ★ Add this import
 
 // --- State ---
@@ -428,6 +434,23 @@ const showQuestDetails = (quest) => {
     modalContentType.value = 'questDetails';
     isModalVisible.value = true;
   });
+};
+
+const handleForfeitQuest = async (questId) => {
+  if (confirm("정말 이 퀘스트를 포기하시겠습니까?")) {
+    try {
+      await forfeitQuest(questId);
+      alert("퀘스트를 포기했습니다.");
+      const locationToRefresh = selectedLocationForModal.value;
+      closeModal();
+      if (locationToRefresh) {
+        await fetchQuestsForModal(locationToRefresh);
+      }
+    } catch (error) {
+      console.error(`Error forfeiting quest:`, error);
+      alert(`퀘스트 포기에 실패했습니다: ${error.response?.data?.message || error.message}`);
+    }
+  }
 };
 
 const closeModal = () => {
@@ -667,19 +690,25 @@ const closeModal = () => {
   border-color: #cbd5e1;
 }
 
-.manual-location-action {
-  margin-top: 16px;
-  padding: 16px;
-  background-color: #f8fafc;
-  border-radius: 12px;
-  text-align: center;
+.btn-danger-sm {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-danger-sm:hover {
+  background: #fecaca;
+  border-color: #fca5a5;
 }
 
-.quest-error-message {
-  color: #ef4444;
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 12px;
+.detail-actions {
+  margin-top: 24px;
+  text-align: center;
 }
 
 .quest-detail-content { margin-top: 24px; }
