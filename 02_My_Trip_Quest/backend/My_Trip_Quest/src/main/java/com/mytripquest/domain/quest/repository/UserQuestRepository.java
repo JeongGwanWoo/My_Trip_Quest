@@ -23,4 +23,6 @@ public interface UserQuestRepository {
     void delete(UserQuest userQuest);
     List<InProgressQuestDto> findUserQuestsByStatus(@Param("userId") Long userId, @Param("status") QuestStatus status);
 
+    List<UserQuest> findByUserIdAndQuestIds(@Param("userId") long userId, @Param("questIds") List<Long> questIds);
+
 }

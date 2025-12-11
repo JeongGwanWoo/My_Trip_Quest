@@ -5,7 +5,7 @@ import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.QuestAcceptRequestDto;
-import com.mytripquest.domain.quest.entity.Quest;
+import com.mytripquest.domain.quest.dto.QuestInfoWithStatusDto;
 import com.mytripquest.domain.quest.service.QuestService;
 import com.mytripquest.domain.user.repository.UserMapper;
 import com.mytripquest.global.ApiResponse;
@@ -84,8 +84,9 @@ public class QuestController {
      * @return 해당 관광지의 퀘스트 리스트
      */
     @GetMapping("/locations/{locationId}")
-    public ResponseEntity<ApiResponse<List<Quest>>> getQuestsByLocation(@PathVariable Long locationId) {
-        List<Quest> quests = questService.getQuestsByLocationId(locationId);
+    public ResponseEntity<ApiResponse<List<QuestInfoWithStatusDto>>> getQuestsByLocation(@PathVariable Long locationId) {
+        Long userId = getCurrentUserId();
+        List<QuestInfoWithStatusDto> quests = questService.getQuestsByLocationId(locationId, userId);
         return ResponseEntity.ok(ApiResponse.success(quests));
     }
 

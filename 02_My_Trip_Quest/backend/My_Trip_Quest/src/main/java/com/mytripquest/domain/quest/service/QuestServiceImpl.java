@@ -4,6 +4,7 @@ import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.ai.service.AIVisionService;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
+import com.mytripquest.domain.quest.dto.QuestInfoWithStatusDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
 import com.mytripquest.domain.quest.entity.Quest;
 import com.mytripquest.domain.quest.entity.QuestStatus;
@@ -104,8 +105,39 @@ public class QuestServiceImpl implements QuestService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Quest> getQuestsByLocationId(Long locationId) {
-        return questRepository.findQuestsByLocationId(locationId);
+    public List<QuestInfoWithStatusDto> getQuestsByLocationId(Long locationId, Long userId) {
+        // 1. 특정 관광지의 모든 퀘스트 목록 조회
+        List<Quest> quests = questRepository.findQuestsByLocationId(locationId);
+        if (quests.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. 퀘스트 ID 리스트 추출
+        List<Long> questIds = quests.stream().map(Quest::getQuestId).collect(Collectors.toList());
+
+        // 3. 사용자의 퀘스트 진행 상태 조회
+        List<UserQuest> userQuests = userQuestRepository.findByUserIdAndQuestIds(userId, questIds);
+        Map<Long, QuestStatus> questStatusMap = userQuests.stream()
+                .collect(Collectors.toMap(UserQuest::getQuestId, UserQuest::getStatus));
+
+        // 4. 퀘스트 정보와 상태를 합쳐 DTO 리스트 생성
+        return quests.stream().map(quest -> {
+            QuestStatus status = questStatusMap.get(quest.getQuestId());
+            return QuestInfoWithStatusDto.builder()
+                    .questId(quest.getQuestId())
+                    .locationId(quest.getLocationId())
+                    .questTypeId(quest.getQuestTypeId())
+                    .previousQuestId(quest.getPreviousQuestId())
+                    .difficulty(quest.getDifficulty())
+                    .title(quest.getTitle())
+                    .description(quest.getDescription())
+                    .rewardXp(quest.getRewardXp())
+                    .rewardPoints(quest.getRewardPoints())
+                    .requireGpsVerify(quest.isRequireGpsVerify())
+                    .isActive(quest.isActive())
+                    .status(status) // null일 경우 아직 시작하지 않은 퀘스트
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     /**

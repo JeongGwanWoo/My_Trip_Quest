@@ -91,4 +91,14 @@
         WHERE user_quest_id = #{userQuestId}
     </delete>
 
+    <select id="findByUserIdAndQuestIds" resultMap="userQuestMap">
+        SELECT *
+        FROM user_quests
+        WHERE user_id = #{userId}
+          AND quest_id IN
+        <foreach item="questId" collection="questIds" open="(" separator="," close=")">
+            #{questId}
+        </foreach>
+    </select>
+
 </mapper>
