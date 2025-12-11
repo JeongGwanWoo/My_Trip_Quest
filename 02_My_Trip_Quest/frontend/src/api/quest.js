@@ -8,7 +8,7 @@ import api from './index';
  * @returns {Promise<any>} API 응답 객체
  */
 export const completeArrivalQuest = (questId, latitude, longitude) => {
-  return api.post(`/api/quests/${questId}/complete/arrival`, {
+  return api.post(`/api/v1/quest-map/quests/${questId}/complete/arrival`, {
     latitude,
     longitude,
   });
