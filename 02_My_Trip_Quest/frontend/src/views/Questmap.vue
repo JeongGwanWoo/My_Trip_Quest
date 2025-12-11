@@ -111,7 +111,26 @@
               </div>
               <div class="quest-actions">
                 <button class="btn-text" @click.stop="showQuestDetails(quest)">상세보기</button>
-                <button class="btn-primary-sm" @click.stop="acceptQuest(quest.questId)">수락</button>
+                
+                <!-- 퀘스트 상태에 따른 동적 버튼 -->
+                <template v-if="quest.status === 'IN_PROGRESS'">
+                  <button v-if="quest.type === 'ARRIVAL'" class="btn-primary-sm" @click.stop="handleCompleteArrival(quest.questId)">
+                    완료하기
+                  </button>
+                  <button v-else-if="quest.type === 'PHOTO'" class="btn-primary-sm" @click.stop="handleCompletePhoto(quest.questId)">
+                    사진찍기
+                  </button>
+                </template>
+
+                <template v-else-if="quest.status === 'COMPLETED'">
+                   <button class="btn-primary-sm" disabled>완료됨</button>
+                </template>
+
+                <template v-else>
+                  <button class="btn-primary-sm" @click.stop="acceptQuest(quest.questId)">
+                    수락
+                  </button>
+                </template>
               </div>
             </div>
           </div>
@@ -157,6 +176,7 @@ import MapComponent from "@/components/map/MapComponent.vue";
 import BaseModal from "@/components/ui/BaseModal.vue";
 import BottomSheet from "@/components/ui/BottomSheet.vue";
 import api from "@/api";
+import { completeArrivalQuest } from "@/api/quest";
 
 // --- State ---
 const isSheetOpen = ref(false);
@@ -229,6 +249,7 @@ const fetchLocations = async (areaCode) => {
 const fetchQuestsForModal = async (location) => {
   try {
     const response = await api.get(`/api/v1/quest-map/locations/${location.locationId}`);
+    console.log('Quest list API response:', response.data.data); // 응답 데이터 구조 확인
     locationQuests.value = response.data.data;
     selectedLocationForModal.value = location;
     modalContentType.value = 'questList';
@@ -242,10 +263,47 @@ const acceptQuest = async (questId) => {
   try {
     await api.post(`/api/v1/quest-map/quests/${questId}/accept`);
     alert(`퀘스트 #${questId}를 수락했습니다!`);
+    // 퀘스트 목록을 새로고침하여 버튼 상태를 업데이트합니다.
+    if (selectedLocationForModal.value) {
+      await fetchQuestsForModal(selectedLocationForModal.value);
+    }
   } catch (error) {
     console.error(`Error accepting quest:`, error);
     alert(`실패: ${error.response?.data?.message || error.message}`);
   }
+};
+
+const handleCompleteArrival = async (questId) => {
+  if (!navigator.geolocation) {
+    alert("이 브라우저에서는 위치 정보 서비스를 사용할 수 없습니다.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+      try {
+        await completeArrivalQuest(questId, latitude, longitude);
+        alert(`퀘스트 #${questId} 완료!`);
+        // 퀘스트 목록을 새로고침하여 버튼 상태를 업데이트합니다.
+        if (selectedLocationForModal.value) {
+          await fetchQuestsForModal(selectedLocationForModal.value);
+        }
+      } catch (error) {
+        console.error(`Error completing arrival quest:`, error);
+        alert(`퀘스트 완료 실패: ${error.response?.data?.message || error.message}`);
+      }
+    },
+    (error) => {
+      console.error("Error getting location:", error);
+      alert(`위치 정보를 가져오는 데 실패했습니다: ${error.message}`);
+    }
+  );
+};
+
+// '사진찍기' 퀘스트를 위한 임시 핸들러
+const handleCompletePhoto = (questId) => {
+  alert(`'사진찍기' 퀘스트(${questId})는 아직 구현되지 않았습니다.`);
 };
 
 const showQuestDetails = (quest) => {
@@ -468,6 +526,23 @@ const closeModal = () => {
 .btn-text:hover { color: #334155; }
 .btn-primary-sm { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
 .btn-primary-sm:hover { background: #1d4ed8; }
+
+.btn-secondary-sm {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-secondary-sm:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
 .quest-detail-content { margin-top: 24px; }
 .detail-title { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
 .detail-desc { font-size: 15px; color: #4b5563; line-height: 1.6; margin-bottom: 24px; }
