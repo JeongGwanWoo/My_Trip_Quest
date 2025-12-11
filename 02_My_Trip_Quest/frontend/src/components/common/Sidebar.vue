@@ -114,8 +114,8 @@
             </div>
             <div class="more-menu-col">
               <h4 class="menu-header">법률</h4>
-              <a href="#">이용약관</a>
-              <a href="#">개인정보처리방침</a>
+              <router-link to="/terms">이용약관</router-link>
+              <router-link to="/privacy">개인정보처리방침</router-link>
               <a href="#">쿠키 정책</a>
             </div>
           </div>
