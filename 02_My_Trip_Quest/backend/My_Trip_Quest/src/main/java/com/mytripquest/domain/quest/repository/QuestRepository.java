@@ -42,4 +42,6 @@ public interface QuestRepository {
     int countTotalLocationsByArea(@Param("areaCode") String areaCode);
 
     Optional<LocationWithQuestCountDto> findLocationById(@Param("locationId") Long locationId);
+
+    Optional<Quest> findFirstByLocationIdAndQuestTypeIdOrderByQuestIdAsc(@Param("locationId") long locationId, @Param("questTypeId") int questTypeId);
 }

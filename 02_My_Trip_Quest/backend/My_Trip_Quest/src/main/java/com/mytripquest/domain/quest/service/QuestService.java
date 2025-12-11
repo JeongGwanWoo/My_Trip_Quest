@@ -9,6 +9,7 @@ import com.mytripquest.domain.quest.entity.Quest;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface QuestService {
@@ -17,7 +18,7 @@ public interface QuestService {
     List<QuestInfoWithStatusDto> getQuestsByLocationId(Long locationId, Long userId);
     void acceptQuest(long questId, long userId);
     void completeArrivalQuest(long questId, long userId, QuestCompleteRequestDto request);
-    void completePhotoQuest(long questId, long userId, MultipartFile imageFile) throws IOException;
+    void completePhotoQuest(long questId, long userId, MultipartFile imageFile, BigDecimal latitude, BigDecimal longitude) throws IOException;
     List<InProgressQuestDto> getInProgressQuests(Long userId);
 }
 

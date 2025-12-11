@@ -113,17 +113,21 @@
                 <button class="btn-text" @click.stop="showQuestDetails(quest)">상세보기</button>
                 
                 <!-- 퀘스트 상태에 따른 동적 버튼 -->
-                <template v-if="quest.status === 'IN_PROGRESS'">
-                  <button v-if="quest.type === 'ARRIVAL'" class="btn-primary-sm" @click.stop="handleCompleteArrival(quest.questId)">
+                <template v-if="quest.status === 'ACCEPTED' || quest.status === 'IN_PROGRESS'">
+                  <button v-if="quest.questTypeId === 1" class="btn-primary-sm" @click.stop="handleCompleteArrival(quest.questId)">
                     완료하기
                   </button>
-                  <button v-else-if="quest.type === 'PHOTO'" class="btn-primary-sm" @click.stop="handleCompletePhoto(quest.questId)">
+                  <button v-else-if="quest.questTypeId === 2" class="btn-primary-sm" @click.stop="handleCompletePhoto(quest.questId)">
                     사진찍기
                   </button>
                 </template>
 
                 <template v-else-if="quest.status === 'COMPLETED'">
                    <button class="btn-primary-sm" disabled>완료됨</button>
+                </template>
+
+                <template v-else-if="quest.status === 'FAILED'">
+                   <button class="btn-secondary-sm" disabled>실패</button>
                 </template>
 
                 <template v-else>
