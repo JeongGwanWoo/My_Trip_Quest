@@ -117,8 +117,12 @@
                   <button v-if="quest.questTypeId === 1" class="btn-primary-sm" @click.stop="handleCompleteArrival(quest.questId)">
                     완료하기
                   </button>
-                  <button v-else-if="quest.questTypeId === 2" class="btn-primary-sm" @click.stop="handleCompletePhoto(quest.questId)">
-                    사진찍기
+                  <button 
+                    v-else-if="quest.questTypeId === 2" 
+                    class="btn-primary-sm" 
+                    @click.stop="triggerFileInput(quest.questId)"
+                    :disabled="isUploading">
+                    {{ isUploading ? '업로드 중...' : '사진 업로드' }}
                   </button>
                 </template>
 
@@ -131,12 +135,31 @@
                 </template>
 
                 <template v-else>
-                  <button class="btn-primary-sm" @click.stop="acceptQuest(quest.questId)">
+                  <button 
+                    class="btn-primary-sm" 
+                    @click.stop="acceptQuest(quest.questId)"
+                    :disabled="isUploading">
                     수락
                   </button>
                 </template>
               </div>
             </div>
+          </div>
+
+          <!-- General Photo Quest Error Message -->
+          <div v-if="photoQuestError" class="quest-error-message">{{ photoQuestError }}</div>
+          
+          <!-- Hidden file input for photo quests -->
+          <input type="file" ref="fileInputRef" @change="handleFileSelect" accept="image/*" style="display: none;">
+
+          <!-- "내 위치 가져오기" button for photo quests without metadata -->
+          <div v-if="showGeolocationButton" class="manual-location-action">
+              <button 
+                class="btn-primary-sm" 
+                @click="handleGetLocationAndUpload()" 
+                :disabled="isUploading">
+                {{ isUploading ? '인증 중...' : '내 현재 위치로 인증하기' }}
+              </button>
           </div>
         </div>
 
@@ -181,6 +204,7 @@ import BaseModal from "@/components/ui/BaseModal.vue";
 import BottomSheet from "@/components/ui/BottomSheet.vue";
 import api from "@/api";
 import { completeArrivalQuest } from "@/api/quest";
+import { completePhotoQuest } from "@/api/photoQuest"; // ★ Add this import
 
 // --- State ---
 const isSheetOpen = ref(false);
@@ -195,6 +219,14 @@ const isModalVisible = ref(false);
 const modalContentType = ref('');
 const selectedQuestForModal = ref(null);
 const selectedLocationForModal = ref(null);
+
+// ★ New states for photo quest
+const fileInputRef = ref(null); // Reference to the hidden file input
+const selectedImageFile = ref(null); // Temporarily store the selected image file
+const showGeolocationButton = ref(false); // Controls visibility of "Get My Location" button
+const activePhotoQuestId = ref(null); // ID of the photo quest being processed
+const isUploading = ref(false); // Controls the loading state for uploads
+const photoQuestError = ref(null); // Stores error messages for photo quests
 
 // --- Methods ---
 const handleAreaClick = (areaCode) => {
@@ -289,7 +321,6 @@ const handleCompleteArrival = async (questId) => {
       try {
         await completeArrivalQuest(questId, latitude, longitude);
         alert(`퀘스트 #${questId} 완료!`);
-        // 퀘스트 목록을 새로고침하여 버튼 상태를 업데이트합니다.
         if (selectedLocationForModal.value) {
           await fetchQuestsForModal(selectedLocationForModal.value);
         }
@@ -305,9 +336,89 @@ const handleCompleteArrival = async (questId) => {
   );
 };
 
-// '사진찍기' 퀘스트를 위한 임시 핸들러
-const handleCompletePhoto = (questId) => {
-  alert(`'사진찍기' 퀘스트(${questId})는 아직 구현되지 않았습니다.`);
+// ★ Methods for photo quest, updated for reliability
+const triggerFileInput = (questId) => {
+  photoQuestError.value = null; // Clear previous errors
+  activePhotoQuestId.value = questId; // Store current questId
+  fileInputRef.value.click();
+};
+
+const uploadPhotoForQuest = async (questId, imageFile, latitude = null, longitude = null) => {
+  isUploading.value = true;
+  photoQuestError.value = null; // Clear previous errors
+  try {
+    showGeolocationButton.value = false; // Reset button visibility
+    await completePhotoQuest(questId, imageFile, latitude, longitude);
+    alert(`사진 퀘스트 #${questId} 완료!`);
+    if (selectedLocationForModal.value) {
+      await fetchQuestsForModal(selectedLocationForModal.value);
+    }
+    // Reset temporary states
+    selectedImageFile.value = null;
+    activePhotoQuestId.value = null;
+  } catch (error) {
+    console.error(`Error completing photo quest:`, error);
+    const errorMessage = error.response?.data?.message || error.message;
+
+    if (error.response?.data?.code === 'PHOTO_METADATA_MISSING') {
+      photoQuestError.value = "사진에 위치 정보가 없습니다. 현재 위치로 인증해주세요.";
+      selectedImageFile.value = imageFile; // Store file for re-upload with manual location
+      showGeolocationButton.value = true;
+    } else {
+      photoQuestError.value = `${errorMessage}`;
+      // Reset temporary states on general failure
+      selectedImageFile.value = null;
+      showGeolocationButton.value = false;
+      activePhotoQuestId.value = null;
+    }
+  } finally {
+    isUploading.value = false;
+  }
+};
+
+const handleFileSelect = async (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    if (activePhotoQuestId.value) {
+      await uploadPhotoForQuest(activePhotoQuestId.value, file);
+    } else {
+      photoQuestError.value = "퀘스트 정보가 없습니다. 다시 시도해주세요.";
+    }
+  }
+  // Clear file input regardless of selection to allow re-selection of the same file
+  event.target.value = null;
+};
+
+const handleGetLocationAndUpload = async () => {
+  if (!navigator.geolocation) {
+    photoQuestError.value = "이 브라우저에서는 위치 정보 서비스를 사용할 수 없습니다.";
+    return;
+  }
+
+  if (!activePhotoQuestId.value) {
+    photoQuestError.value = "퀘스트 정보가 없습니다. 다시 시도해주세요.";
+    return;
+  }
+
+  isUploading.value = true;
+  photoQuestError.value = null; // Clear previous errors
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+      if (selectedImageFile.value) {
+        await uploadPhotoForQuest(activePhotoQuestId.value, selectedImageFile.value, latitude.toString(), longitude.toString());
+      } else {
+        photoQuestError.value = "업로드할 사진 파일을 찾을 수 없습니다.";
+        isUploading.value = false; // Stop loading if no file is found
+      }
+    },
+    (error) => {
+      console.error("Error getting location for photo upload:", error);
+      photoQuestError.value = `위치 정보를 가져오는 데 실패했습니다: ${error.message}`;
+      isUploading.value = false; // Stop loading on geolocation error
+    }
+  );
 };
 
 const showQuestDetails = (quest) => {
@@ -325,6 +436,11 @@ const closeModal = () => {
   selectedLocationForModal.value = null;
   locationQuests.value = [];
   modalContentType.value = '';
+  // ★ Reset photo quest specific states
+  selectedImageFile.value = null;
+  showGeolocationButton.value = false;
+  activePhotoQuestId.value = null;
+  photoQuestError.value = null;
 };
 </script>
 
@@ -530,6 +646,10 @@ const closeModal = () => {
 .btn-text:hover { color: #334155; }
 .btn-primary-sm { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
 .btn-primary-sm:hover { background: #1d4ed8; }
+.btn-primary-sm:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
 
 .btn-secondary-sm {
   background: #f1f5f9;
@@ -545,6 +665,21 @@ const closeModal = () => {
 .btn-secondary-sm:hover {
   background: #e2e8f0;
   border-color: #cbd5e1;
+}
+
+.manual-location-action {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.quest-error-message {
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
 }
 
 .quest-detail-content { margin-top: 24px; }
