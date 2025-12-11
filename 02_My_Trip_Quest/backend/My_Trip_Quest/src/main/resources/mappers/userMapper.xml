@@ -44,7 +44,7 @@
             <if test="passwordHash != null">password_hash = #{passwordHash},</if>
             <if test="totalXp != null">total_xp = #{totalXp},</if>
             <if test="points != null">points = #{points},</if>
-        </set>
+            updated_at = NOW() </set>
         WHERE user_id = #{userId}
     </update>
 
@@ -72,5 +72,9 @@
         FROM users
         WHERE email = #{email}
     </select>
+
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM users WHERE user_id = #{userId}
+    </delete>
 
 </mapper>

@@ -10,3 +10,23 @@ export const getProfile = async () => {
     throw error;
   }
 };
+
+export const updateProfile = async (updateData) => {
+  try {
+    const response = await api.patch('/api/v1/users/me', updateData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
+export const deleteAccount = async () => {
+  try {
+    const response = await api.delete('/api/v1/users/me');
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    throw error;
+  }
+};
