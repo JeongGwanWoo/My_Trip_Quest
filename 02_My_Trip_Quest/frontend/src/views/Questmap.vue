@@ -145,13 +145,15 @@
               </div>
             </div>
           </div>
+
+          <!-- General Photo Quest Error Message -->
+          <div v-if="photoQuestError" class="quest-error-message">{{ photoQuestError }}</div>
           
           <!-- Hidden file input for photo quests -->
           <input type="file" ref="fileInputRef" @change="handleFileSelect" accept="image/*" style="display: none;">
 
           <!-- "내 위치 가져오기" button for photo quests without metadata -->
           <div v-if="showGeolocationButton" class="manual-location-action">
-              <div v-if="photoQuestError" class="quest-error-message">{{ photoQuestError }}</div>
               <button 
                 class="btn-primary-sm" 
                 @click="handleGetLocationAndUpload()" 
@@ -363,8 +365,8 @@ const uploadPhotoForQuest = async (questId, imageFile, latitude = null, longitud
       selectedImageFile.value = imageFile; // Store file for re-upload with manual location
       showGeolocationButton.value = true;
     } else {
-      photoQuestError.value = `오류: ${errorMessage}`;
-      // Reset temporary states
+      photoQuestError.value = `${errorMessage}`;
+      // Reset temporary states on general failure
       selectedImageFile.value = null;
       showGeolocationButton.value = false;
       activePhotoQuestId.value = null;
