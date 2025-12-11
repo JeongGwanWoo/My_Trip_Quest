@@ -12,5 +12,6 @@ public class LocationWithQuestCountDto {
     private String title;
     private BigDecimal latitude;
     private BigDecimal longitude;
+    private Integer gpsVerifyRadius;
     private int questCount;
 }

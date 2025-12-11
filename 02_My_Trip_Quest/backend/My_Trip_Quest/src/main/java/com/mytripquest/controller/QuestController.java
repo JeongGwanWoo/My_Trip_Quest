@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -123,9 +124,12 @@ public class QuestController {
      * @throws IOException
      */
     @PostMapping(value = "/quests/{questId}/complete/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<Void>> completePhotoQuest(@PathVariable long questId, @RequestParam("image") MultipartFile imageFile) throws IOException {
+    public ResponseEntity<ApiResponse<Void>> completePhotoQuest(@PathVariable long questId,
+                                                                 @RequestParam("image") MultipartFile imageFile,
+                                                                 @RequestParam(value = "latitude", required = false) BigDecimal latitude,
+                                                                 @RequestParam(value = "longitude", required = false) BigDecimal longitude) throws IOException {
         Long userId = getCurrentUserId();
-        questService.completePhotoQuest(questId, userId, imageFile);
+        questService.completePhotoQuest(questId, userId, imageFile, latitude, longitude);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 

@@ -25,6 +25,7 @@
         <result property="title" column="title"/>
         <result property="latitude" column="latitude"/>
         <result property="longitude" column="longitude"/>
+        <result property="gpsVerifyRadius" column="gps_verify_radius"/>
         <result property="questCount" column="quest_count"/>
     </resultMap>
 
@@ -35,6 +36,7 @@
             l.title,
             l.latitude,
             l.longitude,
+            l.gps_verify_radius,
             COUNT(q.quest_id) AS quest_count
         FROM
             locations l
@@ -43,7 +45,7 @@
         WHERE
             l.area_code = #{areaCode}
         GROUP BY
-            l.location_id, l.title, l.latitude, l.longitude
+            l.location_id, l.title, l.latitude, l.longitude, l.gps_verify_radius
     </select>
 
     <!-- 특정 관광지 ID를 기준으로 해당 관광지에 속한 퀘스트 목록을 조회합니다. -->
@@ -72,11 +74,20 @@
             title,
             latitude,
             longitude,
+            gps_verify_radius,
             0 AS quest_count
         FROM
             locations
         WHERE
             location_id = #{locationId}
+    </select>
+
+    <select id="findFirstByLocationIdAndQuestTypeIdOrderByQuestIdAsc" resultMap="questMap">
+        SELECT *
+        FROM quests
+        WHERE location_id = #{locationId} AND quest_type_id = #{questTypeId}
+        ORDER BY quest_id ASC
+        LIMIT 1
     </select>
 
 </mapper>

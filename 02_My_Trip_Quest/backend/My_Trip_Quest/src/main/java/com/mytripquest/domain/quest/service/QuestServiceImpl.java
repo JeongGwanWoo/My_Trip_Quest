@@ -16,17 +16,27 @@ import com.mytripquest.domain.user.repository.UserMapper;
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifSubIFDDirectory;
+import com.drew.metadata.exif.GpsDirectory;
+import com.drew.lang.GeoLocation;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +45,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class QuestServiceImpl implements QuestService {
 
     private final QuestRepository questRepository;
@@ -178,15 +189,15 @@ public class QuestServiceImpl implements QuestService {
      */
     @Override
     public void completeArrivalQuest(long questId, long userId, QuestCompleteRequestDto request) {
-        completeQuestInternal(questId, userId, request, null);
+        completeQuestInternal(questId, userId, request, null, null, null);
     }
 
     @Override
-    public void completePhotoQuest(long questId, long userId, MultipartFile imageFile) throws IOException {
-        completeQuestInternal(questId, userId, null, imageFile);
+    public void completePhotoQuest(long questId, long userId, MultipartFile imageFile, BigDecimal latitude, BigDecimal longitude) throws IOException {
+        completeQuestInternal(questId, userId, null, imageFile, latitude, longitude);
     }
 
-    private void completeQuestInternal(long questId, long userId, QuestCompleteRequestDto arrivalRequest, MultipartFile photoFile) {
+    private void completeQuestInternal(long questId, long userId, QuestCompleteRequestDto arrivalRequest, MultipartFile photoFile, BigDecimal currentLat, BigDecimal currentLon) {
         // 1. 퀘스트 및 사용자-퀘스트 정보 조회
         Quest quest = questRepository.findQuestById(questId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_FOUND));
@@ -203,15 +214,11 @@ public class QuestServiceImpl implements QuestService {
 
         // 3. 퀘스트 타입별 완료 조건 검증
         switch (quest.getQuestTypeId()) {
-            case 1:
+            case 1: // 도착 미션
                 verifyArrivalQuest(quest, arrivalRequest);
                 break;
-            case 2:
-                try {
-                    verifyPhotoQuest(quest, photoFile);
-                } catch (IOException e) {
-                    throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
-                }
+            case 2: // 사진 미션
+                performPhotoVerification(quest, userId, photoFile, currentLat, currentLon);
                 break;
             default:
                 // 지원하지 않는 퀘스트 타입에 대한 예외 처리나 로깅
@@ -220,13 +227,14 @@ public class QuestServiceImpl implements QuestService {
 
         // 4. 퀘스트 상태를 COMPLETED로 업데이트
         userQuest.setStatus(QuestStatus.COMPLETED);
+        userQuest.setCompletedAt(java.time.LocalDateTime.now());
         userQuestRepository.update(userQuest);
 
         // 5. 퀘스트 완료 보상 지급
         grantQuestRewards(userId, quest);
     }
 
-    private void verifyPhotoQuest(Quest quest, MultipartFile imageFile) throws IOException {
+    private void performPhotoVerification(Quest quest, Long userId, MultipartFile imageFile, BigDecimal currentLat, BigDecimal currentLon) {
         if (imageFile == null || imageFile.isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF);
         }
@@ -234,10 +242,73 @@ public class QuestServiceImpl implements QuestService {
         LocationWithQuestCountDto location = questRepository.findLocationById(quest.getLocationId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
 
-        boolean isVerified = aiVisionService.isPhotoOfLandmark(imageFile.getBytes(), location.getTitle());
+        BigDecimal verificationLat;
+        BigDecimal verificationLon;
 
-        if (!isVerified) {
-            throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF);
+        try {
+            byte[] fileBytes = imageFile.getBytes();
+
+            if (currentLat != null && currentLon != null) {
+                log.info("--- 제공된 현재 위치로 사진 미션 인증 ---");
+                verificationLat = currentLat;
+                verificationLon = currentLon;
+            } else {
+                log.info("--- 사진 메타데이터로 사진 미션 인증 ---");
+                Metadata metadata = ImageMetadataReader.readMetadata(new ByteArrayInputStream(fileBytes));
+                GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
+
+                if (gpsDirectory == null || !gpsDirectory.containsTag(GpsDirectory.TAG_LATITUDE) || !gpsDirectory.containsTag(GpsDirectory.TAG_LONGITUDE)) {
+                    throw new BusinessException(ErrorCode.PHOTO_METADATA_MISSING);
+                }
+                
+                GeoLocation photoLocation = gpsDirectory.getGeoLocation();
+                verificationLat = BigDecimal.valueOf(photoLocation.getLatitude());
+                verificationLon = BigDecimal.valueOf(photoLocation.getLongitude());
+
+                Date photoTimestamp;
+                ExifSubIFDDirectory exifSubIFDDirectory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
+                photoTimestamp = (exifSubIFDDirectory != null) ? exifSubIFDDirectory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL) : null;
+
+                if (photoTimestamp == null) {
+                    throw new BusinessException(ErrorCode.PHOTO_METADATA_MISSING);
+                }
+                log.info("사진 촬영 시간: {}", photoTimestamp);
+
+                Quest arrivalQuest = questRepository.findFirstByLocationIdAndQuestTypeIdOrderByQuestIdAsc(location.getLocationId(), 1)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.ARRIVAL_QUEST_NOT_FOUND));
+
+                UserQuest arrivalUserQuest = userQuestRepository.findByUserIdAndQuestId(userId, arrivalQuest.getQuestId())
+                        .filter(uq -> uq.getStatus() == QuestStatus.COMPLETED)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.ARRIVAL_QUEST_NOT_COMPLETED));
+
+                Date arrivalMissionCompletionTime = Date.from(arrivalUserQuest.getCompletedAt().atZone(ZoneId.systemDefault()).toInstant());
+                log.info("도착 미션 완료 시간: {}", arrivalMissionCompletionTime);
+
+                long timeDifferenceMillis = photoTimestamp.getTime() - arrivalMissionCompletionTime.getTime();
+                if (timeDifferenceMillis < 0) {
+                    throw new BusinessException(ErrorCode.PHOTO_TIME_BEFORE_ARRIVAL_MISSION);
+                } else if (timeDifferenceMillis > TimeUnit.HOURS.toMillis(24)) {
+                    throw new BusinessException(ErrorCode.PHOTO_TIME_EXCEEDS_24_HOURS);
+                }
+            }
+            
+            double distance = calculateDistance(verificationLat, verificationLon, location.getLatitude(), location.getLongitude());
+            double maxDistance = location.getGpsVerifyRadius() != null ? location.getGpsVerifyRadius() : 50.0;
+
+            if (distance > maxDistance) {
+                log.warn("사진 미션 실패 (사용자 {}): 거리 {}m가 요구 반경 {}m보다 큽니다.", userId, String.format("%.2f", distance), maxDistance);
+                throw new BusinessException(ErrorCode.DISTANCE_TOO_FAR);
+            }
+
+            boolean isLandmarkPhoto = aiVisionService.isPhotoOfLandmark(fileBytes, location.getTitle());
+            if (!isLandmarkPhoto) {
+                log.warn("사진 미션 실패 (사용자 {}): AI가 사진 내용이 랜드마크 '{}'와 일치하지 않는다고 판단했습니다.", userId, location.getTitle());
+                throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF);
+            }
+
+        } catch (ImageProcessingException | IOException e) {
+            log.error("사진 파일을 처리하는 중 오류가 발생했습니다: {}", e.getMessage(), e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -266,24 +337,21 @@ public class QuestServiceImpl implements QuestService {
      */
     private void verifyArrivalQuest(Quest quest, QuestCompleteRequestDto request) {
         if (request.getLatitude() == null || request.getLongitude() == null) {
-            throw new BusinessException(ErrorCode.GPS_COORDINATES_REQUIRED); // 또는 GPS_REQUIRED 등
+            throw new BusinessException(ErrorCode.GPS_COORDINATES_REQUIRED);
         }
 
-        // 퀘스트에 연결된 장소 정보 조회
         LocationWithQuestCountDto location = questRepository.findLocationById(quest.getLocationId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
 
         if (location.getLatitude() == null || location.getLongitude() == null) {
-            throw new BusinessException(ErrorCode.GPS_COORDINATES_REQUIRED); // 장소에 좌표가 없는 경우
+            throw new BusinessException(ErrorCode.GPS_COORDINATES_REQUIRED);
         }
 
-        // 거리 계산 (미터 단위)
-        double distance = calculateDistance(request.getLatitude(), request.getLongitude(),
+        double distance = calculateDistance(BigDecimal.valueOf(request.getLatitude()), BigDecimal.valueOf(request.getLongitude()),
                 location.getLatitude(), location.getLongitude());
 
-        // 예: 50미터 이내에 있어야 통과
-        double MAX_DISTANCE_METERS = 50.0;
-        if (distance > MAX_DISTANCE_METERS) {
+        double maxDistance = location.getGpsVerifyRadius() != null ? location.getGpsVerifyRadius() : 50.0;
+        if (distance > maxDistance) {
             throw new BusinessException(ErrorCode.DISTANCE_TOO_FAR);
         }
     }
@@ -291,15 +359,15 @@ public class QuestServiceImpl implements QuestService {
     /**
      * 두 지점 간의 거리를 미터 단위로 계산합니다 (Haversine formula).
      */
-    private double calculateDistance(Double lat1, Double lon1, BigDecimal lat2, BigDecimal lon2) {
+    private double calculateDistance(BigDecimal lat1, BigDecimal lon1, BigDecimal lat2, BigDecimal lon2) {
         if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) {
             throw new BusinessException(ErrorCode.GPS_COORDINATES_REQUIRED);
         }
 
         final int R = 6371; // 지구 반지름 (킬로미터)
 
-        double dLat1 = Math.toRadians(lat1);
-        double dLon1 = Math.toRadians(lon1);
+        double dLat1 = Math.toRadians(lat1.doubleValue());
+        double dLon1 = Math.toRadians(lon1.doubleValue());
         double dLat2 = Math.toRadians(lat2.doubleValue());
         double dLon2 = Math.toRadians(lon2.doubleValue());
 

@@ -25,6 +25,11 @@ public enum ErrorCode {
     GPS_COORDINATES_REQUIRED(HttpStatus.BAD_REQUEST, "GPS 좌표가 필요합니다."),
     LOCATION_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 장소를 찾을 수 없습니다."),
     INVALID_PHOTO_PROOF(HttpStatus.BAD_REQUEST, "퀘스트 인증에 실패했습니다. 올바른 장소에서 찍은 사진인지 확인해주세요."),
+    PHOTO_METADATA_MISSING(HttpStatus.BAD_REQUEST, "사진에서 위치 또는 촬영 시간 정보를 찾을 수 없습니다. 현재 위치로 대신 인증하시겠습니까?"),
+    PHOTO_TIME_BEFORE_ARRIVAL_MISSION(HttpStatus.BAD_REQUEST, "사진 촬영 시간이 도착 미션 완료 시간보다 빠릅니다."),
+    PHOTO_TIME_EXCEEDS_24_HOURS(HttpStatus.BAD_REQUEST, "사진 촬영 시간이 도착 미션 완료 후 24시간을 초과했습니다."),
+    ARRIVAL_QUEST_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "도착 미션을 완료해야 사진 미션을 진행할 수 있습니다."),
+    ARRIVAL_QUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 장소의 도착 미션을 찾을 수 없습니다."),
 
     // Item
     ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 아이템을 찾을 수 없습니다."),
