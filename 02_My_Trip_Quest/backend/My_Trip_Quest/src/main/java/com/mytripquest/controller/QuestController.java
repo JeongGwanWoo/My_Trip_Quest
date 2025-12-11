@@ -105,6 +105,18 @@ public class QuestController {
     }
 
     /**
+     * 퀘스트를 포기합니다.
+     * @param questId 포기할 퀘스트의 ID
+     * @return 성공 응답
+     */
+    @PostMapping("/quests/{questId}/forfeit")
+    public ResponseEntity<ApiResponse<Void>> forfeitQuest(@PathVariable long questId) {
+        Long userId = getCurrentUserId();
+        questService.forfeitQuest(questId, userId);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    /**
      * 도착 퀘스트를 완료 처리합니다.
      * @param questId 완료할 퀘스트의 ID
      * @return 성공 응답

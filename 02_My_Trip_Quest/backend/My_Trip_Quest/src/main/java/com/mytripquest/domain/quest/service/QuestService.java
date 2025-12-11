@@ -17,6 +17,7 @@ public interface QuestService {
     List<LocationWithQuestCountDto> getLocationsByAreaCode(String areaCode);
     List<QuestInfoWithStatusDto> getQuestsByLocationId(Long locationId, Long userId);
     void acceptQuest(long questId, long userId);
+    void forfeitQuest(long questId, long userId);
     void completeArrivalQuest(long questId, long userId, QuestCompleteRequestDto request);
     void completePhotoQuest(long questId, long userId, MultipartFile imageFile, BigDecimal latitude, BigDecimal longitude) throws IOException;
     List<InProgressQuestDto> getInProgressQuests(Long userId);
