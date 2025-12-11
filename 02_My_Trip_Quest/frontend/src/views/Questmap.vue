@@ -122,7 +122,7 @@
                     class="btn-primary-sm" 
                     @click.stop="triggerFileInput(quest.questId)"
                     :disabled="isUploading">
-                    사진 업로드
+                    {{ isUploading ? '업로드 중...' : '사진 업로드' }}
                   </button>
                 </template>
 
