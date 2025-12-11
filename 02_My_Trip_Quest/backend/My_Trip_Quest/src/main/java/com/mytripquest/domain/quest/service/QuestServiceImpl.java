@@ -281,9 +281,9 @@ public class QuestServiceImpl implements QuestService {
         double distance = calculateDistance(request.getLatitude(), request.getLongitude(),
                 location.getLatitude(), location.getLongitude());
 
-        // 예: 50미터 이내에 있어야 통과
-        double MAX_DISTANCE_METERS = 50.0;
-        if (distance > MAX_DISTANCE_METERS) {
+        // DB에 저장된 반경 값을 사용, null일 경우 기본값(50미터) 사용
+        double maxDistance = location.getGpsVerifyRadius() != null ? location.getGpsVerifyRadius() : 50.0;
+        if (distance > maxDistance) {
             throw new BusinessException(ErrorCode.DISTANCE_TOO_FAR);
         }
     }
