@@ -5,6 +5,9 @@ import Rankings from '@/views/Rankings.vue'
 import FittingRoom from '@/views/FittingRoom.vue'
 import Profile from '@/views/Profile.vue'
 import Shop from '@/views/Shop.vue'
+import TermsOfService from '@/views/TermsOfService.vue'
+import PrivacyPolicy from '@/views/PrivacyPolicy.vue'
+import NotFound from '@/views/NotFound.vue'
 
 const routes = [
   {
@@ -50,6 +53,22 @@ const routes = [
     path: '/signup',
     name: 'Signup',
     component: () => import('@/views/SignupView.vue'),
+  },
+  {
+    path: '/terms',
+    name: 'Terms',
+    component: TermsOfService,
+  },
+  {
+    path: '/privacy',
+    name: 'Privacy',
+    component: PrivacyPolicy,
+  },
+  // Catch-all route for 404
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound,
   }
 ]
 
