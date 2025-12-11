@@ -140,13 +140,18 @@
           </div>
           
           <div class="form-group">
-            <label>비밀번호 변경</label>
-            <input type="password" v-model="editForm.password" placeholder="변경할 비밀번호" class="form-input" />
+            <label>현재 비밀번호</label>
+            <input type="password" v-model="editForm.currentPassword" placeholder="비밀번호 변경 시 필수" class="form-input" />
           </div>
 
           <div class="form-group">
-            <label>비밀번호 확인</label>
-            <input type="password" v-model="editForm.confirmPassword" placeholder="비밀번호 확인" class="form-input" />
+            <label>새 비밀번호</label>
+            <input type="password" v-model="editForm.newPassword" placeholder="변경할 비밀번호" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label>새 비밀번호 확인</label>
+            <input type="password" v-model="editForm.confirmNewPassword" placeholder="새 비밀번호 다시 입력" class="form-input" />
           </div>
 
           <button type="submit" class="btn-save">저장하기</button>
@@ -166,10 +171,12 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { getAvatar } from '@/api/avatar.js';
-import { getProfile } from '@/api/user.js';
+import { getProfile, updateProfile, deleteAccount } from '@/api/user.js';
 import { getLevelProgress } from '@/utils/level.js';
 import BaseModal from "@/components/ui/BaseModal.vue"; // 모달 컴포넌트 필수
+import { useAuthStore } from '@/stores/auth';
 
+const authStore = useAuthStore();
 const userProfile = ref(null);
 const equippedItemsList = ref([]);
 const userJoined = ref('2024. 1. 15.'); 
@@ -178,14 +185,16 @@ const userJoined = ref('2024. 1. 15.');
 const isEditModalOpen = ref(false);
 const editForm = ref({
   nickname: '',
-  password: '',
-  confirmPassword: ''
+  currentPassword: '',
+  newPassword: '',
+  confirmNewPassword: ''
 });
 
 const openEditModal = () => {
   editForm.value.nickname = userProfile.value?.nickname || '';
-  editForm.value.password = '';
-  editForm.value.confirmPassword = '';
+  editForm.value.currentPassword = '';
+  editForm.value.newPassword = '';
+  editForm.value.confirmNewPassword = '';
   isEditModalOpen.value = true;
 };
 
@@ -194,23 +203,57 @@ const closeEditModal = () => {
 };
 
 const handleUpdateProfile = async () => {
-  if (editForm.value.password && editForm.value.password !== editForm.value.confirmPassword) {
-    alert('비밀번호가 일치하지 않습니다.');
+  if (editForm.value.newPassword && (editForm.value.newPassword !== editForm.value.confirmNewPassword)) {
+    alert('새 비밀번호가 일치하지 않습니다.');
     return;
   }
-  // TODO: 정보 수정 API 호출 (예: api.put('/users/profile', editForm.value))
-  alert('정보가 수정되었습니다. (API 연결 필요)');
-  
-  // 성공 시 프로필 다시 불러오기
-  // await fetchUserProfileData();
-  closeEditModal();
+
+  const payload = {};
+  if (editForm.value.nickname !== userProfile.value.nickname) {
+    payload.nickname = editForm.value.nickname;
+  }
+
+  if (editForm.value.newPassword) {
+    if (!editForm.value.currentPassword) {
+      alert('현재 비밀번호를 입력해야 비밀번호를 변경할 수 있습니다.');
+      return;
+    }
+    payload.currentPassword = editForm.value.currentPassword;
+    payload.newPassword = editForm.value.newPassword;
+  }
+
+  if (Object.keys(payload).length === 0) {
+    alert('변경할 내용이 없습니다.');
+    return;
+  }
+
+  try {
+    const response = await updateProfile(payload);
+    if (response.success) {
+      alert('정보가 성공적으로 수정되었습니다.');
+      await fetchUserProfileData();
+      closeEditModal();
+    }
+  } catch (error) {
+    const message = error.response?.data?.message || '프로필 수정에 실패했습니다.';
+    alert(message);
+    console.error('Error updating profile:', error);
+  }
 };
 
 const handleWithdraw = async () => {
   if (confirm('정말로 탈퇴하시겠습니까? 탈퇴 시 모든 여행 기록이 삭제됩니다.')) {
-    // TODO: 회원 탈퇴 API 호출 (예: api.delete('/users'))
-    alert('탈퇴 처리되었습니다. (API 연결 필요)');
-    // 로그아웃 및 메인으로 이동
+    try {
+      const response = await deleteAccount();
+      if (response.success) {
+        alert('회원 탈퇴가 완료되었습니다. 이용해주셔서 감사합니다.');
+        authStore.logout();
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || '회원 탈퇴에 실패했습니다.';
+      alert(message);
+      console.error('Error deleting account:', error);
+    }
   }
 };
 // -----------------------

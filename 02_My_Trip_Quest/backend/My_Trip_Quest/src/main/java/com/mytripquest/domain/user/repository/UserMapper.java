@@ -25,4 +25,6 @@ public interface UserMapper {
 
     Optional<Long> findIdByEmail(String email); // Added method
 
+    void deleteById(long userId);
+
 }

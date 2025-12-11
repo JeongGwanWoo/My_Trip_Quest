@@ -13,6 +13,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자를 찾을 수 없습니다."),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
     NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
+    PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
 
     // Quest
     QUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 퀘스트를 찾을 수 없습니다."),
@@ -30,7 +31,8 @@ public enum ErrorCode {
     ITEM_NOT_PURCHASABLE(HttpStatus.BAD_REQUEST, "구매할 수 없는 아이템입니다."),
     ITEM_ALREADY_OWNED(HttpStatus.CONFLICT, "이미 소유하고 있는 아이템입니다."),
     INSUFFICIENT_FUNDS(HttpStatus.BAD_REQUEST, "코인이 부족합니다."),
-    CANNOT_UNEQUIP_SKIN(HttpStatus.BAD_REQUEST, "기본 스킨은 해제할 수 없습니다.");
+    CANNOT_UNEQUIP_SKIN(HttpStatus.BAD_REQUEST, "기본 스킨은 해제할 수 없습니다."), 
+    PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "현재 비밀번호를 입력해주세요.");
 
 
     private final HttpStatus status;

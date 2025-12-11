@@ -17,4 +17,11 @@ public class UserRequestDto {
         private String password;
     }
 
+    @Data
+    public static class Update {
+        private String nickname;
+        private String currentPassword;
+        private String newPassword;
+    }
+
 }

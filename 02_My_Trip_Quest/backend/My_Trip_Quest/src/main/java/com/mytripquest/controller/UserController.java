@@ -8,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,5 +44,23 @@ public class UserController {
         }
         UserResponseDto.ProfileResponseDto profile = userService.getProfile(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success(profile));
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<ApiResponse> updateProfile(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UserRequestDto.Update request) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(ApiResponse.failure("인증되지 않은 사용자입니다."));
+        }
+        userService.updateProfile(userDetails.getUsername(), request);
+        return ResponseEntity.ok(ApiResponse.success("회원정보가 성공적으로 수정되었습니다."));
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiResponse> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(ApiResponse.failure("인증되지 않은 사용자입니다."));
+        }
+        userService.deleteUser(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("회원 탈퇴가 성공적으로 처리되었습니다."));
     }
 }
