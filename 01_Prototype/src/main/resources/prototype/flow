@@ -1,0 +1,77 @@
+모바일 웹 환경에서 "미션 시작 > 공통 미션 완료 (위치 확인) > 포인트 지급"이라는 가장 단순한 핵심
+흐름을 구현하기 위한 최소한의 단계입니다.
+
+이 흐름을 만들기 위해 다음 순서로 진행하는 것을 추천합니다.
+
+---
+
+1단계: 프로젝트 초기 설정 및 데이터베이스 준비
+
+1. Spring Boot 프로젝트 생성: 기본적인 Spring Boot 프로젝트를 만듭니다.
+2. 의존성 추가: pom.xml 또는 build.gradle에 다음 의존성을 추가합니다.
+    - spring-boot-starter-web (API 개발용)
+    - spring-boot-starter-data-jdbc 또는 spring-boot-starter-jdbc (DB 연결용)
+    - mysql-connector-java (MySQL 드라이버)
+    - mybatis-spring-boot-starter (MyBatis 연동용)
+    - lombok (선택 사항이지만 개발 편의성 증대)
+3. `application.yml` 설정: 데이터베이스 연결 정보(URL, 사용자명, 비밀번호)와 MyBatis 설정을 추가합니다.
+4. 필수 테이블 생성: 01-database-design.md를 참고하여 다음 테이블만 생성합니다.
+    - users
+    - tourist_spots
+    - missions
+    - point_logs
+5. 샘플 데이터 삽입 (`data.sql` 활용):
+    - users 테이블에 user_id=1인 사용자 1명만 삽입합니다.
+    - tourist_spots 테이블에 테스트할 관광지 1곳(예: 경복궁)의 위도, 경도, gps_verify_range를 정확히 삽입합니다.
+    - missions 테이블에 위 관광지에 연결된 ARRIVAL 타입의 미션 1개만 삽입합니다.
+    - point_logs 테이블은 비워둡니다.
+
+---
+
+2단계: 핵심 백엔드 로직 구현 (Mapper & Service)
+
+1. Mapper 인터페이스 및 XML 파일 생성:
+    - `TouristSpotMapper`: selectSpotByNo(Integer spotNo) 메서드를 정의하고, 해당 관광지의 상세 정보를 조회하는
+    SQL을 작성합니다.
+    - `MissionMapper`: selectMissionById(Long missionId) 메서드를 정의하고, 미션 상세 정보를 조회하는 SQL을
+    작성합니다.
+    - `UserMapper`: updatePointBalance(Long userId, Integer amount) 메서드를 정의하고, 사용자의 포인트 잔액을
+    업데이트하는 SQL을 작성합니다.
+    - `PointLogMapper`: insertPointLog(PointLog pointLog) 메서드를 정의하고, 포인트 거래 내역을 기록하는 SQL을
+    작성합니다.
+2. Service 클래스 구현:
+    - `PointService`: earnPoint(Long userId, Integer amount, String description)와 같이 간단하게 사용자의
+    포인트를 증가시키고 PointLog를 기록하는 메서드를 구현합니다.
+    - `MissionService`:
+        - verifyArrival(Long userId, Integer spotNo, BigDecimal userLat, BigDecimal userLon) 메서드를
+        구현합니다.
+        - 이 메서드 안에서 TouristSpotMapper를 통해 관광지 정보를 가져옵니다.
+        - 사용자 위치(userLat, userLon)와 관광지 위치를 이용해 Haversine 공식으로 거리를 계산합니다.
+        - 계산된 거리가 관광지의 gps_verify_range 이내인지 확인합니다.
+        - 범위 내라면 PointService를 호출하여 사용자에게 포인트를 지급하고 성공 응답을 반환합니다.
+        - 범위 밖이라면 실패 응답을 반환합니다.
+
+---
+
+3단계: API 엔드포인트 구현 (Controller)
+
+1. `SpotController` 생성:
+    - POST /api/spots/{spotNo}/verify-arrival 엔드포인트를 구현합니다.
+    - 요청 바디로 latitude, longitude를 받습니다.
+    - MissionService의 verifyArrival 메서드를 호출하고, 그 결과를 클라이언트에 반환합니다.
+
+---
+
+4단계: 동작 확인 (Postman 또는 curl)
+
+1. Spring Boot 애플리케이션 실행: 서버를 시작합니다.
+2. API 테스트: Postman이나 curl 명령어를 사용하여 POST /api/spots/{spotNo}/verify-arrival 엔드포인트에 요청을
+보냅니다.
+    - 성공 케이스: 관광지 범위 내의 위도/경도를 보내 성공 응답과 함께 DB의 사용자 포인트가 증가하는지
+    확인합니다.
+    - 실패 케이스: 관광지 범위 밖의 위도/경도를 보내 실패 응답을 받는지 확인합니다.
+
+---
+
+이 순서대로 진행하시면, 모바일 웹에서 GPS 정보를 받아 서버에서 위치를 검증하고 포인트를 지급하는 핵심적인
+프로토타입 흐름을 가장 빠르게 구현할 수 있을 것입니다.
