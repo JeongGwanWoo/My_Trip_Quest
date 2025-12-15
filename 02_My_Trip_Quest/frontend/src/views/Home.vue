@@ -2,7 +2,7 @@
     <main class="main-content">
       <section class="text-section">
         <div class="badge">
-          <span class="badge-dot"></span> TEXTOK
+          <span class="badge-dot"></span> MyTripQuest
         </div>
         
         <h1 class="main-title">
@@ -10,31 +10,40 @@
           여행에서 또다른 즐거움이 생기다
         </h1>
         
-        <p class="sub-desc">
-          📍 위치 기반 퀘스트로 여행을 더 흥미롭게<br /><br />
-          🗺️ 사용자가 직접 참여하는 여행 미션<br /><br />
-          🎉 즐기면서 완성하는 나만의 여행 기록
-        </p>
+        <ul class="sub-desc-list">
+          <li class="sub-desc-item">
+            <div class="icon-box"><i class="fa-solid fa-location-dot"></i></div>
+            <span>위치 기반 퀘스트로 여행을 더 흥미롭게</span>
+          </li>
+          <li class="sub-desc-item">
+            <div class="icon-box"><i class="fa-solid fa-flag"></i></div>
+            <span>사용자가 직접 참여하는 여행 미션</span>
+          </li>
+          <li class="sub-desc-item">
+            <div class="icon-box"><i class="fa-solid fa-map"></i></div>
+            <span>즐기면서 완성하는 나만의 여행 기록</span>
+          </li>
+        </ul>
 
         <div class="stats-row">
           <div class="stat-item">
-            <strong class="stat-num">1,000+</strong>
-            <span class="stat-label">누적 사용자</span>
+            <strong class="stat-num">1,200+</strong>
+            <span class="stat-label">등록된 여행 스팟</span>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
-            <strong class="stat-num">3,200+</strong>
-            <span class="stat-label">완료된 퀘스트</span>
+            <strong class="stat-num">50+</strong>
+            <span class="stat-label">오픈된 챌린지</span>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
-            <strong class="stat-num">850+</strong>
-            <span class="stat-label">등록된 여행 미션</span>
+            <strong class="stat-num">Infinite</strong>
+            <span class="stat-label">나만의 여행 기록</span>
           </div>
         </div>
 
         <button class="btn-cta" @click="handleCtaClick">
-          {{ isLoggedIn ? '여행 시작하기 🚀' : '로그인 하러가기 →' }}
+          {{ isLoggedIn ? '여행 시작하기' : '로그인 하러가기 →' }}
         </button>
       </section>
 
@@ -79,7 +88,7 @@ const handleCtaClick = () => {
   display: flex;
   background-color: #f5f7fb;
   height: 100%; /* 부모 높이 상속 */
-  overflow: hidden; /* 스크롤 방지 (필요 시 제거) */
+  overflow: hidden; /* 스크롤 방지 */
 }
 
 .text-section {
@@ -120,14 +129,36 @@ const handleCtaClick = () => {
   letter-spacing: -0.5px;
 }
 
-.sub-desc {
-  font-size: 17px;
-  line-height: 1.7;
-  color: #4b5563;
-  margin-bottom: 60px;
-  font-weight: 400;
-  word-break: keep-all; /* 한글 줄바꿈 개선 */
+/* --- 수정됨: 설명 리스트 스타일 --- */
+.sub-desc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 60px 0;
 }
+
+.sub-desc-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 17px;
+  color: #4b5563;
+  font-weight: 400;
+}
+
+.icon-box {
+  width: 36px;
+  height: 36px;
+  background-color: #eff6ff; /* 연한 파란색 배경 */
+  color: #2563eb; /* 아이콘 색상 */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14px;
+  font-size: 16px;
+  flex-shrink: 0; /* 아이콘 크기 고정 */
+}
+/* -------------------------------- */
 
 .stats-row {
   display: flex;
@@ -225,9 +256,22 @@ const handleCtaClick = () => {
     margin-bottom: 20px;
   }
 
-  .sub-desc {
-    font-size: 15px;
+  /* 수정됨: 반응형에서 설명 리스트 정렬 */
+  .sub-desc-list {
     margin-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* 중앙 정렬보다는 시작점 정렬이 리스트엔 더 깔끔 */
+    text-align: left;
+  }
+  
+  /* 만약 모바일에서 중앙 정렬을 원하면 아래 주석 해제 */
+  /*
+  .sub-desc-list { align-items: center; }
+  */
+
+  .sub-desc-item {
+    font-size: 15px;
   }
 
   /* 통계 영역 간격 및 정렬 수정 */

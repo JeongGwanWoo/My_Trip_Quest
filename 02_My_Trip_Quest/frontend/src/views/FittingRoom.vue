@@ -47,7 +47,7 @@
               </div>
 
               <button @click="saveCurrentAvatar" class="btn-save">
-                <span>💾 스타일 저장하기</span>
+                <span><i class="fa-solid fa-floppy-disk" style="margin-right: 8px;"></i> 스타일 저장하기</span>
               </button>
             </div>
           </div>
@@ -78,7 +78,7 @@
             </div>
             
             <div v-else-if="currentItems.length === 0" class="state-msg">
-              <span class="empty-icon">👕</span>
+              <i class="fa-solid fa-shirt empty-icon"></i>
               <p>이 카테고리에 아이템이 없습니다.</p>
             </div>
             

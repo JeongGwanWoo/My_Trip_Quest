@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth';
 
 const api = axios.create({
   // ★ 주의: 만약 프록시 설정이 없다면 'http://localhost:8080'으로 바꿔야 할 수도 있습니다.
-  baseURL: 'http://localhost:8080', 
+  baseURL: 'http://localhost:8080',  
   withCredentials: true, 
   headers: {
     'Content-Type': 'application/json',

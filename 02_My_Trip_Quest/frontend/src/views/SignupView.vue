@@ -3,7 +3,7 @@
     <div class="auth-card">
       
       <div class="logo-area">
-        <span class="logo-icon">✨</span>
+        <span class="logo-icon"><i class="fa-solid fa-sparkles"></i></span>
         <h1 class="logo-text">회원가입</h1>
         <p class="sub-text">새로운 여행의 시작을 함께하세요</p>
       </div>
@@ -13,7 +13,7 @@
         <div class="form-group">
           <label for="nickname" class="form-label">닉네임</label>
           <div class="input-wrapper">
-            <span class="input-icon">👤</span>
+            <span class="input-icon"><i class="fa-solid fa-user"></i></span>
             <input 
               type="text" 
               id="nickname" 
@@ -28,7 +28,7 @@
         <div class="form-group">
           <label for="email" class="form-label">이메일</label>
           <div class="input-wrapper">
-            <span class="input-icon">✉️</span>
+            <span class="input-icon"><i class="fa-solid fa-envelope"></i></span>
             <input 
               type="email" 
               id="email" 
@@ -43,7 +43,7 @@
         <div class="form-group">
           <label for="password" class="form-label">비밀번호</label>
           <div class="input-wrapper">
-            <span class="input-icon">🔒</span>
+            <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
             <input 
               type="password" 
               id="password" 
@@ -58,7 +58,7 @@
         <div class="form-group">
           <label for="confirmPassword" class="form-label">비밀번호 확인</label>
           <div class="input-wrapper">
-            <span class="input-icon">🛡️</span>
+            <span class="input-icon"><i class="fa-solid fa-shield-alt"></i></span>
             <input 
               type="password" 
               id="confirmPassword" 

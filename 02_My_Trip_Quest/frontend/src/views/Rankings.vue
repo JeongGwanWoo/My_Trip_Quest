@@ -10,14 +10,14 @@
           글로벌 랭킹
         </h2>
         <p class="page-desc">
-          여행을 즐기며 코인을 모아 최고의 여행자가 되어보세요! 🏆
+          여행을 즐기며 코인을 모아 최고의 여행자가 되어보세요!
         </p>
       </header>
 
       <section class="my-rank-card">
         <div class="my-profile-section">
           <div class="avatar-circle">
-            <span class="avatar-emoji">😊</span>
+            <i class="fa-solid fa-user avatar-icon"></i>
             <div class="status-indicator"></div>
           </div>
           <div class="text-group">
@@ -71,7 +71,7 @@
               <div class="player-info">
                 <div class="player-avatar-sm">{{ user.nickname.charAt(0) }}</div>
                 <span class="player-name">{{ user.nickname }}</span>
-                <span v-if="user.rank <= 3" class="crown-icon">👑</span>
+                <i v-if="user.rank <= 3" class="fa-solid fa-crown crown-icon"></i>
               </div>
             </div>
             
@@ -92,7 +92,7 @@
       </section>
 
       <footer class="info-footer">
-        <p>💡 랭킹은 획득한 코인 총합을 기준으로 실시간 업데이트됩니다.</p>
+        <p><i class="fa-solid fa-lightbulb" style="margin-right: 8px;"></i> 랭킹은 획득한 코인 총합을 기준으로 실시간 업데이트됩니다.</p>
       </footer>
 
     </div>
@@ -252,6 +252,11 @@ onMounted(async () => {
   justify-content: center;
   font-size: 32px;
   position: relative;
+}
+
+.avatar-icon {
+  font-size: 32px;
+  color: #64748b;
 }
 
 .status-indicator {

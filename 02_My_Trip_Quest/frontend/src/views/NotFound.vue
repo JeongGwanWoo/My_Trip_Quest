@@ -2,7 +2,8 @@
   <div class="not-found-container">
     <div class="content">
       <div class="icon-area">
-        🧭 </div>
+        <i class="fa-solid fa-compass"></i>
+      </div>
       <h1>404</h1>
       <h2>페이지를 찾을 수 없습니다</h2>
       <p>
@@ -63,7 +64,7 @@ p {
 .home-btn {
   padding: 12px 24px;
   font-size: 1rem;
-  background-color: #4CAF50; /* 여행 느낌의 초록색 */
+  background-color: #3b82f6; /* 테마 파란색 */
   color: white;
   border: none;
   border-radius: 30px;
@@ -72,7 +73,7 @@ p {
 }
 
 .home-btn:hover {
-  background-color: #45a049;
+  background-color: #2563eb; /* 더 진한 파란색 */
   transform: translateY(-2px);
 }
 
@@ -81,5 +82,36 @@ p {
   0% { transform: translateY(0px); }
   50% { transform: translateY(-15px); }
   100% { transform: translateY(0px); }
+}
+
+/* --- 반응형 미디어 쿼리 --- */
+@media (max-width: 600px) {
+  .not-found-container {
+    height: 100vh; /* 모바일에서 전체 높이 사용 */
+    padding: 20px; /* 좌우 여백 추가 */
+  }
+
+  .icon-area {
+    font-size: 3.5rem; /* 아이콘 크기 축소 */
+    margin-bottom: 15px;
+  }
+
+  h1 {
+    font-size: 4rem; /* H1 크기 축소 */
+  }
+
+  h2 {
+    font-size: 1.2rem; /* H2 크기 축소 */
+  }
+
+  p {
+    font-size: 0.9rem; /* 본문 텍스트 크기 축소 */
+    margin-bottom: 1.5rem;
+  }
+
+  .home-btn {
+    padding: 10px 20px; /* 버튼 패딩 축소 */
+    font-size: 0.9rem; /* 버튼 폰트 크기 축소 */
+  }
 }
 </style>
