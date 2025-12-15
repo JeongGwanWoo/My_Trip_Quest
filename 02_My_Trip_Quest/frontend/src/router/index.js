@@ -8,6 +8,7 @@ import Shop from '@/views/Shop.vue'
 import TermsOfService from '@/views/TermsOfService.vue'
 import PrivacyPolicy from '@/views/PrivacyPolicy.vue'
 import NotFound from '@/views/NotFound.vue'
+import SocialLoginRedirect from '@/views/SocialLoginRedirect.vue'
 
 const routes = [
   {
@@ -63,6 +64,11 @@ const routes = [
     path: '/privacy',
     name: 'Privacy',
     component: PrivacyPolicy,
+  },
+  {
+    path: '/social-login-redirect',
+    name: 'SocialLoginRedirect',
+    component: SocialLoginRedirect,
   },
   // Catch-all route for 404
   {
