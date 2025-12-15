@@ -11,7 +11,7 @@
         <div class="form-group">
           <label for="email" class="form-label">이메일</label>
           <div class="input-wrapper">
-            <span class="input-icon">✉️</span>
+            <span class="input-icon"><i class="fa-solid fa-envelope"></i></span>
             <input 
               type="email" 
               id="email" 
@@ -26,7 +26,7 @@
         <div class="form-group">
           <label for="password" class="form-label">비밀번호</label>
           <div class="input-wrapper">
-            <span class="input-icon">🔒</span>
+            <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
             <input 
               type="password" 
               id="password" 

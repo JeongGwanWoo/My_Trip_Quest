@@ -14,7 +14,7 @@
         <div class="coin-card">
           <div class="coin-label">내 보유 코인</div>
           <div class="coin-value-row">
-            <span class="coin-icon">🪙</span>
+            <i class="fa-solid fa-coins coin-icon"></i>
             <span class="coin-amount">{{ userCoins.toLocaleString() }} P</span>
           </div>
         </div>
@@ -65,7 +65,7 @@
                 보유중
               </template>
               <template v-else>
-                <span class="btn-coin-icon">🪙</span> {{ item.price.toLocaleString() }}
+                <i class="fa-solid fa-coins btn-coin-icon"></i> {{ item.price.toLocaleString() }}
               </template>
             </button>
           </div>
@@ -73,7 +73,7 @@
       </div>
       
       <div v-if="!isLoading && filteredItems.length === 0" class="empty-state">
-        <span class="empty-icon">📦</span>
+        <i class="fa-solid fa-box empty-icon"></i>
         <p>해당 카테고리에 아이템이 없습니다.</p>
       </div>
 

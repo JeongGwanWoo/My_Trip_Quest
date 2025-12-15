@@ -15,7 +15,7 @@
           <div class="profile-card">
             
             <button class="settings-btn" title="회원 정보 수정" @click="openEditModal">
-              ⚙️
+              <i class="fa-solid fa-gear"></i>
             </button>
 
             <div class="avatar-area">
@@ -34,7 +34,7 @@
               <h2 class="username">{{ userProfile?.nickname || '여행자' }}</h2>
               <span class="user-email">{{ userProfile?.email || 'email@example.com' }}</span>
               <div class="joined-date">
-                <span class="icon">📅</span> 가입일: {{ userJoined }}
+                <span class="icon"><i class="fa-solid fa-calendar-days"></i></span> 가입일: {{ userJoined }}
               </div>
             </div>
           </div>
@@ -45,7 +45,7 @@
           <section class="level-card">
             <div class="level-header">
               <div class="level-badge-group">
-                <span class="level-icon">⭐</span>
+                <span class="level-icon"><i class="fa-solid fa-star"></i></span>
                 <div class="level-text">
                   <span class="label">CURRENT LEVEL</span>
                   <span class="value">Lv.{{ levelInfo.currentLevel }}</span>
@@ -65,7 +65,7 @@
                 ></div>
               </div>
               <div class="progress-footer">
-                <span class="next-level-tip">다음 레벨까지 {{ levelInfo.xpForNextLevel - (userProfile?.totalXp || 0) }} XP 남았습니다! 힘내세요! 🔥</span>
+                <span class="next-level-tip">다음 레벨까지 {{ levelInfo.xpForNextLevel - (userProfile?.totalXp || 0) }} XP 남았습니다! 힘내세요! <i class="fa-solid fa-fire"></i></span>
                 <span class="percentage">{{ levelInfo.progressPercentage }}%</span>
               </div>
             </div>
@@ -73,28 +73,28 @@
 
           <section class="stats-grid">
             <div class="stat-card">
-              <div class="stat-icon-box yellow"><span class="icon">🪙</span></div>
+              <div class="stat-icon-box yellow"><span class="icon"><i class="fa-solid fa-coins"></i></span></div>
               <div class="stat-info">
                 <span class="label">보유 코인</span>
                 <span class="value">{{ (userProfile?.points || 0).toLocaleString() }} P</span>
               </div>
             </div>
             <div class="stat-card green">
-              <div class="stat-icon-box green"><span class="icon">🏆</span></div>
+              <div class="stat-icon-box green"><span class="icon"><i class="fa-solid fa-trophy"></i></span></div>
               <div class="stat-info">
                 <span class="label">완료 미션</span>
                 <span class="value">3 <span class="sub">/ 60</span></span>
               </div>
             </div>
             <div class="stat-card blue">
-              <div class="stat-icon-box blue"><span class="icon">📈</span></div>
+              <div class="stat-icon-box blue"><span class="icon"><i class="fa-solid fa-chart-line"></i></span></div>
               <div class="stat-info">
                 <span class="label">전체 달성률</span>
                 <span class="value">5%</span>
               </div>
             </div>
             <div class="stat-card purple">
-              <div class="stat-icon-box purple"><span class="icon">🗺️</span></div>
+              <div class="stat-icon-box purple"><span class="icon"><i class="fa-solid fa-map-location-dot"></i></span></div>
               <div class="stat-info">
                 <span class="label">방문 도시</span>
                 <span class="value">1 <span class="sub">/ 4</span></span>
@@ -106,7 +106,7 @@
             <h3 class="section-title">도시별 진행 현황</h3>
             <div class="city-list">
               <div v-for="city in cityProgress" :key="city.id" class="city-item">
-                <div class="city-icon">{{ city.icon }}</div>
+                <div class="city-icon"><i :class="city.icon"></i></div>
                 <div class="city-info">
                   <div class="city-header">
                     <span class="city-name">{{ city.name }}</span>
@@ -309,10 +309,10 @@ onMounted(async () => {
 });
 
 const cityProgress = ref([
-  { id: 1, name: '서울', icon: '🏙️', completed: 3, total: 15, percentage: 20, colorClass: 'bg-green' },
-  { id: 2, name: '부산', icon: '🌊', completed: 0, total: 15, percentage: 0, colorClass: 'bg-blue' },
-  { id: 3, name: '제주', icon: '🌴', completed: 0, total: 15, percentage: 0, colorClass: 'bg-orange' },
-  { id: 4, name: '경주', icon: '🏛️', completed: 0, total: 15, percentage: 0, colorClass: 'bg-purple' },
+  { id: 1, name: '서울', icon: 'fa-solid fa-city', completed: 3, total: 15, percentage: 20, colorClass: 'bg-green' },
+  { id: 2, name: '부산', icon: 'fa-solid fa-water', completed: 0, total: 15, percentage: 0, colorClass: 'bg-blue' },
+  { id: 3, name: '제주', icon: 'fa-solid fa-tree', completed: 0, total: 15, percentage: 0, colorClass: 'bg-orange' },
+  { id: 4, name: '경주', icon: 'fa-solid fa-archway', completed: 0, total: 15, percentage: 0, colorClass: 'bg-purple' },
 ]);
 </script>
 
