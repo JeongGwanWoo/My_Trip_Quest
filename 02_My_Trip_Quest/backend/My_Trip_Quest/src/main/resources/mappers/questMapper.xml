@@ -86,6 +86,17 @@
         WHERE area_code = #{areaCode}
     </select>
 
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM quests
+    </select>
+
+    <select id="countQuestsByArea" resultType="int">
+        SELECT COUNT(q.quest_id)
+        FROM quests q
+        JOIN locations l ON q.location_id = l.location_id
+        WHERE l.area_code = #{areaCode}
+    </select>
+
     <select id="findLocationById" resultMap="locationWithQuestCountMap">
         SELECT
             location_id,
