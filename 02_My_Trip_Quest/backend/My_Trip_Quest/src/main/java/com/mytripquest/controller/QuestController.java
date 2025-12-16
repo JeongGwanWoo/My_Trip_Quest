@@ -3,7 +3,7 @@ package com.mytripquest.controller;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
-import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
+import com.mytripquest.domain.quest.dto.LocationWithQuestStatusDto;
 import com.mytripquest.domain.quest.dto.QuestAcceptRequestDto;
 import com.mytripquest.domain.quest.dto.QuestInfoWithStatusDto;
 import com.mytripquest.domain.quest.service.QuestService;
@@ -69,13 +69,14 @@ public class QuestController {
     }
 
     /**
-     * 특정 지역에 속한, 퀘스트가 있는 관광지 목록을 조회합니다.
+     * 특정 지역에 속한, 퀘스트가 있는 관광지 목록과 사용자의 퀘스트 상태를 함께 조회합니다.
      * @param areaCode (1, 5 등)
-     * @return 해당 지역의 관광지 정보와 퀘스트 개수를 담은 DTO 리스트
+     * @return 해당 지역의 관광지 정보, 퀘스트 개수, 사용자 퀘스트 상태를 담은 DTO 리스트
      */
     @GetMapping("/areas/{areaCode}")
-    public ResponseEntity<ApiResponse<List<LocationWithQuestCountDto>>> getLocationsByArea(@PathVariable String areaCode) {
-        List<LocationWithQuestCountDto> locations = questService.getLocationsByAreaCode(areaCode);
+    public ResponseEntity<ApiResponse<List<LocationWithQuestStatusDto>>> getLocationsByArea(@PathVariable String areaCode) {
+        Long userId = getCurrentUserId();
+        List<LocationWithQuestStatusDto> locations = questService.getLocationsByAreaCode(areaCode, userId);
         return ResponseEntity.ok(ApiResponse.success(locations));
     }
 

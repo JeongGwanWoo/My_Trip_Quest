@@ -48,6 +48,18 @@
             l.location_id, l.title, l.latitude, l.longitude, l.gps_verify_radius
     </select>
 
+    <!-- 지역 코드를 기준으로, 해당 지역에 속한 모든 퀘스트 목록을 조회합니다. -->
+    <select id="findQuestsByAreaCode" resultMap="questMap">
+        SELECT
+            q.*
+        FROM
+            quests q
+        JOIN
+            locations l ON q.location_id = l.location_id
+        WHERE
+            l.area_code = #{areaCode}
+    </select>
+
     <!-- 특정 관광지 ID를 기준으로 해당 관광지에 속한 퀘스트 목록을 조회합니다. -->
     <select id="findQuestsByLocationId" resultMap="questMap">
         SELECT *

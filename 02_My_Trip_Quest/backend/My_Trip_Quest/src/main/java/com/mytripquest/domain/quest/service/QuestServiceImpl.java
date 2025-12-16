@@ -4,6 +4,7 @@ import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.ai.service.AIVisionService;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
+import com.mytripquest.domain.quest.dto.LocationWithQuestStatusDto;
 import com.mytripquest.domain.quest.dto.QuestInfoWithStatusDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
 import com.mytripquest.domain.quest.entity.Quest;
@@ -96,17 +97,81 @@ public class QuestServiceImpl implements QuestService {
     }
 
     /**
-     * 지역 코드를 받아 해당 지역의 퀘스트가 있는 관광지 목록을 조회합니다.
+     * 지역 코드를 받아 해당 지역의 퀘스트가 있는 관광지 목록과 사용자의 퀘스트 상태를 함께 조회합니다.
      * @param areaCode (1, 5 등)
-     * @return 해당 지역의 관광지 정보와 퀘스트 개수를 담은 DTO 리스트
+     * @param userId 현재 사용자 ID
+     * @return 해당 지역의 관광지 정보, 퀘스트 개수, 사용자 퀘스트 상태를 담은 DTO 리스트
      */
     @Override
     @Transactional(readOnly = true)
-    public List<LocationWithQuestCountDto> getLocationsByAreaCode(String areaCode) {
+    public List<LocationWithQuestStatusDto> getLocationsByAreaCode(String areaCode, Long userId) {
         if (!CODE_TO_NAME.containsKey(areaCode)) {
             return Collections.emptyList();
         }
-        return questRepository.findLocationsByAreaCode(areaCode);
+
+        // 1. Get all locations in the area
+        List<LocationWithQuestCountDto> locations = questRepository.findLocationsByAreaCode(areaCode);
+        if (locations.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. Get all quests in the area to find their statuses efficiently
+        List<Quest> questsInArea = questRepository.findQuestsByAreaCode(areaCode);
+        if (questsInArea.isEmpty()) {
+            // 지역에 퀘스트가 아예 없으면 상태 없이 로케이션 정보만 반환
+            return locations.stream().map(locationDto -> {
+                LocationWithQuestStatusDto statusDto = new LocationWithQuestStatusDto();
+                statusDto.setLocationId(locationDto.getLocationId());
+                statusDto.setTitle(locationDto.getTitle());
+                statusDto.setLatitude(locationDto.getLatitude());
+                statusDto.setLongitude(locationDto.getLongitude());
+                statusDto.setGpsVerifyRadius(locationDto.getGpsVerifyRadius());
+                statusDto.setQuestCount(locationDto.getQuestCount());
+                statusDto.setStatus(null); // No quests, so no status
+                return statusDto;
+            }).collect(Collectors.toList());
+        }
+
+        List<Long> questIdsInArea = questsInArea.stream().map(Quest::getQuestId).collect(Collectors.toList());
+
+        // 3. Get the user's status for all quests in this area in one query
+        List<UserQuest> userQuests = userQuestRepository.findByUserIdAndQuestIds(userId, questIdsInArea);
+
+        // 4. Map user's quests by location ID for quick lookup
+        Map<Long, List<QuestStatus>> locationToStatusMap = new HashMap<>();
+        Map<Long, Quest> questIdToQuestMap = questsInArea.stream().collect(Collectors.toMap(Quest::getQuestId, q -> q));
+
+        for (UserQuest userQuest : userQuests) {
+            Quest quest = questIdToQuestMap.get(userQuest.getQuestId());
+            if (quest != null) {
+                locationToStatusMap
+                        .computeIfAbsent(quest.getLocationId(), k -> new ArrayList<>())
+                        .add(userQuest.getStatus());
+            }
+        }
+
+        // 5. Build the final DTO list
+        return locations.stream().map(locationDto -> {
+            LocationWithQuestStatusDto statusDto = new LocationWithQuestStatusDto();
+            statusDto.setLocationId(locationDto.getLocationId());
+            statusDto.setTitle(locationDto.getTitle());
+            statusDto.setLatitude(locationDto.getLatitude());
+            statusDto.setLongitude(locationDto.getLongitude());
+            statusDto.setGpsVerifyRadius(locationDto.getGpsVerifyRadius());
+            statusDto.setQuestCount(locationDto.getQuestCount());
+
+            List<QuestStatus> statuses = locationToStatusMap.get(locationDto.getLocationId());
+            if (statuses != null) {
+                if (statuses.contains(QuestStatus.ACCEPTED) || statuses.contains(QuestStatus.IN_PROGRESS)) {
+                    statusDto.setStatus("IN_PROGRESS");
+                } else if (statuses.contains(QuestStatus.COMPLETED)) {
+                    statusDto.setStatus("COMPLETED");
+                }
+            }
+            // if status is not set, it remains null (LOCKED)
+
+            return statusDto;
+        }).collect(Collectors.toList());
     }
 
     /**
