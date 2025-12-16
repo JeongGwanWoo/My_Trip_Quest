@@ -71,6 +71,20 @@
             </div>
           </section>
 
+          <section class="badge-section">
+            <h3 class="section-title">획득한 뱃지</h3>
+            <div class="badge-list">
+              <div v-if="earnedBadges.length > 0" v-for="badge in earnedBadges" :key="badge.id" class="badge-item" :title="badge.name">
+                <div class="badge-icon">
+                  <i :class="badge.icon"></i>
+                </div>
+              </div>
+              <div v-if="earnedBadges.length === 0" class="no-badges">
+                <p>아직 획득한 뱃지가 없습니다.</p>
+              </div>
+            </div>
+          </section>
+
           <section class="stats-grid">
             <div class="stat-card">
               <div class="stat-icon-box yellow"><span class="icon"><i class="fa-solid fa-coins"></i></span></div>
@@ -87,19 +101,20 @@
               </div>
             </div>
             <div class="stat-card blue">
-              <div class="stat-icon-box blue"><span class="icon"><i class="fa-solid fa-chart-line"></i></span></div>
+              <div class="stat-icon-box blue"><span class="icon"><i class="fa-solid fa-ranking-star"></i></span></div>
               <div class="stat-info">
-                <span class="label">전체 달성률</span>
-                <span class="value">5%</span>
+                <span class="label">현재 랭킹</span>
+                <span class="value">{{ (userProfile?.rank || 0).toLocaleString() }}<span class="sub">위</span></span>
               </div>
             </div>
-            <div class="stat-card purple">
-              <div class="stat-icon-box purple"><span class="icon"><i class="fa-solid fa-map-location-dot"></i></span></div>
+            <div class="stat-card purple" @click="isInProgressModalOpen = true" style="cursor: pointer;">
+              <div class="stat-icon-box purple"><span class="icon"><i class="fa-solid fa-person-running"></i></span></div>
               <div class="stat-info">
-                <span class="label">방문 도시</span>
-                <span class="value">1 <span class="sub">/ 4</span></span>
+                <span class="label">진행중인 퀘스트</span>
+                <span class="value">0</span>
               </div>
             </div>
+
           </section>
 
           <section class="city-section">
@@ -165,6 +180,16 @@
       </div>
     </BaseModal>
 
+    <BaseModal :show="isInProgressModalOpen" @close="isInProgressModalOpen = false">
+      <div class="modal-inner">
+        <h3 class="modal-title">진행중인 퀘스트</h3>
+        <div class="quest-list-placeholder">
+          <p>여기에 진행중인 퀘스트 목록이 표시됩니다.</p>
+          <!-- TODO: Fetch and display actual in-progress quests -->
+        </div>
+      </div>
+    </BaseModal>
+
   </div>
 </template>
 
@@ -183,6 +208,7 @@ const userJoined = ref('2024. 1. 15.');
 
 // --- 수정 모달 관련 상태 ---
 const isEditModalOpen = ref(false);
+const isInProgressModalOpen = ref(false);
 const editForm = ref({
   nickname: '',
   currentPassword: '',
@@ -313,6 +339,13 @@ const cityProgress = ref([
   { id: 2, name: '부산', icon: 'fa-solid fa-water', completed: 0, total: 15, percentage: 0, colorClass: 'bg-blue' },
   { id: 3, name: '제주', icon: 'fa-solid fa-tree', completed: 0, total: 15, percentage: 0, colorClass: 'bg-orange' },
   { id: 4, name: '경주', icon: 'fa-solid fa-archway', completed: 0, total: 15, percentage: 0, colorClass: 'bg-purple' },
+]);
+
+const earnedBadges = ref([
+  { id: 1, name: '첫걸음', icon: 'fa-solid fa-shoe-prints' },
+  { id: 2, name: '서울 탐험가', icon: 'fa-solid fa-city' },
+  { id: 3, name: '사진의 달인', icon: 'fa-solid fa-camera' },
+  { id: 4, name: '프로 뚜벅이', icon: 'fa-solid fa-person-hiking' },
 ]);
 </script>
 
@@ -740,5 +773,55 @@ const cityProgress = ref([
   .user-info { text-align: center; }
   .stats-grid { grid-template-columns: 1fr; }
   .city-list { grid-template-columns: 1fr; }
+}
+.quest-list-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+}
+
+/* 뱃지 섹션 스타일 */
+.badge-section {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid #f1f5f9;
+}
+.badge-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.badge-icon {
+  width: 64px;
+  height: 64px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+.badge-item:hover .badge-icon {
+  color: #3b82f6;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  transform: scale(1.1);
+}
+.no-badges {
+  width: 100%;
+  text-align: center;
+  padding: 20px;
+  color: #94a3b8;
 }
 </style>
