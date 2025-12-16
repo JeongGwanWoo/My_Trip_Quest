@@ -28,4 +28,11 @@ public class User {
     public enum Role {
         USER, ADMIN
     }
+
+    public int getLevel() {
+        if (this.totalXp == null) {
+            return 1;
+        }
+        return 1 + (this.totalXp / 1000);
+    }
 }
