@@ -6,12 +6,15 @@ import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestStatusDto;
 import com.mytripquest.domain.quest.dto.QuestAcceptRequestDto;
 import com.mytripquest.domain.quest.dto.QuestInfoWithStatusDto;
+import com.mytripquest.domain.quest.dto.QuestLocationSliceDto;
 import com.mytripquest.domain.quest.service.QuestService;
 import com.mytripquest.domain.user.repository.UserMapper;
 import com.mytripquest.global.ApiResponse;
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -69,14 +72,22 @@ public class QuestController {
     }
 
     /**
-     * 특정 지역에 속한, 퀘스트가 있는 관광지 목록과 사용자의 퀘스트 상태를 함께 조회합니다.
+     * 특정 지역에 속한, 퀘스트가 있는 관광지 목록을 페이지네이션과 검색을 적용하여 조회합니다.
      * @param areaCode (1, 5 등)
-     * @return 해당 지역의 관광지 정보, 퀘스트 개수, 사용자 퀘스트 상태를 담은 DTO 리스트
+     * @param page 페이지 번호 (기본값: 0)
+     * @param size 페이지 당 아이템 수 (기본값: 10)
+     * @param keyword 검색어 (선택 사항)
+     * @return 페이지네이션이 적용된 관광지 정보 DTO
      */
     @GetMapping("/areas/{areaCode}")
-    public ResponseEntity<ApiResponse<List<LocationWithQuestStatusDto>>> getLocationsByArea(@PathVariable String areaCode) {
+    public ResponseEntity<ApiResponse<QuestLocationSliceDto>> getLocationsByArea(
+            @PathVariable String areaCode,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword) {
         Long userId = getCurrentUserId();
-        List<LocationWithQuestStatusDto> locations = questService.getLocationsByAreaCode(areaCode, userId);
+        Pageable pageable = PageRequest.of(page, size);
+        QuestLocationSliceDto locations = questService.getLocationsByAreaCode(areaCode, userId, keyword, pageable);
         return ResponseEntity.ok(ApiResponse.success(locations));
     }
 

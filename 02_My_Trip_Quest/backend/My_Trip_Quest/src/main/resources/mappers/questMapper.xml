@@ -44,8 +44,14 @@
             quests q ON l.location_id = q.location_id
         WHERE
             l.area_code = #{areaCode}
+            <if test="keyword != null and keyword != ''">
+                AND l.title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
         GROUP BY
             l.location_id, l.title, l.latitude, l.longitude, l.gps_verify_radius
+        ORDER BY
+            l.title ASC
+        LIMIT #{pageable.pageSize} OFFSET #{pageable.offset}
     </select>
 
     <!-- 지역 코드를 기준으로, 해당 지역에 속한 모든 퀘스트 목록을 조회합니다. -->

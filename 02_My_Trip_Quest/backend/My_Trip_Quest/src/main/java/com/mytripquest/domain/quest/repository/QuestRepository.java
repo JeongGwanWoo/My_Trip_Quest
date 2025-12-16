@@ -4,6 +4,7 @@ import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.entity.Quest;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +19,7 @@ public interface QuestRepository {
      * @param areaCode
      * @return 관광지 정보와 퀘스트 개수를 담은 DTO 리스트
      */
-    List<LocationWithQuestCountDto> findLocationsByAreaCode(@Param("areaCode") String areaCode);
+    List<LocationWithQuestCountDto> findLocationsByAreaCode(@Param("areaCode") String areaCode, @Param("keyword") String keyword, @Param("pageable") Pageable pageable);
 
     /**
      * 지역 코드를 기준으로, 해당 지역에 속한 모든 퀘스트 목록을 조회합니다.

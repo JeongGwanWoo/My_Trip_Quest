@@ -5,6 +5,7 @@ import com.mytripquest.domain.ai.service.AIVisionService;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestStatusDto;
+import com.mytripquest.domain.quest.dto.QuestLocationSliceDto;
 import com.mytripquest.domain.quest.dto.QuestInfoWithStatusDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
 import com.mytripquest.domain.quest.entity.Quest;
@@ -18,6 +19,8 @@ import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -96,50 +99,55 @@ public class QuestServiceImpl implements QuestService {
         return areaQuestStatus;
     }
 
-    /**
-     * 지역 코드를 받아 해당 지역의 퀘스트가 있는 관광지 목록과 사용자의 퀘스트 상태를 함께 조회합니다.
-     * @param areaCode (1, 5 등)
-     * @param userId 현재 사용자 ID
-     * @return 해당 지역의 관광지 정보, 퀘스트 개수, 사용자 퀘스트 상태를 담은 DTO 리스트
-     */
     @Override
     @Transactional(readOnly = true)
-    public List<LocationWithQuestStatusDto> getLocationsByAreaCode(String areaCode, Long userId) {
+    public QuestLocationSliceDto getLocationsByAreaCode(String areaCode, Long userId, String keyword, Pageable pageable) {
         if (!CODE_TO_NAME.containsKey(areaCode)) {
-            return Collections.emptyList();
+            return new QuestLocationSliceDto(Collections.emptyList(), true);
         }
 
-        // 1. Get all locations in the area
-        List<LocationWithQuestCountDto> locations = questRepository.findLocationsByAreaCode(areaCode);
-        if (locations.isEmpty()) {
-            return Collections.emptyList();
+        // 1. '더 보기'를 위해 페이지 사이즈 + 1만큼 조회
+        Pageable queryPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize() + 1);
+        List<LocationWithQuestCountDto> locations = questRepository.findLocationsByAreaCode(areaCode, keyword, queryPageable);
+
+        // 2. 다음 페이지 존재 여부 확인
+        boolean hasNext = locations.size() > pageable.getPageSize();
+        List<LocationWithQuestCountDto> content = hasNext ? locations.subList(0, pageable.getPageSize()) : locations;
+
+        if (content.isEmpty()) {
+            return new QuestLocationSliceDto(Collections.emptyList(), !hasNext);
         }
 
-        // 2. Get all quests in the area to find their statuses efficiently
+        // 3. 현재 페이지의 관광지들에 대한 모든 퀘스트 ID 조회
+        List<Long> locationIds = content.stream().map(LocationWithQuestCountDto::getLocationId).collect(Collectors.toList());
+        // findQuestsByLocationIds 와 같은 메소드가 필요. 없으면 N+1 발생.
+        // 임시로 findQuestsByAreaCode 사용 (비효율적일 수 있음)
         List<Quest> questsInArea = questRepository.findQuestsByAreaCode(areaCode);
-        if (questsInArea.isEmpty()) {
-            // 지역에 퀘스트가 아예 없으면 상태 없이 로케이션 정보만 반환
-            return locations.stream().map(locationDto -> {
-                LocationWithQuestStatusDto statusDto = new LocationWithQuestStatusDto();
-                statusDto.setLocationId(locationDto.getLocationId());
-                statusDto.setTitle(locationDto.getTitle());
-                statusDto.setLatitude(locationDto.getLatitude());
-                statusDto.setLongitude(locationDto.getLongitude());
-                statusDto.setGpsVerifyRadius(locationDto.getGpsVerifyRadius());
-                statusDto.setQuestCount(locationDto.getQuestCount());
-                statusDto.setStatus(null); // No quests, so no status
-                return statusDto;
+        List<Quest> questsForContent = questsInArea.stream()
+                .filter(q -> locationIds.contains(q.getLocationId()))
+                .collect(Collectors.toList());
+
+        if (questsForContent.isEmpty()) {
+            List<LocationWithQuestStatusDto> dtoList = content.stream().map(loc -> {
+                LocationWithQuestStatusDto dto = new LocationWithQuestStatusDto();
+                dto.setLocationId(loc.getLocationId());
+                dto.setTitle(loc.getTitle());
+                dto.setLatitude(loc.getLatitude());
+                dto.setLongitude(loc.getLongitude());
+                dto.setGpsVerifyRadius(loc.getGpsVerifyRadius());
+                dto.setQuestCount(loc.getQuestCount());
+                dto.setStatus(null);
+                return dto;
             }).collect(Collectors.toList());
+            return new QuestLocationSliceDto(dtoList, !hasNext);
         }
 
-        List<Long> questIdsInArea = questsInArea.stream().map(Quest::getQuestId).collect(Collectors.toList());
+        List<Long> questIds = questsForContent.stream().map(Quest::getQuestId).collect(Collectors.toList());
 
-        // 3. Get the user's status for all quests in this area in one query
-        List<UserQuest> userQuests = userQuestRepository.findByUserIdAndQuestIds(userId, questIdsInArea);
-
-        // 4. Map user's quests by location ID for quick lookup
+        // 4. 사용자의 퀘스트 상태 조회
+        List<UserQuest> userQuests = userQuestRepository.findByUserIdAndQuestIds(userId, questIds);
         Map<Long, List<QuestStatus>> locationToStatusMap = new HashMap<>();
-        Map<Long, Quest> questIdToQuestMap = questsInArea.stream().collect(Collectors.toMap(Quest::getQuestId, q -> q));
+        Map<Long, Quest> questIdToQuestMap = questsForContent.stream().collect(Collectors.toMap(Quest::getQuestId, q -> q));
 
         for (UserQuest userQuest : userQuests) {
             Quest quest = questIdToQuestMap.get(userQuest.getQuestId());
@@ -150,8 +158,8 @@ public class QuestServiceImpl implements QuestService {
             }
         }
 
-        // 5. Build the final DTO list
-        return locations.stream().map(locationDto -> {
+        // 5. 최종 DTO 리스트 생성
+        List<LocationWithQuestStatusDto> dtoList = content.stream().map(locationDto -> {
             LocationWithQuestStatusDto statusDto = new LocationWithQuestStatusDto();
             statusDto.setLocationId(locationDto.getLocationId());
             statusDto.setTitle(locationDto.getTitle());
@@ -168,10 +176,10 @@ public class QuestServiceImpl implements QuestService {
                     statusDto.setStatus("COMPLETED");
                 }
             }
-            // if status is not set, it remains null (LOCKED)
-
             return statusDto;
         }).collect(Collectors.toList());
+
+        return new QuestLocationSliceDto(dtoList, !hasNext);
     }
 
     /**
