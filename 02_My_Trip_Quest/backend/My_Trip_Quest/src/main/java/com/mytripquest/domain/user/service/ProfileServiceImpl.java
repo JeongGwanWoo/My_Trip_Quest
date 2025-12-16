@@ -74,7 +74,12 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         return UserProfileResponseDto.builder()
+                .email(user.getEmail())
+                .nickname(user.getNickname())
                 .joinedAt(user.getCreatedAt().toLocalDate())
+                .totalXp(user.getTotalXp())
+                .points(user.getPoints())
+                .level(user.getLevel())
                 .completedMissions(completedMissions)
                 .totalMissions(totalMissions)
                 .rank(rank != null ? rank : 0)
