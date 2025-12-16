@@ -49,6 +49,19 @@ public interface QuestRepository {
      */
     int countTotalLocationsByArea(@Param("areaCode") String areaCode);
 
+    /**
+     * 모든 퀘스트의 총 개수를 조회합니다.
+     * @return 퀘스트 총 개수
+     */
+    long countAll();
+
+    /**
+     * 특정 지역의 총 퀘스트 개수를 조회합니다.
+     * @param areaCode
+     * @return 특정 지역의 퀘스트 총 개수
+     */
+    int countQuestsByArea(@Param("areaCode") String areaCode);
+
     Optional<LocationWithQuestCountDto> findLocationById(@Param("locationId") Long locationId);
 
     Optional<Quest> findFirstByLocationIdAndQuestTypeIdOrderByQuestIdAsc(@Param("locationId") long locationId, @Param("questTypeId") int questTypeId);

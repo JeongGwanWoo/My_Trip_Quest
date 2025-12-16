@@ -25,4 +25,8 @@ public interface UserQuestRepository {
 
     List<UserQuest> findByUserIdAndQuestIds(@Param("userId") long userId, @Param("questIds") List<Long> questIds);
 
+    long countByUserIdAndStatus(@Param("userId") Long userId, @Param("status") QuestStatus status);
+
+    int countCompletedQuestsByArea(@Param("userId") Long userId, @Param("areaCode") String areaCode);
+
 }

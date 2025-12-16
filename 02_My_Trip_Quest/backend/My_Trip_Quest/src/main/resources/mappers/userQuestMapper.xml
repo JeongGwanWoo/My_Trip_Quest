@@ -101,4 +101,21 @@
         </foreach>
     </select>
 
+    <select id="countByUserIdAndStatus" resultType="long">
+        SELECT COUNT(*)
+        FROM user_quests
+        WHERE user_id = #{userId}
+          AND status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
+    </select>
+
+    <select id="countCompletedQuestsByArea" resultType="int">
+        SELECT COUNT(uq.user_quest_id)
+        FROM user_quests uq
+        JOIN quests q ON uq.quest_id = q.quest_id
+        JOIN locations l ON q.location_id = l.location_id
+        WHERE uq.user_id = #{userId}
+          AND uq.status = 'COMPLETED'
+          AND l.area_code = #{areaCode}
+    </select>
+
 </mapper>
