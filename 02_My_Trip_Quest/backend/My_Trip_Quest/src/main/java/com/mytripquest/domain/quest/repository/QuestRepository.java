@@ -21,6 +21,13 @@ public interface QuestRepository {
     List<LocationWithQuestCountDto> findLocationsByAreaCode(@Param("areaCode") String areaCode);
 
     /**
+     * 지역 코드를 기준으로, 해당 지역에 속한 모든 퀘스트 목록을 조회합니다.
+     * @param areaCode
+     * @return 퀘스트 리스트
+     */
+    List<Quest> findQuestsByAreaCode(@Param("areaCode") String areaCode);
+
+    /**
      * 특정 관광지 ID를 기준으로 해당 관광지에 속한 퀘스트 목록을 조회합니다.
      * @param locationId
      * @return 퀘스트 리스트

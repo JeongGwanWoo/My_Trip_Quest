@@ -3,7 +3,7 @@ package com.mytripquest.domain.quest.service;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
-import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
+import com.mytripquest.domain.quest.dto.LocationWithQuestStatusDto;
 import com.mytripquest.domain.quest.dto.QuestInfoWithStatusDto;
 import com.mytripquest.domain.quest.entity.Quest;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,7 +14,7 @@ import java.util.List;
 
 public interface QuestService {
     List<UserAreaQuestStatusDto> getUserAreaQuestCounts(Long userId);
-    List<LocationWithQuestCountDto> getLocationsByAreaCode(String areaCode);
+    List<LocationWithQuestStatusDto> getLocationsByAreaCode(String areaCode, Long userId);
     List<QuestInfoWithStatusDto> getQuestsByLocationId(Long locationId, Long userId);
     void acceptQuest(long questId, long userId);
     void forfeitQuest(long questId, long userId);
