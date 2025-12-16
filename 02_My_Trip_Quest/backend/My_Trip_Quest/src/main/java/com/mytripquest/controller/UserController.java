@@ -1,9 +1,13 @@
 package com.mytripquest.controller;
 
 import com.mytripquest.domain.user.dto.UserRequestDto;
-import com.mytripquest.domain.user.dto.UserResponseDto;
+import com.mytripquest.domain.user.dto.UserProfileResponseDto;
+import com.mytripquest.domain.user.repository.UserMapper;
+import com.mytripquest.domain.user.service.ProfileService;
 import com.mytripquest.domain.user.service.UserService;
 import com.mytripquest.global.ApiResponse;
+import com.mytripquest.global.error.exception.BusinessException;
+import com.mytripquest.global.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,6 +28,8 @@ import java.util.Collections;
 public class UserController {
 
     private final UserService userService;
+    private final ProfileService profileService;
+    private final UserMapper userMapper;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> register(@RequestBody UserRequestDto.Register request) {
@@ -38,11 +44,14 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserResponseDto.ProfileResponseDto>> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<ApiResponse<UserProfileResponseDto>> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(401).body(ApiResponse.failure("인증되지 않은 사용자입니다."));
         }
-        UserResponseDto.ProfileResponseDto profile = userService.getProfile(userDetails.getUsername());
+        Long userId = userMapper.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND))
+                .getUserId();
+        UserProfileResponseDto profile = profileService.getProfileData(userId);
         return ResponseEntity.ok(ApiResponse.success(profile));
     }
 
