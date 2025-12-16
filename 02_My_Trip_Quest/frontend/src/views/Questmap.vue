@@ -8,17 +8,7 @@
           <MapComponent :areas="areas" @area-clicked="handleAreaClick" class="map-component" />
         </div>
         
-        <div class="map-legend">
-          <div class="legend-header">상태 안내</div>
-          <div class="legend-item">
-            <span class="status-dot yellow"></span>
-            <span class="label">진행중</span>
-          </div>
-          <div class="legend-item">
-            <span class="status-dot green"></span>
-            <span class="label">완료됨</span>
-          </div>
-        </div>
+
 
         <BottomSheet v-model:isOpen="isSheetOpen" class="map-bottom-sheet">
           <div class="sheet-content">
@@ -31,7 +21,14 @@
                   ✕
                 </button>
               </div>
+              <div class="header-main-row">
               <h2 class="section-title">탐험할 지역을 선택하세요</h2>
+              <button @click="isHelpModalVisible = true" class="btn-help" title="도움말">?</button>
+            </div>
+            <div class="sheet-search-bar">
+              <input type="text" v-model="searchKeyword" @keyup.enter="handleSearch" placeholder="관광지 이름으로 검색" class="search-input" />
+              <button @click="handleSearch" class="search-btn">검색</button>
+            </div>
             </div>
 
             <div class="quest-list">
@@ -39,7 +36,7 @@
                 <div
                   class="quest-card"
                   :class="[quest.colorClass, { 'is-active': selectedAreaCode === quest.id }]"
-                  @click="fetchLocations(quest.id)"
+                  @click="handleQuestCardClick(quest.id)"
                 >
                   <div class="card-left">
                     <div class="quest-icon-box">{{ quest.icon }}</div>
@@ -66,20 +63,22 @@
                   <div v-if="selectedAreaCode === quest.id" class="location-list-container">
                     <div class="location-list-connector"></div>
                     <div class="location-list">
-                      <div
-                        v-for="(location, index) in areaLocations"
-                        :key="location.locationId"
-                        class="location-item"
-                        @click.stop="fetchQuestsForModal(location)"
-                      >
-                        <div class="location-info">
-                          <span class="bullet-point" :class="getLocationColorClass(index)"></span>
-                          <span class="location-name">{{ location.title }}</span>
-                        </div>
-                        <div class="quest-count-badge">
-                          퀘스트 {{ location.questCount }}개
-                        </div>
-                      </div>
+                                            <div
+                                              v-for="(location) in areaLocations"
+                                              :key="location.locationId"
+                                              class="location-item"
+                                              @click.stop="fetchQuestsForModal(location)"
+                                            >
+                                              <div class="location-info">
+                                                <span class="bullet-point" :class="getLocationColorClass(location)"></span>
+                                                <span class="location-name">{{ location.title }}</span>
+                                              </div>
+                                            </div>
+                                            <div v-if="!isLastPage && areaLocations.length > 0" class="load-more-container">
+                                              <button @click="handleLoadMore" :disabled="isLoadingMore" class="btn-load-more">
+                                                {{ isLoadingMore ? '불러오는 중...' : '더 보기' }}
+                                              </button>
+                                            </div>
                     </div>
                   </div>
                 </Transition>
@@ -200,6 +199,28 @@
         </div>
       </div>
     </BaseModal>
+
+    <BaseModal :show="isHelpModalVisible" @close="isHelpModalVisible = false">
+      <div class="modal-inner">
+        <div class="modal-header">
+          <h3>상태 안내</h3>
+        </div>
+        <div class="help-legend-list">
+          <div class="legend-item">
+            <span class="bullet-point dot-skyblue"></span>
+            <span class="label">수락 전</span>
+          </div>
+          <div class="legend-item">
+            <span class="bullet-point dot-orange"></span>
+            <span class="label">진행중</span>
+          </div>
+          <div class="legend-item">
+            <span class="bullet-point dot-green"></span>
+            <span class="label">완료됨</span>
+          </div>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -220,8 +241,15 @@ const areaLocations = ref([]);
 const locationQuests = ref([]);
 const selectedAreaCode = ref(null);
 
+// Search & Pagination State
+const searchKeyword = ref('');
+const currentPage = ref(0);
+const isLastPage = ref(false);
+const isLoadingMore = ref(false);
+
 // Modal State
 const isModalVisible = ref(false);
+const isHelpModalVisible = ref(false);
 const modalContentType = ref('');
 const selectedQuestForModal = ref(null);
 const selectedLocationForModal = ref(null);
@@ -236,11 +264,11 @@ const photoQuestError = ref(null); // Stores error messages for photo quests
 
 // --- Methods ---
 const handleAreaClick = (areaCode) => {
-  fetchLocations(areaCode);
+  handleQuestCardClick(areaCode);
   isSheetOpen.value = true;
 };
 
-onMounted(async () => {
+const fetchAreas = async () => {
   try {
     const response = await api.get(`/api/v1/quest-map/areas`);
     areas.value = response.data.data;
@@ -258,6 +286,10 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error fetching areas:", error);
   }
+};
+
+onMounted(async () => {
+  await fetchAreas();
 });
 
 const getQuestStyle = (areaName) => {
@@ -268,25 +300,69 @@ const getQuestStyle = (areaName) => {
   }
 };
 
-const getLocationColorClass = (index) => {
-    const colors = ['dot-red', 'dot-blue', 'dot-green', 'dot-purple'];
-    return colors[index % colors.length];
+const getLocationColorClass = (location) => {
+  switch (location.status) {
+    case 'COMPLETED':
+      return 'dot-green';
+    case 'IN_PROGRESS':
+      return 'dot-orange';
+    default:
+      return 'dot-skyblue';
+  }
 };
 
-const fetchLocations = async (areaCode) => {
-  if (selectedAreaCode.value === areaCode) {
-    selectedAreaCode.value = null;
-    areaLocations.value = [];
-    return;
-  }
-  try {
-    const response = await api.get(`/api/v1/quest-map/areas/${areaCode}`);
-    areaLocations.value = response.data.data;
-    selectedAreaCode.value = areaCode;
-  } catch (error) {
-    console.error(`Error fetching locations for area ${areaCode}:`, error);
-  }
-};
+    const fetchLocations = async (areaCode, { reset = false } = {}) => {
+      if (isLoadingMore.value && !reset) return;
+
+      if (reset) {
+        currentPage.value = 0;
+        areaLocations.value = [];
+        isLastPage.value = false;
+      }
+
+      isLoadingMore.value = true;
+      try {
+        const response = await api.get(`/api/v1/quest-map/areas/${areaCode}`, {
+          params: {
+            page: currentPage.value,
+            size: 10,
+            keyword: searchKeyword.value,
+          },
+        });
+        const data = response.data.data;
+        areaLocations.value.push(...data.content);
+        isLastPage.value = data.last;
+        currentPage.value++;
+      } catch (error) {
+        console.error(`Error fetching locations for area ${areaCode}:`, error);
+      } finally {
+        isLoadingMore.value = false;
+      }
+    };
+
+    const handleQuestCardClick = (areaCode) => {
+      if (selectedAreaCode.value === areaCode) {
+        selectedAreaCode.value = null;
+        areaLocations.value = [];
+        searchKeyword.value = '';
+      } else {
+        selectedAreaCode.value = areaCode;
+        searchKeyword.value = '';
+        fetchLocations(areaCode, { reset: true });
+      }
+    };
+
+    const handleSearch = () => {
+      if (selectedAreaCode.value) {
+        fetchLocations(selectedAreaCode.value, { reset: true });
+      }
+    };
+
+    const handleLoadMore = () => {
+      if (selectedAreaCode.value && !isLastPage.value) {
+        fetchLocations(selectedAreaCode.value);
+      }
+    };
 
 const fetchQuestsForModal = async (location) => {
   try {
@@ -305,10 +381,15 @@ const acceptQuest = async (questId) => {
   try {
     await api.post(`/api/v1/quest-map/quests/${questId}/accept`);
     alert(`퀘스트 #${questId}를 수락했습니다!`);
-    // 퀘스트 목록을 새로고침하여 버튼 상태를 업데이트합니다.
+    
+    // UI 상태를 동적으로 새로고침합니다.
     if (selectedLocationForModal.value) {
       await fetchQuestsForModal(selectedLocationForModal.value);
     }
+    if (selectedAreaCode.value) {
+      await fetchLocations(selectedAreaCode.value, { reset: true });
+    }
+    await fetchAreas();
   } catch (error) {
     console.error(`Error accepting quest:`, error);
     alert(`실패: ${error.response?.data?.message || error.message}`);
@@ -327,9 +408,15 @@ const handleCompleteArrival = async (questId) => {
       try {
         await completeArrivalQuest(questId, latitude, longitude);
         alert(`퀘스트 #${questId} 완료!`);
+        
+        // UI 상태를 동적으로 새로고침합니다.
         if (selectedLocationForModal.value) {
           await fetchQuestsForModal(selectedLocationForModal.value);
         }
+        if (selectedAreaCode.value) {
+          await fetchLocations(selectedAreaCode.value, { reset: true });
+        }
+        await fetchAreas();
       } catch (error) {
         console.error(`Error completing arrival quest:`, error);
         alert(`퀘스트 완료 실패: ${error.response?.data?.message || error.message}`);
@@ -356,9 +443,16 @@ const uploadPhotoForQuest = async (questId, imageFile, latitude = null, longitud
     showGeolocationButton.value = false; // Reset button visibility
     await completePhotoQuest(questId, imageFile, latitude, longitude);
     alert(`사진 퀘스트 #${questId} 완료!`);
+    
+    // UI 상태를 동적으로 새로고침합니다.
     if (selectedLocationForModal.value) {
       await fetchQuestsForModal(selectedLocationForModal.value);
     }
+    if (selectedAreaCode.value) {
+      await fetchLocations(selectedAreaCode.value, { reset: true });
+    }
+    await fetchAreas();
+
     // Reset temporary states
     selectedImageFile.value = null;
     activePhotoQuestId.value = null;
@@ -441,11 +535,18 @@ const handleForfeitQuest = async (questId) => {
     try {
       await forfeitQuest(questId);
       alert("퀘스트를 포기했습니다.");
+      
       const locationToRefresh = selectedLocationForModal.value;
       closeModal();
+      
+      // UI 상태를 동적으로 새로고침합니다.
       if (locationToRefresh) {
         await fetchQuestsForModal(locationToRefresh);
       }
+      if (selectedAreaCode.value) {
+        await fetchLocations(selectedAreaCode.value, { reset: true });
+      }
+      await fetchAreas();
     } catch (error) {
       console.error(`Error forfeiting quest:`, error);
       alert(`퀘스트 포기에 실패했습니다: ${error.response?.data?.message || error.message}`);
@@ -649,10 +750,9 @@ const closeModal = () => {
 .location-info { display: flex; align-items: center; gap: 10px; }
 .location-name { font-size: 14px; font-weight: 500; color: #334155; }
 .bullet-point { width: 8px; height: 8px; border-radius: 2px; }
-.dot-red { background: #fca5a5; }
-.dot-blue { background: #93c5fd; }
-.dot-green { background: #86efac; }
-.dot-purple { background: #d8b4fe; }
+.dot-skyblue { background: #38bdf8; } /* 하늘색 (수락 전) */
+.dot-orange { background: #fbbf24; } /* 주황색 (진행중) */
+.dot-green { background: #22c55e; } /* 초록색 (완료) */
 .quest-count-badge { font-size: 12px; color: #64748b; background: #e2e8f0; padding: 4px 8px; border-radius: 6px; }
 
 /* Modal & Transition */
@@ -664,14 +764,15 @@ const closeModal = () => {
 .nested-quest-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; transition: border-color 0.2s; }
 .nested-quest-item:hover { border-color: #cbd5e1; }
 .quest-title-text { font-weight: 600; color: #334155; font-size: 15px; }
-.quest-actions { display: flex; gap: 8px; }
-.btn-text { background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; font-weight: 500; }
+.quest-actions { display: flex; gap: 8px; flex-wrap: nowrap; }
+.btn-text { background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; font-weight: 500; white-space: nowrap; }
 .btn-text:hover { color: #334155; }
-.btn-primary-sm { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.btn-primary-sm { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
 .btn-primary-sm:hover { background: #1d4ed8; }
 .btn-primary-sm:disabled {
   background: #94a3b8;
   cursor: not-allowed;
+  white-space: nowrap;
 }
 
 .btn-secondary-sm {
@@ -684,6 +785,7 @@ const closeModal = () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 .btn-secondary-sm:hover {
   background: #e2e8f0;
@@ -700,6 +802,7 @@ const closeModal = () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 .btn-danger-sm:hover {
   background: #fecaca;
@@ -722,4 +825,101 @@ const closeModal = () => {
 .detail-box .value.point { color: #f59e0b; }
 .slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s ease; }
 .slide-fade-enter-from, .slide-fade-leave-to { opacity: 0; transform: translateY(-10px); }
+
+/* 도움말 버튼 및 모달 관련 스타일 */
+.header-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px; /* 상단 여백 추가 */
+}
+
+.btn-help {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+}
+.btn-help:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.help-legend-list {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.help-legend-list .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.help-legend-list .label {
+  font-size: 15px;
+  color: #334155;
+}
+
+/* BaseModal의 modal-header 재정의 */
+    .help-legend-list + .modal-header h3 {
+      margin-bottom: 0;
+    }
+
+    /* 검색 바 스타일 */
+    .sheet-search-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .search-input {
+      flex-grow: 1;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px #3b82f6;
+    }
+    .search-btn {
+      border: 1px solid #3b82f6;
+      background: #3b82f6;
+      color: white;
+      padding: 0 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* 더 보기 버튼 스타일 */
+    .load-more-container {
+      text-align: center;
+      padding: 16px 0;
+    }
+    .btn-load-more {
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      color: #334155;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-load-more:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
 </style>
