@@ -40,8 +40,21 @@ const displayAreaMarkers = (newAreas) => {
 
         const contentEl = document.createElement('div');
         contentEl.className = 'custom-marker';
-        // 퀘스트 완료 여부에 따라 핀 색상 결정
-        const pinColorClass = area.incompleteLocationCount === 0 ? 'quest-pin-completed' : 'quest-pin-active';
+        
+        // 퀘스트 상태에 따라 핀 색상 결정
+        let pinColorClass;
+        switch (area.status) {
+          case 'COMPLETED':
+            pinColorClass = 'quest-pin-completed';
+            break;
+          case 'IN_PROGRESS':
+            pinColorClass = 'quest-pin-inprogress';
+            break;
+          default:
+            pinColorClass = 'quest-pin-not-started';
+            break;
+        }
+
         contentEl.innerHTML = `
           <div class="pin-body ${pinColorClass}"><span class="pin-text">Q</span></div>
           <div class="pin-tail"></div>
@@ -164,12 +177,16 @@ const initMap = () => {
   border: 2px solid white;
 }
 
-.pin-body.quest-pin-active {
+.pin-body.quest-pin-inprogress {
   background-color: #fbbf24; /* 주황색 배경 */
 }
 
 .pin-body.quest-pin-completed {
   background-color: #22c55e; /* 초록색 배경 */
+}
+
+.pin-body.quest-pin-not-started {
+  background-color: #38bdf8; /* 하늘색 배경 */
 }
 
 .pin-body .pin-text {

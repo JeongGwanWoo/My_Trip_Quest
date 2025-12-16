@@ -8,17 +8,7 @@
           <MapComponent :areas="areas" @area-clicked="handleAreaClick" class="map-component" />
         </div>
         
-        <div class="map-legend">
-          <div class="legend-header">상태 안내</div>
-          <div class="legend-item">
-            <span class="status-dot yellow"></span>
-            <span class="label">진행중</span>
-          </div>
-          <div class="legend-item">
-            <span class="status-dot green"></span>
-            <span class="label">완료됨</span>
-          </div>
-        </div>
+
 
         <BottomSheet v-model:isOpen="isSheetOpen" class="map-bottom-sheet">
           <div class="sheet-content">
@@ -31,7 +21,10 @@
                   ✕
                 </button>
               </div>
+              <div class="header-main-row">
               <h2 class="section-title">탐험할 지역을 선택하세요</h2>
+              <button @click="isHelpModalVisible = true" class="btn-help" title="도움말">?</button>
+            </div>
             </div>
 
             <div class="quest-list">
@@ -73,12 +66,10 @@
                         @click.stop="fetchQuestsForModal(location)"
                       >
                         <div class="location-info">
-                          <span class="bullet-point" :class="getLocationColorClass(index)"></span>
+                          <span class="bullet-point" :class="getLocationColorClass(location)"></span>
                           <span class="location-name">{{ location.title }}</span>
                         </div>
-                        <div class="quest-count-badge">
-                          퀘스트 {{ location.questCount }}개
-                        </div>
+
                       </div>
                     </div>
                   </div>
@@ -200,6 +191,28 @@
         </div>
       </div>
     </BaseModal>
+
+    <BaseModal :show="isHelpModalVisible" @close="isHelpModalVisible = false">
+      <div class="modal-inner">
+        <div class="modal-header">
+          <h3>상태 안내</h3>
+        </div>
+        <div class="help-legend-list">
+          <div class="legend-item">
+            <span class="bullet-point dot-skyblue"></span>
+            <span class="label">수락 전</span>
+          </div>
+          <div class="legend-item">
+            <span class="bullet-point dot-orange"></span>
+            <span class="label">진행중</span>
+          </div>
+          <div class="legend-item">
+            <span class="bullet-point dot-green"></span>
+            <span class="label">완료됨</span>
+          </div>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -222,6 +235,7 @@ const selectedAreaCode = ref(null);
 
 // Modal State
 const isModalVisible = ref(false);
+const isHelpModalVisible = ref(false);
 const modalContentType = ref('');
 const selectedQuestForModal = ref(null);
 const selectedLocationForModal = ref(null);
@@ -240,7 +254,7 @@ const handleAreaClick = (areaCode) => {
   isSheetOpen.value = true;
 };
 
-onMounted(async () => {
+const fetchAreas = async () => {
   try {
     const response = await api.get(`/api/v1/quest-map/areas`);
     areas.value = response.data.data;
@@ -258,6 +272,10 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error fetching areas:", error);
   }
+};
+
+onMounted(async () => {
+  await fetchAreas();
 });
 
 const getQuestStyle = (areaName) => {
@@ -268,9 +286,25 @@ const getQuestStyle = (areaName) => {
   }
 };
 
-const getLocationColorClass = (index) => {
-    const colors = ['dot-red', 'dot-blue', 'dot-green', 'dot-purple'];
-    return colors[index % colors.length];
+const getLocationColorClass = (location) => {
+  switch (location.status) {
+    case 'COMPLETED':
+      return 'dot-green';
+    case 'IN_PROGRESS':
+      return 'dot-orange';
+    default:
+      return 'dot-skyblue';
+  }
+};
+
+const refreshLocations = async (areaCode) => {
+  try {
+    const response = await api.get(`/api/v1/quest-map/areas/${areaCode}`);
+    areaLocations.value = response.data.data;
+    // selectedAreaCode는 이미 설정되어 있을 것이므로, 여기서 다시 설정할 필요는 없습니다.
+  } catch (error) {
+    console.error(`Error refreshing locations for area ${areaCode}:`, error);
+  }
 };
 
 const fetchLocations = async (areaCode) => {
@@ -305,10 +339,15 @@ const acceptQuest = async (questId) => {
   try {
     await api.post(`/api/v1/quest-map/quests/${questId}/accept`);
     alert(`퀘스트 #${questId}를 수락했습니다!`);
-    // 퀘스트 목록을 새로고침하여 버튼 상태를 업데이트합니다.
+    
+    // UI 상태를 동적으로 새로고침합니다.
     if (selectedLocationForModal.value) {
-      await fetchQuestsForModal(selectedLocationForModal.value);
+      await fetchQuestsForModal(selectedLocationForModal.value); // 1. 모달 내부 퀘스트 목록 갱신
     }
+    if (selectedAreaCode.value) {
+      await refreshLocations(selectedAreaCode.value); // 2. 관광지 목록 갱신 (점 색상)
+    }
+    await fetchAreas(); // 3. 지역 목록 갱신 (지도 핀 색상)
   } catch (error) {
     console.error(`Error accepting quest:`, error);
     alert(`실패: ${error.response?.data?.message || error.message}`);
@@ -327,9 +366,15 @@ const handleCompleteArrival = async (questId) => {
       try {
         await completeArrivalQuest(questId, latitude, longitude);
         alert(`퀘스트 #${questId} 완료!`);
+        
+        // UI 상태를 동적으로 새로고침합니다.
         if (selectedLocationForModal.value) {
           await fetchQuestsForModal(selectedLocationForModal.value);
         }
+        if (selectedAreaCode.value) {
+          await refreshLocations(selectedAreaCode.value);
+        }
+        await fetchAreas();
       } catch (error) {
         console.error(`Error completing arrival quest:`, error);
         alert(`퀘스트 완료 실패: ${error.response?.data?.message || error.message}`);
@@ -356,9 +401,16 @@ const uploadPhotoForQuest = async (questId, imageFile, latitude = null, longitud
     showGeolocationButton.value = false; // Reset button visibility
     await completePhotoQuest(questId, imageFile, latitude, longitude);
     alert(`사진 퀘스트 #${questId} 완료!`);
+    
+    // UI 상태를 동적으로 새로고침합니다.
     if (selectedLocationForModal.value) {
       await fetchQuestsForModal(selectedLocationForModal.value);
     }
+    if (selectedAreaCode.value) {
+      await refreshLocations(selectedAreaCode.value);
+    }
+    await fetchAreas();
+
     // Reset temporary states
     selectedImageFile.value = null;
     activePhotoQuestId.value = null;
@@ -441,11 +493,18 @@ const handleForfeitQuest = async (questId) => {
     try {
       await forfeitQuest(questId);
       alert("퀘스트를 포기했습니다.");
+      
       const locationToRefresh = selectedLocationForModal.value;
       closeModal();
+      
+      // UI 상태를 동적으로 새로고침합니다.
       if (locationToRefresh) {
         await fetchQuestsForModal(locationToRefresh);
       }
+      if (selectedAreaCode.value) {
+        await refreshLocations(selectedAreaCode.value);
+      }
+      await fetchAreas();
     } catch (error) {
       console.error(`Error forfeiting quest:`, error);
       alert(`퀘스트 포기에 실패했습니다: ${error.response?.data?.message || error.message}`);
@@ -649,10 +708,9 @@ const closeModal = () => {
 .location-info { display: flex; align-items: center; gap: 10px; }
 .location-name { font-size: 14px; font-weight: 500; color: #334155; }
 .bullet-point { width: 8px; height: 8px; border-radius: 2px; }
-.dot-red { background: #fca5a5; }
-.dot-blue { background: #93c5fd; }
-.dot-green { background: #86efac; }
-.dot-purple { background: #d8b4fe; }
+.dot-skyblue { background: #38bdf8; } /* 하늘색 (수락 전) */
+.dot-orange { background: #fbbf24; } /* 주황색 (진행중) */
+.dot-green { background: #22c55e; } /* 초록색 (완료) */
 .quest-count-badge { font-size: 12px; color: #64748b; background: #e2e8f0; padding: 4px 8px; border-radius: 6px; }
 
 /* Modal & Transition */
@@ -664,14 +722,15 @@ const closeModal = () => {
 .nested-quest-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; transition: border-color 0.2s; }
 .nested-quest-item:hover { border-color: #cbd5e1; }
 .quest-title-text { font-weight: 600; color: #334155; font-size: 15px; }
-.quest-actions { display: flex; gap: 8px; }
-.btn-text { background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; font-weight: 500; }
+.quest-actions { display: flex; gap: 8px; flex-wrap: nowrap; }
+.btn-text { background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; font-weight: 500; white-space: nowrap; }
 .btn-text:hover { color: #334155; }
-.btn-primary-sm { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.btn-primary-sm { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
 .btn-primary-sm:hover { background: #1d4ed8; }
 .btn-primary-sm:disabled {
   background: #94a3b8;
   cursor: not-allowed;
+  white-space: nowrap;
 }
 
 .btn-secondary-sm {
@@ -684,6 +743,7 @@ const closeModal = () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 .btn-secondary-sm:hover {
   background: #e2e8f0;
@@ -700,6 +760,7 @@ const closeModal = () => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 .btn-danger-sm:hover {
   background: #fecaca;
@@ -722,4 +783,54 @@ const closeModal = () => {
 .detail-box .value.point { color: #f59e0b; }
 .slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s ease; }
 .slide-fade-enter-from, .slide-fade-leave-to { opacity: 0; transform: translateY(-10px); }
+
+/* 도움말 버튼 및 모달 관련 스타일 */
+.header-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px; /* 상단 여백 추가 */
+}
+
+.btn-help {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+}
+.btn-help:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.help-legend-list {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.help-legend-list .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.help-legend-list .label {
+  font-size: 15px;
+  color: #334155;
+}
+
+/* BaseModal의 modal-header 재정의 */
+.help-legend-list + .modal-header h3 {
+  margin-bottom: 0;
+}
 </style>
