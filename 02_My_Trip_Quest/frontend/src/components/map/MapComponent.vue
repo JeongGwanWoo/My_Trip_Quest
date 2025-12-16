@@ -40,12 +40,12 @@ const displayAreaMarkers = (newAreas) => {
 
         const contentEl = document.createElement('div');
         contentEl.className = 'custom-marker';
-        const pinColorClass = area.incompleteLocationCount === 0 ? 'green-pin' : 'orange-pin';
+        // 퀘스트 완료 여부에 따라 핀 색상 결정
+        const pinColorClass = area.incompleteLocationCount === 0 ? 'quest-pin-completed' : 'quest-pin-active';
         contentEl.innerHTML = `
-          <div class="pin-body ${pinColorClass}"><span class="pin-number">${area.incompleteLocationCount}</span></div>
+          <div class="pin-body ${pinColorClass}"><span class="pin-text">Q</span></div>
           <div class="pin-tail"></div>
         `;
-
         contentEl.addEventListener('click', () => {
           emit('area-clicked', area.areaCode);
         });
@@ -67,6 +67,18 @@ const displayAreaMarkers = (newAreas) => {
   });
 };
 
+// props.areas가 변경될 때 마커를 업데이트합니다.
+// 지도가 초기화된 후에만 마커를 표시하도록 `map` 변수를 확인합니다.
+watch(
+  () => props.areas,
+  (newAreas) => {
+    if (map) {
+      displayAreaMarkers(newAreas);
+    }
+  },
+  { deep: true }
+);
+
 onMounted(() => {
   const loadAndInitMap = () => {
     kakao.maps.load(() => {
@@ -86,15 +98,6 @@ onMounted(() => {
     script.src = `//dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=4a721b099696ef1b4f34ca52a919cbee&libraries=services`;
     document.head.appendChild(script);
   }
-
-  // watch는 스크립트 로드 여부와 관계없이 항상 설정되어야 함
-  watch(
-    () => props.areas,
-    (newAreas) => {
-      displayAreaMarkers(newAreas);
-    },
-    { immediate: true, deep: true } // 컴포넌트가 마운트될 때 즉시 실행
-  );
 });
 
 const initMap = () => {
@@ -106,6 +109,7 @@ const initMap = () => {
   };
   map = new kakao.maps.Map(container, options);
 
+  // 지도 드래그 제한 설정
   const bounds = new kakao.maps.LatLngBounds(
     new kakao.maps.LatLng(33, 124),
     new kakao.maps.LatLng(39, 132)
@@ -125,6 +129,12 @@ const initMap = () => {
       map.setCenter(new kakao.maps.LatLng(newLat, newLng));
     }
   });
+
+  // *** FIX ***
+  // 지도가 초기화된 후, props.areas에 이미 데이터가 있다면 마커를 표시합니다.
+  if (props.areas && props.areas.length > 0) {
+    displayAreaMarkers(props.areas);
+  }
 };
 </script>
 
@@ -154,17 +164,18 @@ const initMap = () => {
   border: 2px solid white;
 }
 
-.pin-body.orange-pin {
+.pin-body.quest-pin-active {
   background-color: #fbbf24; /* 주황색 배경 */
 }
 
-.pin-body.green-pin {
+.pin-body.quest-pin-completed {
   background-color: #22c55e; /* 초록색 배경 */
 }
 
-.pin-body .pin-number {
-  transform: rotate(45deg); /* 숫자 바로 세우기 */
-  color: #333; /* 텍스트 색상을 어둡게 변경하여 밝은 배경에서 가독성 확보 */
+.pin-body .pin-text {
+  transform: rotate(45deg); /* 'Q' 글자 바로 세우기 */
+  color: white; /* 텍스트 색상을 흰색으로 변경 */
+  font-size: 16px; /* 'Q' 글자 크기 조정 */
 }
 .pin-tail {
   position: absolute;
