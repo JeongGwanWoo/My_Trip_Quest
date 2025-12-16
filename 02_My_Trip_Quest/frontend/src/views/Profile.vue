@@ -34,7 +34,7 @@
               <h2 class="username">{{ userProfile?.nickname || '여행자' }}</h2>
               <span class="user-email">{{ userProfile?.email || 'email@example.com' }}</span>
               <div class="joined-date">
-                <span class="icon"><i class="fa-solid fa-calendar-days"></i></span> 가입일: {{ userJoined }}
+                <span class="icon"><i class="fa-solid fa-calendar-days"></i></span> 가입일: {{ formattedJoinedDate }}
               </div>
             </div>
           </div>
@@ -47,26 +47,9 @@
               <div class="level-badge-group">
                 <span class="level-icon"><i class="fa-solid fa-star"></i></span>
                 <div class="level-text">
-                  <span class="label">CURRENT LEVEL</span>
-                  <span class="value">Lv.{{ levelInfo.currentLevel }}</span>
+                  <span class="label">TOTAL EXPERIENCE</span>
+                  <span class="value">{{ userProfile?.totalXp || 0 }} XP</span>
                 </div>
-              </div>
-              <div class="xp-text">
-                <span class="current">{{ userProfile?.totalXp || 0 }}</span>
-                <span class="total">/ {{ levelInfo.xpForNextLevel }} XP</span>
-              </div>
-            </div>
-
-            <div class="progress-container">
-              <div class="progress-bar-bg">
-                <div 
-                  class="progress-bar-fill" 
-                  :style="{ width: levelInfo.progressPercentage + '%' }"
-                ></div>
-              </div>
-              <div class="progress-footer">
-                <span class="next-level-tip">다음 레벨까지 {{ levelInfo.xpForNextLevel - (userProfile?.totalXp || 0) }} XP 남았습니다! 힘내세요! <i class="fa-solid fa-fire"></i></span>
-                <span class="percentage">{{ levelInfo.progressPercentage }}%</span>
               </div>
             </div>
           </section>
@@ -97,7 +80,7 @@
               <div class="stat-icon-box green"><span class="icon"><i class="fa-solid fa-trophy"></i></span></div>
               <div class="stat-info">
                 <span class="label">완료 미션</span>
-                <span class="value">3 <span class="sub">/ 60</span></span>
+                <span class="value">{{ userProfile?.completedMissions || 0 }} <span class="sub">/ {{ userProfile?.totalMissions || 0 }}</span></span>
               </div>
             </div>
             <div class="stat-card blue">
@@ -120,21 +103,21 @@
           <section class="city-section">
             <h3 class="section-title">도시별 진행 현황</h3>
             <div class="city-list">
-              <div v-for="city in cityProgress" :key="city.id" class="city-item">
-                <div class="city-icon"><i :class="city.icon"></i></div>
+              <div v-for="city in userProfile?.cityProgress || []" :key="city.areaCode" class="city-item">
+                <div class="city-icon"><i :class="getCityStyle(city.cityName).icon"></i></div>
                 <div class="city-info">
                   <div class="city-header">
-                    <span class="city-name">{{ city.name }}</span>
-                    <span class="city-percent">{{ city.percentage }}%</span>
+                    <span class="city-name">{{ city.cityName }}</span>
+                    <span class="city-percent">{{ Math.round((city.completedQuests / city.totalQuests) * 100) || 0 }}%</span>
                   </div>
                   <div class="city-progress-bg">
                     <div 
                       class="city-progress-fill" 
-                      :class="city.colorClass"
-                      :style="{ width: city.percentage + '%' }"
+                      :class="getCityStyle(city.cityName).colorClass"
+                      :style="{ width: `${Math.round((city.completedQuests / city.totalQuests) * 100) || 0}%` }"
                     ></div>
                   </div>
-                  <div class="city-sub-text">{{ city.completed }} / {{ city.total }} 미션 완료</div>
+                  <div class="city-sub-text">{{ city.completedQuests }} / {{ city.totalQuests }} 미션 완료</div>
                 </div>
               </div>
             </div>
@@ -204,7 +187,14 @@ import { useAuthStore } from '@/stores/auth';
 const authStore = useAuthStore();
 const userProfile = ref(null);
 const equippedItemsList = ref([]);
-const userJoined = ref('2024. 1. 15.'); 
+const formattedJoinedDate = computed(() => {
+  if (!userProfile.value?.joinedAt) return 'N/A';
+  const date = new Date(userProfile.value.joinedAt);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}. ${month}. ${day}.`;
+});
 
 // --- 수정 모달 관련 상태 ---
 const isEditModalOpen = ref(false);
@@ -282,18 +272,17 @@ const handleWithdraw = async () => {
     }
   }
 };
+
+const getCityStyle = (cityName) => {
+  switch (cityName) {
+    case '서울특별시': return { icon: 'fa-solid fa-city', colorClass: 'bg-green' };
+    case '광주광역시': return { icon: 'fa-solid fa-water', colorClass: 'bg-blue' };
+    default: return { icon: 'fa-solid fa-map-marker-alt', colorClass: 'bg-gray' };
+  }
+};
 // -----------------------
 
-const levelInfo = computed(() => {
-  if (userProfile.value) {
-    return getLevelProgress(userProfile.value.totalXp);
-  }
-  return {
-    currentLevel: 1,
-    xpForNextLevel: 1000,
-    progressPercentage: 0,
-  };
-});
+
 
 const equippedItemsBySlot = computed(() => {
   const slots = {
@@ -310,8 +299,10 @@ const equippedItemsBySlot = computed(() => {
 const fetchUserProfileData = async () => {
   try {
     const response = await getProfile();
+    console.log('API Response:', response);
     if (response.success) {
       userProfile.value = response.data;
+      console.log('Updated userProfile.value:', userProfile.value);
     }
   } catch (error) {
     console.error("Failed to fetch user profile data:", error);
@@ -334,12 +325,7 @@ onMounted(async () => {
   await fetchAvatarData(); 
 });
 
-const cityProgress = ref([
-  { id: 1, name: '서울', icon: 'fa-solid fa-city', completed: 3, total: 15, percentage: 20, colorClass: 'bg-green' },
-  { id: 2, name: '부산', icon: 'fa-solid fa-water', completed: 0, total: 15, percentage: 0, colorClass: 'bg-blue' },
-  { id: 3, name: '제주', icon: 'fa-solid fa-tree', completed: 0, total: 15, percentage: 0, colorClass: 'bg-orange' },
-  { id: 4, name: '경주', icon: 'fa-solid fa-archway', completed: 0, total: 15, percentage: 0, colorClass: 'bg-purple' },
-]);
+
 
 const earnedBadges = ref([
   { id: 1, name: '첫걸음', icon: 'fa-solid fa-shoe-prints' },
@@ -676,6 +662,7 @@ const earnedBadges = ref([
 .bg-blue { background: #3b82f6; }
 .bg-orange { background: #f97316; }
 .bg-purple { background: #a855f7; }
+.bg-gray { background: #94a3b8; }
 
 .city-sub-text { font-size: 11px; color: #94a3b8; }
 
