@@ -3,6 +3,7 @@ package com.mytripquest.domain.user.service;
 import com.mytripquest.domain.quest.entity.QuestStatus;
 import com.mytripquest.domain.quest.repository.QuestRepository;
 import com.mytripquest.domain.quest.repository.UserQuestRepository;
+import com.mytripquest.domain.ranking.dto.UserRankDto;
 import com.mytripquest.domain.user.dto.CityProgressDto;
 import com.mytripquest.domain.user.dto.UserProfileResponseDto;
 import com.mytripquest.domain.user.entity.User;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,7 +52,9 @@ public class ProfileServiceImpl implements ProfileService {
         long completedMissions = userQuestRepository.countByUserIdAndStatus(userId, QuestStatus.COMPLETED);
 
         // 3. Get user rank
-        Integer rank = userMapper.findUserRankById(userId);
+        Integer rank = userMapper.findUserRankById(userId)
+                .map(userRankDto -> (int) userRankDto.getRank())
+                .orElse(0);
 
         // 4. Get city progress
         List<CityProgressDto> cityProgress = new ArrayList<>();
