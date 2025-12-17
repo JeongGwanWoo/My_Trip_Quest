@@ -32,14 +32,36 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import Sidebar from '@/components/common/Sidebar.vue'
 import Header from '@/components/common/Header.vue'
+import { useAuthStore } from '@/stores/auth'
+import { getProfile } from '@/api/user'
 
 const route = useRoute()
 const isCollapsed = ref(false)
 const isMobileMenuOpen = ref(false)
+
+// --- Auth Check on Startup ---
+const authStore = useAuthStore()
+const checkAuthStatus = async () => {
+  if (authStore.isLoggedIn) {
+    try {
+      // Try to fetch user profile to validate the token
+      await getProfile();
+      console.log("세션 유효성 검사 성공: 사용자가 로그인되어 있습니다.");
+    } catch (error) {
+      console.log("세션 유효성 검사 실패: 토큰이 만료되었거나 서버에 연결할 수 없습니다. 강제 로그아웃합니다.");
+      authStore.logout();
+    }
+  }
+}
+
+onMounted(() => {
+  checkAuthStatus();
+});
+// -----------------------------
 
 // [추가] 퀘스트 맵 페이지인지 확인하는 변수
 const isMapPage = computed(() => route.path === '/quest-map')
