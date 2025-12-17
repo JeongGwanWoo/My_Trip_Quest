@@ -45,20 +45,19 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { storeToRefs } from 'pinia';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { isLoggedIn } = storeToRefs(authStore);
 
 defineProps({
   isCollapsed: Boolean
 })
 
 defineEmits(['open-mobile-menu'])
-
-const isLoggedIn = computed(() => !!authStore.token);
 
 // [추가] 로고 클릭 시 홈으로 이동
 const goHome = () => {
@@ -72,7 +71,6 @@ const handleLogin = () => {
 const handleLogout = () => {
   if(confirm('로그아웃 하시겠습니까?')) {
     authStore.logout();
-    router.push('/login');
   }
 };
 </script>

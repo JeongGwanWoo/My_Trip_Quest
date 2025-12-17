@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import Home from '@/views/Home.vue'
 import QuestMap from '@/views/Questmap.vue'
 import Rankings from '@/views/Rankings.vue'
@@ -16,8 +17,6 @@ const routes = [
     name: 'Home',
     component: Home
   },
-  
-
   {
   path: '/rankings',
   name: 'Rankings',
@@ -28,17 +27,18 @@ const routes = [
     path: '/quest-map',
     name: 'QuestMap',
     component: QuestMap
-    
   },
   {
     path: '/fitting-room',
     name: 'FittingRoom',
-    component: FittingRoom
+    component: FittingRoom,
+    meta: { requiresAuth: true }
   },
   {
     path: '/profile',
     name: 'Profile',
-    component: Profile
+    component: Profile,
+    meta: { requiresAuth: true }
   },
   {
     path: '/shop',
@@ -82,6 +82,17 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
   linkActiveClass: 'active'
+})
+
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+
+  if (requiresAuth && !authStore.isLoggedIn) {
+    next('/login')
+  } else {
+    next()
+  }
 })
 
 export default router

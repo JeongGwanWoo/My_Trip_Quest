@@ -226,12 +226,19 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import { storeToRefs } from "pinia";
 import MapComponent from "@/components/map/MapComponent.vue";
 import BaseModal from "@/components/ui/BaseModal.vue";
 import BottomSheet from "@/components/ui/BottomSheet.vue";
 import api from "@/api";
 import { completeArrivalQuest, forfeitQuest } from "@/api/quest";
 import { completePhotoQuest } from "@/api/photoQuest"; // ★ Add this import
+
+const router = useRouter();
+const authStore = useAuthStore();
+const { isLoggedIn } = storeToRefs(authStore);
 
 // --- State ---
 const isSheetOpen = ref(false);
@@ -365,6 +372,11 @@ const getLocationColorClass = (location) => {
     };
 
 const fetchQuestsForModal = async (location) => {
+  if (!isLoggedIn.value) {
+    alert("로그인이 필요한 서비스입니다.");
+    router.push("/login");
+    return;
+  }
   try {
     const response = await api.get(`/api/v1/quest-map/locations/${location.locationId}`);
     console.log('Quest list API response:', response.data.data); // 응답 데이터 구조 확인

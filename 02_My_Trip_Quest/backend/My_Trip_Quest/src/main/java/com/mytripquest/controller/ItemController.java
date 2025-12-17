@@ -41,7 +41,10 @@ public class ItemController {
 
     @GetMapping("/shop")
     public ResponseEntity<ApiResponse<List<ShopItemDto>>> getShopItems(@AuthenticationPrincipal UserDetails userDetails) {
-        Long userId = userService.findIdByEmail(userDetails.getUsername());
+        Long userId = null;
+        if (userDetails != null) {
+            userId = userService.findIdByEmail(userDetails.getUsername());
+        }
         List<ShopItemDto> shopItems = itemService.getShopItems(userId);
         return ResponseEntity.ok(ApiResponse.success(shopItems));
     }

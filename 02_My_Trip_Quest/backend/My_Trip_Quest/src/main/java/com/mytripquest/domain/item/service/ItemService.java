@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j; // Import Slf4j
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -57,10 +58,15 @@ public class ItemService {
         List<Item> allItems = itemRepository.findAll();
 
         // 2. Get the items the user already owns
-        List<UserItem> myItems = findMyItems(userId);
-        Set<Long> myItemIds = myItems.stream()
-                                     .map(UserItem::getItemId)
-                                     .collect(Collectors.toSet());
+        Set<Long> myItemIds;
+        if (userId != null) {
+            List<UserItem> myItems = findMyItems(userId);
+            myItemIds = myItems.stream()
+                                         .map(UserItem::getItemId)
+                                         .collect(Collectors.toSet());
+        } else {
+            myItemIds = Collections.emptySet();
+        }
 
         // 3. Combine the info to create ShopItemDto list
         return allItems.stream()
