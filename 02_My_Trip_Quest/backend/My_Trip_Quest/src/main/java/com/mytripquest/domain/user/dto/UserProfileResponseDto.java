@@ -12,9 +12,9 @@ public class UserProfileResponseDto {
     private String email;
     private String nickname;
     private LocalDate joinedAt;
-    private int totalXp;
     private int points;
-    private int level;
+    private LevelProgressDto levelProgress;
+
     private long completedMissions;
     private long ongoingMissions;
     private long totalMissions;
