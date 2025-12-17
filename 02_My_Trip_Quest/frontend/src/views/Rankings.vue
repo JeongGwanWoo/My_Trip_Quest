@@ -81,7 +81,7 @@
             </div>
             
             <div class="col level">
-              <span class="level-badge">Lv.{{ calculateLevel(user.totalXp) }}</span>
+              <span class="level-badge">Lv.{{ user.level }}</span>
             </div>
             
             <div class="col missions desktop-only">
@@ -104,7 +104,6 @@ import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { storeToRefs } from 'pinia';
 import { getRankings, getMyRank } from '@/api/ranking.js';
-import { calculateLevel } from '@/utils/level.js';
 
 const authStore = useAuthStore();
 const { isLoggedIn } = storeToRefs(authStore);
