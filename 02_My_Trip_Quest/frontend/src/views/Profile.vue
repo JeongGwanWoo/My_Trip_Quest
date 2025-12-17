@@ -90,11 +90,11 @@
                 <span class="value">{{ (userProfile?.rank || 0).toLocaleString() }}<span class="sub">위</span></span>
               </div>
             </div>
-            <div class="stat-card purple" @click="isInProgressModalOpen = true" style="cursor: pointer;">
+            <div class="stat-card purple" @click="goToOngoingQuests" style="cursor: pointer;">
               <div class="stat-icon-box purple"><span class="icon"><i class="fa-solid fa-person-running"></i></span></div>
               <div class="stat-info">
                 <span class="label">진행중인 퀘스트</span>
-                <span class="value">0</span>
+                <span class="value">{{ userProfile?.ongoingMissions || 0 }}</span>
               </div>
             </div>
 
@@ -163,21 +163,14 @@
       </div>
     </BaseModal>
 
-    <BaseModal :show="isInProgressModalOpen" @close="isInProgressModalOpen = false">
-      <div class="modal-inner">
-        <h3 class="modal-title">진행중인 퀘스트</h3>
-        <div class="quest-list-placeholder">
-          <p>여기에 진행중인 퀘스트 목록이 표시됩니다.</p>
-          <!-- TODO: Fetch and display actual in-progress quests -->
-        </div>
-      </div>
-    </BaseModal>
+
 
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { getAvatar } from '@/api/avatar.js';
 import { getProfile, updateProfile, deleteAccount } from '@/api/user.js';
 import { getLevelProgress } from '@/utils/level.js';
@@ -185,6 +178,12 @@ import BaseModal from "@/components/ui/BaseModal.vue"; // 모달 컴포넌트 �
 import { useAuthStore } from '@/stores/auth';
 
 const authStore = useAuthStore();
+const router = useRouter();
+
+const goToOngoingQuests = () => {
+  router.push('/profile/ongoing-quests');
+};
+
 const userProfile = ref(null);
 const equippedItemsList = ref([]);
 const formattedJoinedDate = computed(() => {
@@ -198,7 +197,6 @@ const formattedJoinedDate = computed(() => {
 
 // --- 수정 모달 관련 상태 ---
 const isEditModalOpen = ref(false);
-const isInProgressModalOpen = ref(false);
 const editForm = ref({
   nickname: '',
   currentPassword: '',

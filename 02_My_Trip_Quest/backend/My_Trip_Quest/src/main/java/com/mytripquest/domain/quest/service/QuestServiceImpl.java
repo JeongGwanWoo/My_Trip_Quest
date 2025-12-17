@@ -432,6 +432,11 @@ public class QuestServiceImpl implements QuestService {
     @Override
     @Transactional(readOnly = true)
     public List<InProgressQuestDto> getInProgressQuests(Long userId) {
-        return userQuestRepository.findUserQuestsByStatus(userId, QuestStatus.ACCEPTED);
+        List<InProgressQuestDto> acceptedQuests = userQuestRepository.findUserQuestsByStatus(userId, QuestStatus.ACCEPTED);
+        List<InProgressQuestDto> inProgressQuests = userQuestRepository.findUserQuestsByStatus(userId, QuestStatus.IN_PROGRESS);
+        List<InProgressQuestDto> allInProgressQuests = new ArrayList<>();
+        allInProgressQuests.addAll(acceptedQuests);
+        allInProgressQuests.addAll(inProgressQuests);
+        return allInProgressQuests;
     }
 }

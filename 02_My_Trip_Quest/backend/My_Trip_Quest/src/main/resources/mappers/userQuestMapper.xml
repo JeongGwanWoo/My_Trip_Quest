@@ -16,10 +16,14 @@
     <resultMap id="inProgressQuestDtoMap" type="com.mytripquest.domain.quest.dto.InProgressQuestDto">
         <constructor>
             <arg column="quest_id" javaType="long"/>
+            <arg column="quest_type_id" javaType="long"/>
             <arg column="title" javaType="string"/>
+            <arg column="description" javaType="string"/>
             <arg column="status" javaType="com.mytripquest.domain.quest.entity.QuestStatus"/>
             <arg column="accepted_at" javaType="java.time.LocalDateTime"/>
             <arg column="location_name" javaType="string"/>
+            <arg column="reward_xp" javaType="java.lang.Integer"/>
+            <arg column="reward_points" javaType="java.lang.Integer"/>
         </constructor>
     </resultMap>
 
@@ -70,15 +74,19 @@
     <select id="findUserQuestsByStatus" resultMap="inProgressQuestDtoMap">
         SELECT
             uq.quest_id,
+            q.quest_type_id,
             q.title,
+            q.description,
             uq.status,
             uq.accepted_at,
-            l.name as location_name
+            l.title as location_name,
+            q.reward_xp,
+            q.reward_points
         FROM
             user_quests uq
-        JOIN
+        LEFT JOIN
             quests q ON uq.quest_id = q.quest_id
-        JOIN
+        LEFT JOIN
             locations l ON q.location_id = l.location_id
         WHERE
             uq.user_id = #{userId} AND uq.status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}

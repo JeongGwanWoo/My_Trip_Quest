@@ -50,6 +50,9 @@ public class ProfileServiceImpl implements ProfileService {
         // 2. Get mission counts
         long totalMissions = questRepository.countAll();
         long completedMissions = userQuestRepository.countByUserIdAndStatus(userId, QuestStatus.COMPLETED);
+        long acceptedMissions = userQuestRepository.countByUserIdAndStatus(userId, QuestStatus.ACCEPTED);
+        long inProgressMissions = userQuestRepository.countByUserIdAndStatus(userId, QuestStatus.IN_PROGRESS);
+        long ongoingMissions = acceptedMissions + inProgressMissions;
 
         // 3. Get user rank
         Integer rank = userMapper.findUserRankById(userId)
@@ -81,6 +84,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .points(user.getPoints())
                 .level(user.getLevel())
                 .completedMissions(completedMissions)
+                .ongoingMissions(ongoingMissions)
                 .totalMissions(totalMissions)
                 .rank(rank != null ? rank : 0)
                 .cityProgress(cityProgress)
