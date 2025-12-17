@@ -16,6 +16,7 @@ public class UserProfileResponseDto {
     private int points;
     private int level;
     private long completedMissions;
+    private long ongoingMissions;
     private long totalMissions;
     private int rank;
     private List<CityProgressDto> cityProgress;

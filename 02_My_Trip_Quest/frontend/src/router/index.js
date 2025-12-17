@@ -41,6 +41,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/profile/ongoing-quests',
+    name: 'OngoingQuests',
+    component: () => import('@/views/OngoingQuests.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/shop',
     name: 'Shop',
     component: Shop
