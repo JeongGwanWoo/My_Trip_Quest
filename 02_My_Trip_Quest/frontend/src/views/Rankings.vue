@@ -14,7 +14,7 @@
         </p>
       </header>
 
-      <section class="my-rank-card">
+      <section class="my-rank-card" v-if="isLoggedIn">
         <div class="my-profile-section">
           <div class="avatar-circle">
             <i class="fa-solid fa-user avatar-icon"></i>
@@ -58,7 +58,7 @@
             v-for="(user, index) in rankings" 
             :key="user.nickname" 
             class="table-row"
-            :class="{ 'my-row': user.nickname === myData.name }"
+            :class="{ 'my-row': isLoggedIn && user.nickname === myData.name }"
           >
             <div class="col rank">
               <div v-if="user.rank === 1" class="rank-badge gold">1</div>
@@ -101,8 +101,13 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { storeToRefs } from 'pinia';
 import { getRankings, getMyRank } from '@/api/ranking.js';
 import { calculateLevel } from '@/utils/level.js';
+
+const authStore = useAuthStore();
+const { isLoggedIn } = storeToRefs(authStore);
 
 const myData = ref({
   name: 'Loading...',
@@ -147,7 +152,9 @@ const fetchMyData = async () => {
 
 onMounted(async () => {
   await fetchRankings();
-  await fetchMyData();
+  if (isLoggedIn.value) {
+    await fetchMyData();
+  }
 });
 </script>
 

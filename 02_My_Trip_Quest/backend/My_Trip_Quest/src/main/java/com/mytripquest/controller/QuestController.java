@@ -50,18 +50,17 @@ public class QuestController {
     // TODO: CustomUserDetails 구현 후 @AuthenticationPrincipal 사용하도록 변경 필요
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED); // 또는 적절한 예외 처리
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() instanceof String) {
+            return null;
         }
-        String email = ((UserDetails) authentication.getPrincipal()).getUsername();
-        return userMapper.findByEmail(email)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND)) // 또는 적절한 예외 처리
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return userMapper.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND))
                 .getUserId();
     }
 
     /**
      * 지도에 표시될 지역별 퀘스트 개수와 현재 사용자의 완료 현황을 조회합니다.
-     * @param userId 현재 조회하는 사용자의 ID
      * @return 각 지역의 이름, 총 퀘스트 개수, 완료한 퀘스트 개수를 담은 DTO 리스트
      */
     @GetMapping("/areas")

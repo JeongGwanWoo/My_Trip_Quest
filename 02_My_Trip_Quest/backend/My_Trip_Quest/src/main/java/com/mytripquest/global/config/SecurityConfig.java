@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/users/register", "/api/v1/users/login", "/login/oauth2/**", "/oauth2/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/quest-map/**", "/api/v1/rankings", "/api/v1/items/shop").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
@@ -55,10 +56,21 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        
+        // 1. 프론트엔드 주소 허용 (그대로 유지)
         configuration.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
+        
+        // 2. 모든 HTTP 메서드 허용 (그대로 유지)
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token"));
+        
+        // 3. ❗수정됨: 모든 헤더 허용 (개발 편의를 위해 "*"로 변경 권장)
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "x-auth-token"));
+        
+        // 4. 자격 증명 허용 (그대로 유지)
         configuration.setAllowCredentials(true);
+        
+        // 5. 브라우저가 'Authorization' 헤더를 읽을 수 있게 노출 (옵션, JWT 사용 시 필요할 수 있음)
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "x-auth-token"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

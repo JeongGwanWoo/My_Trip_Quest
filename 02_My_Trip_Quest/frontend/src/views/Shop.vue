@@ -11,7 +11,7 @@
           <p class="page-desc">나만의 개성을 뽐낼 아이템을 구매해보세요!</p>
         </div>
         
-        <div class="coin-card">
+        <div class="coin-card" v-if="isLoggedIn">
           <div class="coin-label">내 보유 코인</div>
           <div class="coin-value-row">
             <i class="fa-solid fa-coins coin-icon"></i>
@@ -83,8 +83,15 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import { storeToRefs } from 'pinia';
 import { getShopItems, buyItem } from '@/api/items.js';
 import { getProfile } from '@/api/user.js';
+
+const router = useRouter();
+const authStore = useAuthStore();
+const { isLoggedIn } = storeToRefs(authStore);
 
 const userCoins = ref(0);
 const items = ref([]);
@@ -103,37 +110,40 @@ const categories = [
   { id: 'etc', label: '기타' },
 ];
 
-// 카테고리 ID로 한글 라벨 찾기 (헬퍼 함수)
 const getCategoryLabel = (catId) => {
   const cat = categories.find(c => c.id === catId);
   return cat ? cat.label : catId;
 }
 
-const fetchShopData = async () => {
+const fetchShopItemsData = async () => {
   isLoading.value = true;
   try {
-    const [shopItemsResponse, profileResponse] = await Promise.all([
-      getShopItems(),
-      getProfile()
-    ]);
-
+    const shopItemsResponse = await getShopItems();
     if (shopItemsResponse.success) {
       items.value = shopItemsResponse.data;
     }
-
-    if (profileResponse.success) {
-      userCoins.value = profileResponse.data.points;
-    }
-
   } catch (error) {
-    console.error("상점 정보를 불러오는 데 실패했습니다.", error);
-    alert("상점 정보를 불러오는 데 실패했습니다. 다시 시도해주세요.");
-  } finally {
-    isLoading.value = false;
+    console.error("상점 아이템을 불러오는 데 실패했습니다.", error);
   }
 };
 
-onMounted(fetchShopData);
+const fetchUserData = async () => {
+  if (!isLoggedIn.value) return;
+  try {
+    const profileResponse = await getProfile();
+    if (profileResponse.success) {
+      userCoins.value = profileResponse.data.points;
+    }
+  } catch (error) {
+    console.error("사용자 정보를 불러오는 데 실패했습니다.", error);
+  }
+};
+
+onMounted(async () => {
+  await fetchShopItemsData();
+  await fetchUserData();
+  isLoading.value = false;
+});
 
 const filteredItems = computed(() => {
   if (currentCategory.value === 'all') {
@@ -145,12 +155,19 @@ const filteredItems = computed(() => {
 const handleBuy = async (item) => {
   if (item.owned) return;
 
+  if (!isLoggedIn.value) {
+    alert("로그인이 필요한 서비스입니다.");
+    router.push('/login');
+    return;
+  }
+
   if (confirm(`'${item.name}'을(를) ${item.price}코인에 구매하시겠습니까?`)) {
     try {
       const response = await buyItem(item.id);
       if (response.success) {
         alert("구매 완료!");
-        await fetchShopData(); 
+        await fetchShopItemsData();
+        await fetchUserData();
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || "알 수 없는 오류가 발생했습니다.";

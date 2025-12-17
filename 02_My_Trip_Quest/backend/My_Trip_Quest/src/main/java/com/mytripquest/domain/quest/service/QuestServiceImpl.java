@@ -17,6 +17,7 @@ import com.mytripquest.domain.user.entity.User;
 import com.mytripquest.domain.user.repository.UserMapper;
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -43,9 +44,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/**
- * 퀘스트 관련 비즈니스 로직을 처리하는 서비스 구현체
- */
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -56,7 +54,6 @@ public class QuestServiceImpl implements QuestService {
     private final UserQuestRepository userQuestRepository;
     private final UserMapper userMapper;
     private final AIVisionService aiVisionService;
-    // MVP 단계에서는 지역 정보를 하드코딩하여 사용
     private static final Map<String, String> AREA_CODES;
     private static final Map<String, String> CODE_TO_NAME;
 
@@ -69,11 +66,6 @@ public class QuestServiceImpl implements QuestService {
         CODE_TO_NAME = Collections.unmodifiableMap(aMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)));
     }
 
-    /**
-     * 각 지역별 퀘스트 개수와 사용자의 완료 현황을 조회합니다.
-     * @param userId 현재 사용자의 ID
-     * @return 각 지역의 이름, 총 퀘스트 개수, 완료한 퀘스트 개수를 담은 DTO 리스트
-     */
     @Override
     @Transactional(readOnly = true)
     public List<UserAreaQuestStatusDto> getUserAreaQuestCounts(Long userId) {
@@ -82,13 +74,14 @@ public class QuestServiceImpl implements QuestService {
             String areaName = entry.getKey();
             String areaCode = entry.getValue();
 
-            // 1. 해당 지역의 전체 관광지 수 계산
             int totalLocations = questRepository.countTotalLocationsByArea(areaCode);
+            int incompleteLocations;
+            if (userId == null) {
+                incompleteLocations = totalLocations;
+            } else {
+                incompleteLocations = userQuestRepository.countIncompleteLocationsByArea(userId, areaCode);
+            }
 
-            // 2. 해당 지역에서 사용자가 완료하지 않은 관광지 수 계산
-            int incompleteLocations = userQuestRepository.countIncompleteLocationsByArea(userId, areaCode);
-
-            // 3. DTO 생성
             areaQuestStatus.add(UserAreaQuestStatusDto.builder()
                     .areaName(areaName)
                     .areaCode(areaCode)
@@ -106,11 +99,9 @@ public class QuestServiceImpl implements QuestService {
             return new QuestLocationSliceDto(Collections.emptyList(), true);
         }
 
-        // 1. '더 보기'를 위해 페이지 사이즈 + 1만큼 조회
         Pageable queryPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize() + 1);
         List<LocationWithQuestCountDto> locations = questRepository.findLocationsByAreaCode(areaCode, keyword, queryPageable);
 
-        // 2. 다음 페이지 존재 여부 확인
         boolean hasNext = locations.size() > pageable.getPageSize();
         List<LocationWithQuestCountDto> content = hasNext ? locations.subList(0, pageable.getPageSize()) : locations;
 
@@ -118,10 +109,22 @@ public class QuestServiceImpl implements QuestService {
             return new QuestLocationSliceDto(Collections.emptyList(), !hasNext);
         }
 
-        // 3. 현재 페이지의 관광지들에 대한 모든 퀘스트 ID 조회
+        if (userId == null) {
+            List<LocationWithQuestStatusDto> dtoList = content.stream().map(loc -> {
+                LocationWithQuestStatusDto dto = new LocationWithQuestStatusDto();
+                dto.setLocationId(loc.getLocationId());
+                dto.setTitle(loc.getTitle());
+                dto.setLatitude(loc.getLatitude());
+                dto.setLongitude(loc.getLongitude());
+                dto.setGpsVerifyRadius(loc.getGpsVerifyRadius());
+                dto.setQuestCount(loc.getQuestCount());
+                dto.setStatus(null);
+                return dto;
+            }).collect(Collectors.toList());
+            return new QuestLocationSliceDto(dtoList, !hasNext);
+        }
+
         List<Long> locationIds = content.stream().map(LocationWithQuestCountDto::getLocationId).collect(Collectors.toList());
-        // findQuestsByLocationIds 와 같은 메소드가 필요. 없으면 N+1 발생.
-        // 임시로 findQuestsByAreaCode 사용 (비효율적일 수 있음)
         List<Quest> questsInArea = questRepository.findQuestsByAreaCode(areaCode);
         List<Quest> questsForContent = questsInArea.stream()
                 .filter(q -> locationIds.contains(q.getLocationId()))
@@ -143,8 +146,6 @@ public class QuestServiceImpl implements QuestService {
         }
 
         List<Long> questIds = questsForContent.stream().map(Quest::getQuestId).collect(Collectors.toList());
-
-        // 4. 사용자의 퀘스트 상태 조회
         List<UserQuest> userQuests = userQuestRepository.findByUserIdAndQuestIds(userId, questIds);
         Map<Long, List<QuestStatus>> locationToStatusMap = new HashMap<>();
         Map<Long, Quest> questIdToQuestMap = questsForContent.stream().collect(Collectors.toMap(Quest::getQuestId, q -> q));
@@ -158,7 +159,6 @@ public class QuestServiceImpl implements QuestService {
             }
         }
 
-        // 5. 최종 DTO 리스트 생성
         List<LocationWithQuestStatusDto> dtoList = content.stream().map(locationDto -> {
             LocationWithQuestStatusDto statusDto = new LocationWithQuestStatusDto();
             statusDto.setLocationId(locationDto.getLocationId());
@@ -172,7 +172,7 @@ public class QuestServiceImpl implements QuestService {
             if (statuses != null) {
                 if (statuses.contains(QuestStatus.ACCEPTED) || statuses.contains(QuestStatus.IN_PROGRESS)) {
                     statusDto.setStatus("IN_PROGRESS");
-                } else if (statuses.contains(QuestStatus.COMPLETED)) {
+                } else if (statuses.stream().allMatch(s -> s == QuestStatus.COMPLETED)) {
                     statusDto.setStatus("COMPLETED");
                 }
             }
@@ -182,31 +182,25 @@ public class QuestServiceImpl implements QuestService {
         return new QuestLocationSliceDto(dtoList, !hasNext);
     }
 
-    /**
-     * 특정 관광지 ID를 기준으로 해당 관광지에 속한 퀘스트 목록을 조회합니다.
-     * @param locationId
-     * @return 퀘스트 리스트
-     */
     @Override
     @Transactional(readOnly = true)
     public List<QuestInfoWithStatusDto> getQuestsByLocationId(Long locationId, Long userId) {
-        // 1. 특정 관광지의 모든 퀘스트 목록 조회
         List<Quest> quests = questRepository.findQuestsByLocationId(locationId);
         if (quests.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // 2. 퀘스트 ID 리스트 추출
-        List<Long> questIds = quests.stream().map(Quest::getQuestId).collect(Collectors.toList());
+        Map<Long, QuestStatus> questStatusMap = new HashMap<>();
+        if (userId != null) {
+            List<Long> questIds = quests.stream().map(Quest::getQuestId).collect(Collectors.toList());
+            List<UserQuest> userQuests = userQuestRepository.findByUserIdAndQuestIds(userId, questIds);
+            questStatusMap = userQuests.stream()
+                    .collect(Collectors.toMap(UserQuest::getQuestId, UserQuest::getStatus));
+        }
 
-        // 3. 사용자의 퀘스트 진행 상태 조회
-        List<UserQuest> userQuests = userQuestRepository.findByUserIdAndQuestIds(userId, questIds);
-        Map<Long, QuestStatus> questStatusMap = userQuests.stream()
-                .collect(Collectors.toMap(UserQuest::getQuestId, UserQuest::getStatus));
-
-        // 4. 퀘스트 정보와 상태를 합쳐 DTO 리스트 생성
+        final Map<Long, QuestStatus> finalQuestStatusMap = questStatusMap;
         return quests.stream().map(quest -> {
-            QuestStatus status = questStatusMap.get(quest.getQuestId());
+            QuestStatus status = finalQuestStatusMap.get(quest.getQuestId());
             return QuestInfoWithStatusDto.builder()
                     .questId(quest.getQuestId())
                     .locationId(quest.getLocationId())
@@ -219,34 +213,25 @@ public class QuestServiceImpl implements QuestService {
                     .rewardPoints(quest.getRewardPoints())
                     .requireGpsVerify(quest.isRequireGpsVerify())
                     .isActive(quest.isActive())
-                    .status(status) // null일 경우 아직 시작하지 않은 퀘스트
+                    .status(status)
                     .build();
         }).collect(Collectors.toList());
     }
 
-    /**
-     * 사용자가 퀘스트를 수락하는 로직을 처리합니다.
-     * @param questId 수락할 퀘스트 ID
-     * @param userId 수락하는 사용자 ID
-     */
     @Override
     public void acceptQuest(long questId, long userId) {
-        // 1. 퀘스트 정보 조회
         Quest quest = questRepository.findQuestById(questId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_FOUND));
 
-        // 2. 이미 수락한 퀘스트인지 확인
         userQuestRepository.findByUserIdAndQuestId(userId, questId).ifPresent(userQuest -> {
             throw new BusinessException(ErrorCode.QUEST_ALREADY_ACCEPTED);
         });
 
-        // 3. 선행 퀘스트 조건 확인
         if (quest.getPreviousQuestId() != null && quest.getPreviousQuestId() > 0) {
             userQuestRepository.findCompletedByUserIdAndQuestId(userId, quest.getPreviousQuestId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.PREVIOUS_QUEST_NOT_COMPLETED));
         }
 
-        // 4. 퀘스트 수락 처리
         UserQuest newUserQuest = UserQuest.builder()
                 .userId(userId)
                 .questId(questId)
@@ -257,24 +242,16 @@ public class QuestServiceImpl implements QuestService {
 
     @Override
     public void forfeitQuest(long questId, long userId) {
-        // 1. 사용자 퀘스트 정보 조회
         UserQuest userQuest = userQuestRepository.findByUserIdAndQuestId(userId, questId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_ACCEPTED)); // 수락한 적 없는 퀘스트
+                .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_ACCEPTED));
 
-        // 2. 퀘스트 상태 확인
         if (userQuest.getStatus() != QuestStatus.ACCEPTED) {
-            throw new BusinessException(ErrorCode.QUEST_NOT_IN_FORFEITABLE_STATE); // 이미 진행 중이거나 완료된 퀘스트
+            throw new BusinessException(ErrorCode.QUEST_NOT_IN_FORFEITABLE_STATE);
         }
 
-        // 3. 퀘스트 포기 처리 (레코드 삭제)
         userQuestRepository.delete(userQuest);
     }
 
-    /**
-     * 사용자가 퀘스트를 완료 처리합니다.
-     * @param questId 완료할 퀘스트 ID
-     * @param userId 완료하는 사용자 ID
-     */
     @Override
     public void completeArrivalQuest(long questId, long userId, QuestCompleteRequestDto request) {
         completeQuestInternal(questId, userId, request, null, null, null);
@@ -286,13 +263,11 @@ public class QuestServiceImpl implements QuestService {
     }
 
     private void completeQuestInternal(long questId, long userId, QuestCompleteRequestDto arrivalRequest, MultipartFile photoFile, BigDecimal currentLat, BigDecimal currentLon) {
-        // 1. 퀘스트 및 사용자-퀘스트 정보 조회
         Quest quest = questRepository.findQuestById(questId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_FOUND));
         UserQuest userQuest = userQuestRepository.findByUserIdAndQuestId(userId, questId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_ACCEPTED));
 
-        // 2. 퀘스트 상태 확인 (중복 완료 방지)
         if (userQuest.getStatus() == QuestStatus.COMPLETED) {
             throw new BusinessException(ErrorCode.QUEST_ALREADY_COMPLETED);
         }
@@ -300,25 +275,21 @@ public class QuestServiceImpl implements QuestService {
             throw new BusinessException(ErrorCode.QUEST_NOT_ACCEPTED);
         }
 
-        // 3. 퀘스트 타입별 완료 조건 검증
         switch (quest.getQuestTypeId()) {
-            case 1: // 도착 미션
+            case 1:
                 verifyArrivalQuest(quest, arrivalRequest);
                 break;
-            case 2: // 사진 미션
+            case 2:
                 performPhotoVerification(quest, userId, photoFile, currentLat, currentLon);
                 break;
             default:
-                // 지원하지 않는 퀘스트 타입에 대한 예외 처리나 로깅
                 break;
         }
 
-        // 4. 퀘스트 상태를 COMPLETED로 업데이트
         userQuest.setStatus(QuestStatus.COMPLETED);
         userQuest.setCompletedAt(java.time.LocalDateTime.now());
         userQuestRepository.update(userQuest);
 
-        // 5. 퀘스트 완료 보상 지급
         grantQuestRewards(userId, quest);
     }
 
@@ -400,11 +371,6 @@ public class QuestServiceImpl implements QuestService {
         }
     }
 
-    /**
-     * 사용자에게 퀘스트 완료 보상(XP, Point)을 지급합니다.
-     * @param userId 보상을 받을 사용자 ID
-     * @param quest 완료된 퀘스트 정보
-     */
     private void grantQuestRewards(long userId, Quest quest) {
         if (quest.getRewardXp() > 0 || quest.getRewardPoints() > 0) {
             User user = userMapper.findById(userId)
@@ -420,9 +386,6 @@ public class QuestServiceImpl implements QuestService {
         }
     }
 
-    /**
-     * 도착 퀘스트의 완료 조건을 검증합니다 (GPS 좌표 기반).
-     */
     private void verifyArrivalQuest(Quest quest, QuestCompleteRequestDto request) {
         if (request.getLatitude() == null || request.getLongitude() == null) {
             throw new BusinessException(ErrorCode.GPS_COORDINATES_REQUIRED);
@@ -444,9 +407,6 @@ public class QuestServiceImpl implements QuestService {
         }
     }
 
-    /**
-     * 두 지점 간의 거리를 미터 단위로 계산합니다 (Haversine formula).
-     */
     private double calculateDistance(BigDecimal lat1, BigDecimal lon1, BigDecimal lat2, BigDecimal lon2) {
         if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) {
             throw new BusinessException(ErrorCode.GPS_COORDINATES_REQUIRED);
@@ -466,14 +426,9 @@ public class QuestServiceImpl implements QuestService {
                 * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        return R * c * 1000; // 미터 단위로 변환
+        return R * c * 1000;
     }
 
-    /**
-     * 현재 사용자가 진행 중인(ACCEPTED) 퀘스트 목록을 조회합니다.
-     * @param userId 현재 사용자 ID
-     * @return 진행 중인 퀘스트 정보 DTO 리스트
-     */
     @Override
     @Transactional(readOnly = true)
     public List<InProgressQuestDto> getInProgressQuests(Long userId) {
