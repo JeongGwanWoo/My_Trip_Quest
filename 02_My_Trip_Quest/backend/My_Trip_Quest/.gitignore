@@ -34,3 +34,5 @@ build/
 
 ### API Keys and sensitive config ###
 src/main/resources/application.properties
+
+docs/
