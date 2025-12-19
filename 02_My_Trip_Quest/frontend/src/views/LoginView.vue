@@ -91,21 +91,34 @@
 
 <script setup>
 import Logo from '@/components/common/Logo.vue';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue'; // 1. onMounted 추가
 import { useAuthStore } from '@/stores/auth';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router'; // 2. useRoute 추가
 import api from '@/api';
+import { useToast } from '@/utils/toast'; // 3. useToast 임포트
 
 const authStore = useAuthStore();
 const router = useRouter();
+const route = useRoute(); // 4. route 객체 생성
+const { showToast } = useToast(); // 5. 토스트 함수 가져오기
 
 const email = ref('');
 const password = ref('');
 const isLoading = ref(false);
 
+onMounted(() => {
+  if (route.query.error === 'social_login_failed') {
+    showToast('소셜 로그인이 취소되었습니다.', 'warning');
+    
+    // URL에서 ?error=... 부분을 제거하여 주소창을 깨끗하게 만듦
+    router.replace({ query: {} });
+  }
+});
+
+
 const handleLogin = async () => {
   if (!email.value || !password.value) {
-    alert('이메일과 비밀번호를 모두 입력해주세요.');
+    showToast('이메일과 비밀번호를 모두 입력해주세요.', 'warning'); // alert 대신 toast 사용 권장
     return;
   }
 

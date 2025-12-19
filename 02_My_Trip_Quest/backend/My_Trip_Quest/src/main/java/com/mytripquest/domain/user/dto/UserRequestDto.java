@@ -24,4 +24,10 @@ public class UserRequestDto {
         private String newPassword;
     }
 
+    @Data
+    public static class SocialSignup {
+        private String registrationToken;
+        private String nickname;
+    }
+
 }

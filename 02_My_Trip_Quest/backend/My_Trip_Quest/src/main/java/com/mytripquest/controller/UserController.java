@@ -42,6 +42,12 @@ public class UserController {
         String token = userService.login(request);
         return ResponseEntity.ok(new ApiResponse(true, "로그인이 성공적으로 완료되었습니다.", Collections.singletonMap("token", token)));
     }
+    
+    @PostMapping("/social-signup")
+    public ResponseEntity<ApiResponse> socialSignup(@RequestBody UserRequestDto.SocialSignup request) {
+        String token = userService.socialSignup(request);
+        return ResponseEntity.ok(new ApiResponse(true, "소셜 회원가입이 성공적으로 완료되었습니다.", Collections.singletonMap("token", token)));
+    }
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserProfileResponseDto>> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
