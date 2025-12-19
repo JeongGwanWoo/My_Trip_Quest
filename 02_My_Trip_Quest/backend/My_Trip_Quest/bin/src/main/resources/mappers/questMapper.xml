@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mytripquest.domain.quest.repository.QuestRepository">
+
+    <!-- Quest 엔티티와 quests 테이블의 컬럼을 매핑합니다. -->
+    <resultMap id="questMap" type="com.mytripquest.domain.quest.entity.Quest">
+        <id property="questId" column="quest_id"/>
+        <result property="locationId" column="location_id"/>
+        <result property="questTypeId" column="quest_type_id"/>
+        <result property="previousQuestId" column="previous_quest_id"/>
+        <result property="difficulty" column="difficulty"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="rewardXp" column="reward_xp"/>
+        <result property="rewardPoints" column="reward_points"/>
+        <result property="requireGpsVerify" column="require_gps_verify"/>
+        <result property="isActive" column="is_active"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- LocationWithQuestCountDto와 쿼리 결과를 매핑합니다. -->
+    <resultMap id="locationWithQuestCountMap" type="com.mytripquest.domain.quest.dto.LocationWithQuestCountDto">
+        <result property="locationId" column="location_id"/>
+        <result property="title" column="title"/>
+        <result property="latitude" column="latitude"/>
+        <result property="longitude" column="longitude"/>
+        <result property="gpsVerifyRadius" column="gps_verify_radius"/>
+        <result property="questCount" column="quest_count"/>
+    </resultMap>
+
+    <!-- 지역 코드를 기준으로, 퀘스트가 있는 관광지 목록과 각 관광지의 퀘스트 개수를 조회합니다. -->
+    <select id="findLocationsByAreaCode" resultMap="locationWithQuestCountMap">
+        SELECT
+            l.location_id,
+            l.title,
+            l.latitude,
+            l.longitude,
+            l.gps_verify_radius,
+            COUNT(q.quest_id) AS quest_count
+        FROM
+            locations l
+        JOIN
+            quests q ON l.location_id = q.location_id
+        WHERE
+            l.area_code = #{areaCode}
+            <if test="keyword != null and keyword != ''">
+                AND l.title LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        GROUP BY
+            l.location_id, l.title, l.latitude, l.longitude, l.gps_verify_radius
+        ORDER BY
+            l.title ASC
+        LIMIT #{pageable.pageSize} OFFSET #{pageable.offset}
+    </select>
+
+    <!-- 지역 코드를 기준으로, 해당 지역에 속한 모든 퀘스트 목록을 조회합니다. -->
+    <select id="findQuestsByAreaCode" resultMap="questMap">
+        SELECT
+            q.*
+        FROM
+            quests q
+        JOIN
+            locations l ON q.location_id = l.location_id
+        WHERE
+            l.area_code = #{areaCode}
+    </select>
+
+    <!-- 특정 관광지 ID를 기준으로 해당 관광지에 속한 퀘스트 목록을 조회합니다. -->
+    <select id="findQuestsByLocationId" resultMap="questMap">
+        SELECT *
+        FROM quests
+        WHERE location_id = #{locationId}
+    </select>
+
+    <!-- 퀘스트 ID를 기준으로 퀘스트를 단건 조회합니다. -->
+    <select id="findQuestById" resultMap="questMap">
+        SELECT *
+        FROM quests
+        WHERE quest_id = #{questId}
+    </select>
+
+    <select id="countTotalLocationsByArea" resultType="int">
+        SELECT COUNT(*)
+        FROM locations
+        WHERE area_code = #{areaCode}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM quests
+    </select>
+
+    <select id="countQuestsByArea" resultType="int">
+        SELECT COUNT(q.quest_id)
+        FROM quests q
+        JOIN locations l ON q.location_id = l.location_id
+        WHERE l.area_code = #{areaCode}
+    </select>
+
+    <select id="findLocationById" resultMap="locationWithQuestCountMap">
+        SELECT
+            location_id,
+            title,
+            latitude,
+            longitude,
+            gps_verify_radius,
+            0 AS quest_count
+        FROM
+            locations
+        WHERE
+            location_id = #{locationId}
+    </select>
+
+    <select id="findFirstByLocationIdAndQuestTypeIdOrderByQuestIdAsc" resultMap="questMap">
+        SELECT *
+        FROM quests
+        WHERE location_id = #{locationId} AND quest_type_id = #{questTypeId}
+        ORDER BY quest_id ASC
+        LIMIT 1
+    </select>
+
+</mapper>
