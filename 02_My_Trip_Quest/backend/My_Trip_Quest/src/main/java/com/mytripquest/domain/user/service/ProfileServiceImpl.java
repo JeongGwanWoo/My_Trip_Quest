@@ -3,11 +3,12 @@ package com.mytripquest.domain.user.service;
 import com.mytripquest.domain.quest.entity.QuestStatus;
 import com.mytripquest.domain.quest.repository.QuestRepository;
 import com.mytripquest.domain.quest.repository.UserQuestRepository;
-import com.mytripquest.domain.ranking.dto.UserRankDto;
 import com.mytripquest.domain.user.dto.CityProgressDto;
+import com.mytripquest.domain.user.dto.LevelProgressDto;
 import com.mytripquest.domain.user.dto.UserProfileResponseDto;
 import com.mytripquest.domain.user.entity.User;
 import com.mytripquest.domain.user.repository.UserMapper;
+import com.mytripquest.domain.user.util.LevelUtil;
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +60,10 @@ public class ProfileServiceImpl implements ProfileService {
                 .map(userRankDto -> (int) userRankDto.getRank())
                 .orElse(0);
 
-        // 4. Get city progress
+        // 4. Get level progress
+        LevelProgressDto levelProgress = LevelUtil.getLevelProgress(user.getTotalXp());
+
+        // 5. Get city progress
         List<CityProgressDto> cityProgress = new ArrayList<>();
         for (Map.Entry<String, String> entry : AREA_CODES.entrySet()) {
             String cityName = entry.getKey();
@@ -80,9 +84,8 @@ public class ProfileServiceImpl implements ProfileService {
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .joinedAt(user.getCreatedAt().toLocalDate())
-                .totalXp(user.getTotalXp())
                 .points(user.getPoints())
-                .level(user.getLevel())
+                .levelProgress(levelProgress)
                 .completedMissions(completedMissions)
                 .ongoingMissions(ongoingMissions)
                 .totalMissions(totalMissions)

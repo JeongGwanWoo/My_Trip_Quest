@@ -4,6 +4,7 @@ import com.mytripquest.domain.ranking.dto.RankingInfoResponseDto;
 import com.mytripquest.domain.ranking.dto.UserRankDto;
 import com.mytripquest.domain.user.entity.User;
 import com.mytripquest.domain.user.repository.UserMapper;
+import com.mytripquest.domain.user.util.LevelUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,7 @@ public class RankingServiceImpl implements RankingService {
                     .nickname(user.getNickname())
                     .points(user.getPoints())
                     .totalXp(user.getTotalXp())
+                    .level(LevelUtil.calculateLevel(user.getTotalXp()))
                     .build());
             
             previousPoints = user.getPoints();
@@ -51,7 +53,13 @@ public class RankingServiceImpl implements RankingService {
 
     @Override
     public UserRankDto getMyRank(long userId) {
-        return userMapper.findUserRankById(userId)
+        UserRankDto userRankDto = userMapper.findUserRankById(userId)
                 .orElseThrow(() -> new com.mytripquest.global.error.exception.BusinessException(com.mytripquest.global.error.exception.ErrorCode.USER_NOT_FOUND));
+        
+        // Calculate and set the level using the new centralized logic
+        int level = LevelUtil.calculateLevel(userRankDto.getTotalXp());
+        userRankDto.setLevel(level);
+
+        return userRankDto;
     }
 }

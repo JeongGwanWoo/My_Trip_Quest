@@ -10,8 +10,5 @@ public class UserRankDto {
     private String nickname;
     private int points;
     private int totalXp;
-
-    public int getLevel() {
-        return 1 + (this.totalXp / 1000);
-    }
+    private int level;
 }

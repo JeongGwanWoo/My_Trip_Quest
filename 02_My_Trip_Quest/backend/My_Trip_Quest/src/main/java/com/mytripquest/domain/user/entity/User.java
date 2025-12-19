@@ -1,5 +1,6 @@
 package com.mytripquest.domain.user.entity;
 
+import com.mytripquest.domain.user.util.LevelUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -33,6 +34,6 @@ public class User {
         if (this.totalXp == null) {
             return 1;
         }
-        return 1 + (this.totalXp / 1000);
+        return LevelUtil.calculateLevel(this.totalXp);
     }
 }
