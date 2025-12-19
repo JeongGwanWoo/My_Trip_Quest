@@ -1,5 +1,6 @@
 package com.mytripquest.domain.quest.service;
 
+import com.mytripquest.domain.activitylog.service.ActivityLogService;
 import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.ai.service.AIVisionService;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
@@ -54,6 +55,7 @@ public class QuestServiceImpl implements QuestService {
     private final UserQuestRepository userQuestRepository;
     private final UserMapper userMapper;
     private final AIVisionService aiVisionService;
+    private final ActivityLogService activityLogService;
     private static final Map<String, String> AREA_CODES;
     private static final Map<String, String> CODE_TO_NAME;
 
@@ -291,6 +293,9 @@ public class QuestServiceImpl implements QuestService {
         userQuestRepository.update(userQuest);
 
         grantQuestRewards(userId, quest);
+
+        // 활동 로그 기록
+        activityLogService.logQuestCompletion(userId, quest.getQuestId(), quest.getTitle(), quest.getRewardXp(), quest.getRewardPoints());
     }
 
     private void performPhotoVerification(Quest quest, Long userId, MultipartFile imageFile, BigDecimal currentLat, BigDecimal currentLon) {

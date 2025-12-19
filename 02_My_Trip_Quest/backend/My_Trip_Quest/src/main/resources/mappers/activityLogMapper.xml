@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mytripquest.domain.activitylog.repository.ActivityLogMapper">
+
+    <resultMap id="activityLogDtoMap" type="com.mytripquest.domain.activitylog.dto.ActivityLogResponseDto">
+        <id property="logId" column="log_id"/>
+        <result property="activityType" column="activity_type"/>
+        <result property="relatedId" column="related_id"/>
+        <result property="logMessage" column="log_message"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="save" parameterType="com.mytripquest.domain.activitylog.entity.ActivityLog">
+        INSERT INTO activity_logs (user_id, activity_type, related_id, log_message)
+        VALUES (#{userId}, #{activityType}, #{relatedId}, #{logMessage})
+    </insert>
+
+    <select id="findByUserId" resultMap="activityLogDtoMap">
+        SELECT
+            log_id,
+            activity_type,
+            related_id,
+            log_message,
+            created_at
+        FROM activity_logs
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+    </select>
+
+</mapper>
