@@ -60,44 +60,24 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String email = oAuth2UserInfo.getEmail();
         Optional<User> userOptional = userMapper.findByEmail(email);
-        User user;
+        
+        Map<String, Object> newAttributes = new HashMap<>(oAuth2UserInfo.getAttributes());
+        newAttributes.put("email", email);
 
         if (userOptional.isPresent()) {
-            user = userOptional.get();
+            User user = userOptional.get();
+            newAttributes.put("isNewUser", false);
+            newAttributes.put("userId", user.getUserId());
         } else {
-            // 신규 사용자 등록
-            String nickname = oAuth2UserInfo.getName();
-            // 닉네임 중복 시 랜덤 문자열 추가
-            if (userMapper.findByNickname(nickname).isPresent()) {
-                nickname = nickname + "_" + UUID.randomUUID().toString().substring(0, 4);
-            }
-            
-            user = User.builder()
-                    .email(email)
-                    .nickname(nickname)
-                    .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString())) // 임시 비밀번호
-                    .role(User.Role.USER)
-                    .points(1000)
-                    .build();
-            userMapper.save(user);
-
-            // 기본 스킨 아이템 지급
-            Item baseSkin = itemMapper.findItemByName("기본 스킨")
-                    .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
-            itemMapper.addUserItem(user.getUserId(), baseSkin.getItemId(), true);
+            // 신규 사용자일 경우, isNewUser 플래그와 소셜 프로필 정보를 담아서 반환
+            newAttributes.put("isNewUser", true);
+            newAttributes.put("provider", registrationId);
+            newAttributes.put("name", oAuth2UserInfo.getName()); // 닉네임 제안용
         }
 
-     // 1. 기존 속성(읽기 전용)을 수정 가능한 새 Map으로 복사
-        Map<String, Object> newAttributes = new HashMap<>(oAuth2UserInfo.getAttributes());
-        
-        // 2. 이제 안전하게 추가 가능
-        newAttributes.put("email", user.getEmail());
-        newAttributes.put("userId", user.getUserId()); // 필요하면 ID도 추가
-
-        // 3. 리턴할 때 'newAttributes'를 넣어서 보냄
         return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority(user.getRole().name())),
-                newAttributes, // 👈 여기가 중요! (복사한 맵을 넣어야 함)
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")), // 임시 권한
+                newAttributes,
                 userRequest.getClientRegistration().getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName()
         );
     }

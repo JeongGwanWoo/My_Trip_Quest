@@ -29,17 +29,36 @@
 
     <RouterView v-else />
 
+    <ToastContainer :toasts="toasts" @remove-toast="removeToast" />
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, provide } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import Sidebar from '@/components/common/Sidebar.vue'
 import Header from '@/components/common/Header.vue'
 import Footer from '@/components/common/Footer.vue'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useAuthStore } from '@/stores/auth'
 import { getProfile } from '@/api/user'
+
+// --- Toast Logic ---
+const toasts = ref([]);
+let toastId = 0;
+
+const showToast = (message, type = 'info', duration = 3000) => {
+  const id = toastId++;
+  toasts.value.push({ id, message, type, duration });
+};
+
+const removeToast = (idToRemove) => {
+  toasts.value = toasts.value.filter(toast => toast.id !== idToRemove);
+};
+
+provide('showToast', showToast);
+// --------------------
 
 const route = useRoute()
 const isCollapsed = ref(false)

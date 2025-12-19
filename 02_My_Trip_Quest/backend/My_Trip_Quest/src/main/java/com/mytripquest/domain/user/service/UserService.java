@@ -107,4 +107,45 @@ public class UserService {
 		User user = userMapper.findByEmail(email).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 		userMapper.deleteById(user.getUserId());
 	}
+
+	@Transactional
+	public String socialSignup(UserRequestDto.SocialSignup request) {
+		// 1. 토큰 유효성 검증
+		if (!jwtTokenProvider.validateToken(request.getRegistrationToken())) {
+			throw new BusinessException(ErrorCode.INVALID_TOKEN);
+		}
+
+		// 2. 토큰에서 정보 추출
+		io.jsonwebtoken.Claims claims = jwtTokenProvider.getClaims(request.getRegistrationToken());
+		String email = claims.getSubject();
+		String provider = claims.get("provider", String.class);
+
+		// 3. 닉네임 중복 확인
+		if (userMapper.findByNickname(request.getNickname()).isPresent()) {
+			throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
+		}
+
+		// 4. 이메일 중복 확인 (혹시 모를 경우)
+		if (userMapper.findByEmail(email).isPresent()) {
+			throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
+		}
+
+		// 5. 사용자 생성 및 저장
+		User user = User.builder()
+				.email(email)
+				.nickname(request.getNickname())
+				.passwordHash(passwordEncoder.encode(java.util.UUID.randomUUID().toString())) // 임시 비밀번호
+				.role(User.Role.USER)
+				.points(1000)
+				.build();
+		userMapper.save(user);
+
+		// 6. 기본 아이템 지급
+		Item baseSkin = itemMapper.findItemByName("기본 스킨")
+				.orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
+		itemMapper.addUserItem(user.getUserId(), baseSkin.getItemId(), true);
+
+		// 7. 최종 JWT 토큰 발급
+		return jwtTokenProvider.createToken(user.getEmail(), user.getRole().name());
+	}
 }

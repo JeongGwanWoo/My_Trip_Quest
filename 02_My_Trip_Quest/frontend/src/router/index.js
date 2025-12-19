@@ -76,6 +76,11 @@ const routes = [
     name: 'SocialLoginRedirect',
     component: SocialLoginRedirect,
   },
+  {
+    path: '/social-signup',
+    name: 'SocialSignup',
+    component: () => import('@/views/SocialSignup.vue'),
+  },
   // Catch-all route for 404
   {
     path: '/:pathMatch(.*)*',

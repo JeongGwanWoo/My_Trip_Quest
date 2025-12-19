@@ -92,8 +92,10 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/api';
+import { useToast } from '@/utils/toast';
 
 const router = useRouter();
+const { showToast } = useToast();
 const nickname = ref('');
 const email = ref('');
 const password = ref('');
@@ -102,11 +104,11 @@ const isLoading = ref(false);
 
 const handleSignup = async () => {
   if (!nickname.value || !email.value || !password.value || !confirmPassword.value) {
-    alert('모든 필드를 입력해주세요.');
+    showToast('모든 필드를 입력해주세요.', 'warning');
     return;
   }
   if (password.value !== confirmPassword.value) {
-    alert('비밀번호가 일치하지 않습니다.');
+    showToast('비밀번호가 일치하지 않습니다.', 'error');
     return;
   }
   
@@ -119,13 +121,13 @@ const handleSignup = async () => {
       password: password.value,
     });
     
-    alert('회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.');
+    showToast('회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.', 'success');
     router.push('/login');
 
   } catch (error) {
     console.error('회원가입 오류:', error);
     const msg = error.response?.data?.message || '잠시 후 다시 시도해주세요.';
-    alert(`회원가입 실패: ${msg}`);
+    showToast(`회원가입 실패: ${msg}`, 'error');
   } finally {
     isLoading.value = false;
   }

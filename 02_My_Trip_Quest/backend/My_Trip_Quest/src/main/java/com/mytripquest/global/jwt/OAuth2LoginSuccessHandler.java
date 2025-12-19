@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -26,18 +27,34 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        Map<String, Object> attributes = oAuth2User.getAttributes();
 
-        String email = (String) oAuth2User.getAttributes().get("email");
-        
-        User user = userMapper.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
+        boolean isNewUser = (boolean) attributes.getOrDefault("isNewUser", false);
+        String email = (String) attributes.get("email");
+        String targetUrl;
 
-        String accessToken = jwtTokenProvider.createToken(user.getEmail(), user.getRole().name());
-        log.info("Successfully generated JWT for social login user: {}", email);
+        if (isNewUser) {
+            // 신규 사용자인 경우: 임시 등록 토큰 발급
+            String provider = (String) attributes.get("provider");
+            String name = (String) attributes.get("name");
+            String registrationToken = jwtTokenProvider.createRegistrationToken(email, provider, name);
+            log.info("New social user. Issuing registration token for: {}", email);
 
-        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/social-login-redirect")
-                .queryParam("token", accessToken)
-                .build().toUriString();
+            targetUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/social-login-redirect")
+                    .queryParam("registrationToken", registrationToken)
+                    .build().toUriString();
+        } else {
+            // 기존 사용자인 경우: JWT 발급
+            User user = userMapper.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid User"));
+
+            String accessToken = jwtTokenProvider.createToken(user.getEmail(), user.getRole().name());
+            log.info("Successfully generated JWT for social login user: {}", email);
+
+            targetUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/social-login-redirect")
+                    .queryParam("token", accessToken)
+                    .build().toUriString();
+        }
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }

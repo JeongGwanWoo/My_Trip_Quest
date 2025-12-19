@@ -26,7 +26,19 @@ export const deleteAccount = async () => {
     const response = await api.delete('/api/v1/users/me');
     return response.data;
   } catch (error) {
-    console.error('Error deleting account:', error);
-    throw error;
-  }
-};
+        console.error('Error deleting account:', error);
+        throw error;
+      }
+    };
+    
+    export const socialSignup = async (signupData) => {
+      try {
+        const response = await api.post('/api/v1/users/social-signup', signupData);
+        return response.data;
+      } catch (error) {
+        console.error('Error during social signup:', error);
+        throw error;
+      }
+    };
+    
+    

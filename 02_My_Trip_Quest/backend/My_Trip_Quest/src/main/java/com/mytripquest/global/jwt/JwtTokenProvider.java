@@ -48,6 +48,26 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String createRegistrationToken(String email, String provider, String name) {
+        Date now = new Date();
+        // 임시 토큰 유효 시간: 10분
+        long registrationTokenValidity = 10 * 60 * 1000L;
+        Date validity = new Date(now.getTime() + registrationTokenValidity);
+
+        return Jwts.builder()
+                .subject(email)
+                .claim("provider", provider)
+                .claim("name", name)
+                .issuedAt(now)
+                .expiration(validity)
+                .signWith(secretKey)
+                .compact();
+    }
+
+    public Claims getClaims(String token) {
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
+    }
+
     public Authentication getAuthentication(String token) {
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(this.getUsername(token));
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
