@@ -178,7 +178,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  z-index: 1000;
+  z-index: 40;
   /* transition은 script에서 제어 */
 }
 
