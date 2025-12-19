@@ -648,7 +648,7 @@ const closeModal = () => {
   right: 0;
   width: 100% !important;
   height: 100% !important;
-  z-index: 100;
+  z-index: 40;
   pointer-events: auto !important; /* 전체 영역 클릭 활성화 */
 }
 
@@ -660,7 +660,7 @@ const closeModal = () => {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.3);
-  z-index: 101;
+  z-index: 41;
   pointer-events: auto !important; /* 오버레이 클릭으로 닫기 가능 */
 }
 
@@ -675,7 +675,7 @@ const closeModal = () => {
   height: 50vh !important; /* 화면의 50% 높이로 적절하게 조정 */
   max-height: none !important;
   
-  z-index: 102; /* 오버레이보다 높게 */
+  z-index: 42; /* 오버레이보다 높게 */
   
   /* 스타일 */
   border-radius: 24px 24px 0 0;
