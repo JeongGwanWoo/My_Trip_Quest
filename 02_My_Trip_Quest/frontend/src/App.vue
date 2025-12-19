@@ -24,6 +24,7 @@
       <div class="page-content" :class="{ 'no-scroll': isMapPage }">
         <RouterView />
       </div>
+      <Footer :is-map-page="isMapPage" />
     </div>
 
     <RouterView v-else />
@@ -36,6 +37,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import Sidebar from '@/components/common/Sidebar.vue'
 import Header from '@/components/common/Header.vue'
+import Footer from '@/components/common/Footer.vue'
 import { useAuthStore } from '@/stores/auth'
 import { getProfile } from '@/api/user'
 
@@ -114,8 +116,6 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 100vh;
-  overflow: hidden;
 }
 
 /* 실제 페이지 콘텐츠 영역 */

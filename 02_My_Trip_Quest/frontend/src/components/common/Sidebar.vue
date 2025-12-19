@@ -78,59 +78,10 @@
       </nav>
     </div>
 
-    <div class="sidebar-bottom" ref="moreMenuRef">
-      <Transition name="fade">
-        <div v-if="showMoreMenu" class="more-menu-popover">
-          <div class="more-menu-grid">
-            <div class="more-menu-col">
-              <h4 class="menu-header">회사</h4>
-              <a href="#">소개</a>
-              <a href="#">채용</a>
-              <a href="#">블로그</a>
-            </div>
-            <div class="more-menu-col">
-              <h4 class="menu-header">더 보기</h4>
-              <a href="#">공지사항</a>
-              <a href="#">이벤트</a>
-              <a href="#">고객센터</a>
-            </div>
-            <div class="more-menu-col">
-              <h4 class="menu-header">법률</h4>
-              <router-link to="/terms">이용약관</router-link>
-              <router-link to="/privacy">개인정보처리방침</router-link>
-              <a href="#">쿠키 정책</a>
-            </div>
-          </div>
-          <div class="more-menu-footer">
-            <button class="footer-icon-btn" title="테마 설정">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
-              </svg>
-            </button>
-            <button class="footer-icon-btn" title="도움말">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:20px;height:20px;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </Transition>
-
-      <a href="#" class="nav-item more-item" @click.prevent="toggleMoreMenu">
-        <span class="icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-            </svg>
-        </span>
-        <span class="text">더보기</span>
-      </a>
-    </div>
-
   </aside>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { storeToRefs } from 'pinia';
@@ -148,28 +99,6 @@ defineEmits(['toggle-sidebar', 'close-mobile-menu'])
 const goHome = () => {
   router.push('/');
 }
-
-// --- 더보기 메뉴 로직 ---
-const showMoreMenu = ref(false);
-const moreMenuRef = ref(null);
-
-const toggleMoreMenu = () => {
-  showMoreMenu.value = !showMoreMenu.value;
-}
-
-const handleClickOutside = (event) => {
-  if (moreMenuRef.value && !moreMenuRef.value.contains(event.target)) {
-    showMoreMenu.value = false;
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
-})
 </script>
 
 <style scoped>
@@ -306,129 +235,70 @@ onUnmounted(() => {
   background-color: #eff6ff;
 }
 
-/* 하단 영역 스타일 */
-.sidebar-bottom {
-  margin-top: auto;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  position: relative; /* 팝업 위치 기준 */
-}
-
-/* --- 더보기 팝업 메뉴 스타일 --- */
-.more-menu-popover {
-  position: absolute;
-  bottom: 100%; /* 더보기 버튼 바로 위 */
-  left: 0;
-  width: 280px; /* 사이드바보다 약간 넓게 팝업 */
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  padding: 20px;
-  margin-bottom: 10px;
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* 그리드 레이아웃 */
-.more-menu-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-}
-
-.more-menu-col {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.menu-header {
-  font-size: 13px;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
-}
-
-.more-menu-col a {
-  text-decoration: none;
-  font-size: 13px;
-  color: #64748b;
-  transition: color 0.2s;
-}
-.more-menu-col a:hover {
-  color: #2563eb;
-}
-
-/* 하단 아이콘 바 */
-.more-menu-footer {
-  border-top: 1px solid #f1f5f9;
-  padding-top: 16px;
-  display: flex;
-  gap: 12px;
-}
-
-.footer-icon-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #64748b;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-.footer-icon-btn:hover {
-  background-color: #f1f5f9;
-  color: #1e293b;
-}
-
-/* 애니메이션 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
 /* ------------------------------------------- */
+
 /* ★ 모바일 반응형 스타일 (768px 이하) ★ */
+
 /* ------------------------------------------- */
+
 @media (max-width: 768px) {
+
   .sidebar {
+
     position: fixed;
+
     top: 0; left: 0; bottom: 0;
+
     width: 280px !important;
+
     transform: translateX(-100%);
+
     transition: transform 0.3s ease;
+
     box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+
     z-index: 1000;
+
   }
+
+
 
   .sidebar.mobile-open {
+
     transform: translateX(0);
+
   }
+
+
 
   .btn-toggle {
+
     display: none;
+
   }
+
+
 
   .mobile-close-btn {
+
     display: block;
+
     position: absolute;
+
     top: 24px;
+
     right: 20px;
+
   }
 
+
+
   .sidebar.collapsed { width: 280px; padding: 24px 20px; }
+
   .sidebar.collapsed .logo-area { display: flex; }
+
   .sidebar.collapsed .nav-item .text { display: block; }
+
 }
+
 </style>
