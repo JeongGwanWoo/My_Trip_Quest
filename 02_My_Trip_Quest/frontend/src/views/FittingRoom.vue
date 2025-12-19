@@ -258,7 +258,6 @@ onMounted(async () => {
 .fitting-page {
   font-family: "Pretendard", sans-serif;
   width: 100%;
-  /* 높이 100% 고정을 풀고 최소 높이만 지정 -> 스크롤은 App.vue에서 처리 */
   min-height: 100%; 
   display: flex;
   justify-content: center;
@@ -272,7 +271,6 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  height: fit-content;
 }
 
 /* --- Header --- */
@@ -288,21 +286,21 @@ onMounted(async () => {
   font-size: 32px; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.5px;
 }
 
-/* --- Main Layout --- */
+/* --- Main Layout (Flexbox 기반으로 변경) --- */
 .main-layout {
-  display: grid;
-  grid-template-columns: 320px 1fr;
+  display: flex;
   gap: 24px;
-  align-items: start;
+  align-items: flex-start;
   width: 100%;
 }
 
 /* --- 1. Preview Card --- */
 .preview-card {
+  flex: 0 0 320px; /* 고정 너비 */
   background: #fff; border-radius: 24px; padding: 32px 24px;
   display: flex; flex-direction: column; align-items: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid #eef2ff;
-  position: sticky; top: 24px; width: 100%;
+  position: sticky; top: 24px;
 }
 
 .preview-header h3 {
@@ -314,57 +312,33 @@ onMounted(async () => {
   display: flex; flex-direction: column; align-items: center; width: 100%;
 }
 
-/* ------------------------------------------------ */
-/* ★ 아바타 위치 정렬 수정 (이미지 크기 동일할 때) ★ */
-/* ------------------------------------------------ */
+/* Avatar */
 .avatar-stage {
-  width: 280px; /* 아바타가 보일 영역 크기 */
-  height: 280px; 
-  position: relative;
-  display: block; /* Flex 제거 */
+  width: 280px; height: 280px; 
+  position: relative; display: block;
   margin: 0 auto 24px;
 }
-
 .stage-bg {
-  position: absolute; 
-  top: 50%; left: 50%; 
+  position: absolute; top: 50%; left: 50%; 
   transform: translate(-50%, -50%);
   width: 220px; height: 220px;
   background: radial-gradient(circle, #eff6ff 0%, #fff 70%);
   border-radius: 50%; 
   z-index: 0;
 }
-
-.avatar-layers { 
-  position: absolute; 
-  top: 0; left: 0; 
-  width: 100%; height: 100%; 
-  z-index: 1; 
-}
-
-.layer {
-  position: absolute; 
-  top: 0; left: 0; 
-  width: 100%; height: 100%;
-  /* Flex 제거: 이미지가 캔버스 크기대로 꽉 차게 둠 */
-}
-
+.avatar-layers { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+.layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 .layer > img {
   width: 100%; height: 100%; 
-  object-fit: contain; /* 이미지 비율 유지하며 꽉 채움 */
-  display: block;
+  object-fit: contain; display: block;
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
 }
-
-/* 레이어 순서 (Z-Index) */
 .layer.skin { z-index: 10; }
 .layer.face { z-index: 20; }
 .layer.bottom { z-index: 30; }
 .layer.top { z-index: 40; }
 .layer.hair { z-index: 50; }
 .layer.hat { z-index: 60; }
-
-/* ------------------------------------------------ */
 
 .preview-actions { width: 100%; text-align: center; }
 .character-info { margin-bottom: 32px; }
@@ -386,9 +360,11 @@ onMounted(async () => {
 
 /* --- 2. Inventory Card --- */
 .inventory-card {
+  flex: 1; /* 남은 공간 차지 */
+  min-width: 0; /* flex item의 최소 너비 문제 해결 */
   background: #fff; border-radius: 24px; padding: 32px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid #eef2ff;
-  min-height: 600px; display: flex; flex-direction: column; width: 100%;
+  min-height: 600px; display: flex; flex-direction: column;
 }
 
 .inventory-header {
@@ -411,13 +387,17 @@ onMounted(async () => {
 .tab-btn:hover { background: #f1f5f9; color: #334155; }
 .tab-btn.active { background: #1e293b; color: #fff; border-color: #1e293b; }
 
-.items-area-wrapper { flex-grow: 1; }
+.items-area-wrapper { 
+  flex-grow: 1;
+  min-height: 0; /* flex-grow와 함께 사용 시 넘침 방지 */
+  min-width: 0; /* Flex 자식요소 넘침 방지 추가 */
+}
 
 .items-grid {
   display: grid;
-  /* 기본 그리드 설정 */
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 16px;
+  height: 100%;
 }
 
 .item-card {
@@ -447,6 +427,7 @@ onMounted(async () => {
   font-size: 12px; border: 2px solid #fff;
 }
 
+/* 로딩 및 빈 상태 메시지 */
 .state-msg {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 60px 0; color: #94a3b8; height: 100%;
@@ -460,62 +441,148 @@ onMounted(async () => {
 .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
 
 /* ------------------------------------------- */
-/* ★ 반응형 미디어 쿼리 (화면 잘림 해결) ★ */
+/* ★ 반응형 미디어 쿼리 ★ */
 /* ------------------------------------------- */
 
-/* 태블릿 (1024px 이하) */
+/* 태블릿 및 모바일 (1024px 이하) */
 @media (max-width: 1024px) {
   .main-layout {
-    grid-template-columns: 1fr; /* 세로 배치 */
+    flex-direction: column; /* 세로 배치 */
     gap: 20px;
   }
-  .preview-card { position: static; padding: 20px; }
-  .preview-content-wrapper { flex-direction: row; justify-content: center; gap: 32px; }
-  .avatar-stage { margin: 0; width: 220px; height: 220px; }
-  .stage-bg { width: 180px; height: 180px; }
-  .preview-actions { width: auto; text-align: left; }
-  .character-info { margin-bottom: 16px; text-align: left; }
-  .btn-save { width: auto; min-width: 200px; }
+  .preview-card { 
+    position: static; 
+    flex-basis: auto; /* flex-basis 초기화 */
+    width: 100%;
+  }
+  .preview-content-wrapper { 
+    flex-direction: row; 
+    justify-content: center; 
+    gap: 32px; 
+    align-items: center;
+  }
+  .avatar-stage { 
+    margin: 0; 
+    width: 220px; 
+    height: 220px; 
+  }
+  .stage-bg { 
+    width: 180px; 
+    height: 180px; 
+  }
+  .preview-actions { 
+    width: auto; 
+    text-align: left; 
+  }
+  .character-info { 
+    margin-bottom: 16px; 
+    text-align: left; 
+  }
+  .btn-save { 
+    width: auto; 
+    min-width: 200px; 
+    padding: 14px 24px;
+  }
 }
 
-/* 모바일 (600px 이하) - 핵심 수정 구간 */
+/* 모바일 (600px 이하) */
 @media (max-width: 600px) {
   .content-container {
-    padding: 24px 16px; /* 좌우 패딩 축소 */
+    padding: 24px 16px; /* 좌우 패딩 16px 추가 */
+  }
+  
+  .page-header, .preview-card {
+    padding-left: 0; /* content-container가 패딩을 가짐 */
+    padding-right: 0;
   }
 
-  .preview-card {
-    padding: 20px 16px;
-  }
-
-  /* 미리보기 다시 세로 배치 */
-  .preview-content-wrapper {
-    flex-direction: column;
-    gap: 16px;
-  }
-  .preview-actions { text-align: center; }
-  .character-info { text-align: center; }
-  .btn-save { width: 100%; }
-
+  /* ★ 핵심 수정: 인벤토리 카드가 부모 영역을 뚫고 나가지 않도록 설정 ★ */
   .inventory-card {
-    padding: 20px 12px; /* 패딩 더 축소 */
-    min-height: auto;
+     min-height: auto;
+     width: 100%;
+     min-width: 0; /* 중요: Flex 자식 넘침 방지 */
+     padding-left: 0; /* 내부 스크롤을 위해 패딩 제거 */
+     padding-right: 0;
   }
 
-  /* 그리드 수정: 최소 너비를 줄여서 화면 밖으로 밀려나지 않게 함 */
+  /* 내부 컨텐츠들은 스크롤 영역을 제외하고 패딩을 가짐 */
+  .inventory-header {
+      padding-left: 24px; /* 여백 증가 */
+      padding-right: 24px; /* 여백 증가 */
+      padding-top: 10px; /* Adjust as needed */
+      padding-bottom: 10px; /* Adjust as needed */
+  }
+  .category-tabs {
+      padding-left: 16px;
+      padding-right: 16px;
+  }
+
+  /* ★ 카테고리 탭 가로 스크롤 설정 ★ */
+  .category-tabs {
+    width: auto; /* width: 100% 대신 auto로 변경 */
+    padding: 0 16px 4px 16px; /* 좌우 패딩 추가 */
+    overflow-x: auto;
+    flex-wrap: nowrap; /* 줄바꿈 방지 */
+    justify-content: flex-start;
+  }
+
+  .page-title { font-size: 24px; }
+  
+  .preview-card {
+    padding-top: 16px; padding-bottom: 16px;
+  }
+  .preview-header h3 { margin-bottom: 16px; }
+  .preview-content-wrapper {
+    gap: 16px; justify-content: space-around;
+  }
+  .avatar-stage {
+    width: 160px; height: 160px;
+  }
+  .stage-bg {
+    width: 130px; height: 130px;
+  }
+  .username { font-size: 18px; }
+  .btn-save {
+    min-width: unset; width: 100%;
+    padding: 12px 16px; font-size: 14px;
+  }
+  .character-info { margin-bottom: 12px; }
+
+  /* ★ 아이템 그리드 -> 수평 스크롤 Flex로 완벽 변경 ★ */
   .items-grid {
-    /* 100px -> 85px로 축소하여 작은 화면에서도 3열 유지 가능성 높임 */
-    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); 
-    gap: 10px;
+    display: flex; 
+    flex-wrap: nowrap; /* 절대 줄바꿈 금지 */
+    overflow-x: auto;
+    gap: 12px;
+    width: 100%; /* 너비 강제 */
+    padding: 0 16px 12px 16px; /* 좌우 패딩 + 스크롤바 공간 */
+    
+    /* grid 속성 초기화 */
+    height: auto;
+    grid-template-columns: none; 
+
+    /* 스크롤바 숨기기 */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .items-grid::-webkit-scrollbar { display: none; }
+  
+  .item-card {
+    flex: 0 0 90px; /* 고정 너비, 줄어들지 않음 */
+  }
+
+  /* 마지막 아이템 뒤 여백 */
+  .item-card:last-child {
+    margin-right: 16px;
+  }
+  .tab-btn:last-child {
+    margin-right: 16px;
   }
 
   .item-img-box {
-    width: 100%;
-    height: 60px; /* 이미지 박스 높이 줄임 */
+    width: 100%; height: 70px; border-radius: 8px;
   }
-  
-  .item-name {
-    font-size: 11px; /* 폰트 사이즈 조절 */
-  }
+  .item-name { font-size: 12px; }
+  .check-overlay { width: 18px; height: 18px; font-size: 10px; }
 }
 </style>
