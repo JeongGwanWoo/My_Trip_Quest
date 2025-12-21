@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `email`        VARCHAR(255) NOT NULL UNIQUE,
     `password_hash` VARCHAR(255) NOT NULL,
     `nickname`     VARCHAR(100) NOT NULL UNIQUE,
+    `provider`        VARCHAR(20) NULL,              -- 소셜 로그인 제공자 (kakao, google 등)
     `role`         ENUM('USER','ADMIN') NOT NULL DEFAULT 'USER',
     `total_xp`     INT NOT NULL DEFAULT 0,
     `points`       INT NOT NULL DEFAULT 0,
@@ -15,21 +16,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `updated_at`   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
--- 2. AVATARS (아바타) - USERS와 1:1
-CREATE TABLE IF NOT EXISTS `avatars` (
-    `user_id`        BIGINT NOT NULL,
-    `character_style` VARCHAR(100) NOT NULL,
-    `created_at`     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT `pk_avatars` PRIMARY KEY (`user_id`),
-    CONSTRAINT `fk_avatars_user`
-        FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`)
-        ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
--- 3. LOCATIONS (장소)
+-- 2. LOCATIONS (장소)
 CREATE TABLE IF NOT EXISTS `locations` (
     `location_id`       BIGINT AUTO_INCREMENT PRIMARY KEY,
     `content_id`        VARCHAR(100) NULL UNIQUE,
@@ -50,14 +37,14 @@ CREATE TABLE IF NOT EXISTS `locations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- 4. QUEST_TYPES (퀘스트 타입)
+-- 3. QUEST_TYPES (퀘스트 타입)
 CREATE TABLE IF NOT EXISTS `quest_types` (
     `quest_type_id` INT AUTO_INCREMENT PRIMARY KEY,
     `type_name`     VARCHAR(50) NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- 5. QUESTS (퀘스트)
+-- 4. QUESTS (퀘스트)
 CREATE TABLE IF NOT EXISTS `quests` (
     `quest_id`          BIGINT AUTO_INCREMENT PRIMARY KEY,
     `location_id`       BIGINT NULL,
@@ -88,7 +75,7 @@ CREATE TABLE IF NOT EXISTS `quests` (
 
 
 
--- 6. ITEMS (콤마 에러 수정됨)
+-- 5. ITEMS (콤마 에러 수정됨)
 CREATE TABLE `items` (
     `item_id`        BIGINT AUTO_INCREMENT PRIMARY KEY,
     `name`           VARCHAR(100) NOT NULL,            -- 아이템 이름 (예: 빨간 모자)
@@ -100,7 +87,7 @@ CREATE TABLE `items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- 7. USER_ITEMS (인벤토리, 사용자-아이템 N:M)
+-- 6. USER_ITEMS (인벤토리, 사용자-아이템 N:M)
 CREATE TABLE IF NOT EXISTS `user_items` (
     `user_id`     BIGINT NOT NULL,
     `item_id`     BIGINT NOT NULL,
@@ -119,7 +106,7 @@ CREATE TABLE IF NOT EXISTS `user_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- 8. USER_QUESTS (유저별 퀘스트 상태)
+-- 7. USER_QUESTS (유저별 퀘스트 상태)
 CREATE TABLE IF NOT EXISTS `user_quests` (
     `user_quest_id`   BIGINT AUTO_INCREMENT PRIMARY KEY,
     `user_id`         BIGINT NOT NULL,
@@ -143,7 +130,7 @@ CREATE TABLE IF NOT EXISTS `user_quests` (
 
 
 
--- 9. ACTIVITY_LOGS (활동 로그)
+-- 8. ACTIVITY_LOGS (활동 로그)
 CREATE TABLE IF NOT EXISTS `activity_logs` (
     `log_id`        BIGINT AUTO_INCREMENT PRIMARY KEY,
     `user_id`       BIGINT NOT NULL,

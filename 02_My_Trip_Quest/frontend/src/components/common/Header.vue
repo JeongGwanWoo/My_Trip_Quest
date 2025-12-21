@@ -65,6 +65,19 @@
       </div>
 
     </div>
+
+    <!-- Logout Confirmation Modal -->
+    <BaseModal :show="showLogoutModal" @close="closeLogoutModal">
+      <div class="modal-body">
+        <h3 class="modal-title">로그아웃</h3>
+        <p class="modal-text">정말로 로그아웃 하시겠습니까?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="closeLogoutModal">취소</button>
+          <button class="btn-confirm" @click="executeLogout">로그아웃</button>
+        </div>
+      </div>
+    </BaseModal>
+    
   </header>
 </template>
 
@@ -74,10 +87,14 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { storeToRefs } from 'pinia';
 import { getMyActivityLogs } from '@/api/activityLog';
+import BaseModal from '@/components/ui/BaseModal.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const { isLoggedIn } = storeToRefs(authStore);
+
+// Logout Modal State
+const showLogoutModal = ref(false);
 
 // 알림 패널 상태
 const showNotifications = ref(false);
@@ -100,9 +117,16 @@ const handleLogin = () => {
 };
 
 const handleLogout = () => {
-  if(confirm('로그아웃 하시겠습니까?')) {
-    authStore.logout();
-  }
+  showLogoutModal.value = true;
+};
+
+const executeLogout = () => {
+  authStore.logout();
+  showLogoutModal.value = false;
+};
+
+const closeLogoutModal = () => {
+  showLogoutModal.value = false;
 };
 
 const fetchActivityLogs = async () => {
@@ -353,6 +377,53 @@ const formatTime = (isoString) => {
 .log-time {
   font-size: 12px;
   color: #94a3b8;
+}
+
+
+/* --- Modal Content Styling --- */
+.modal-body {
+  padding: 16px 8px;
+  text-align: center;
+}
+.modal-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+.modal-text {
+  font-size: 16px;
+  color: #64748b;
+  margin-bottom: 32px;
+}
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.modal-actions button {
+  flex: 1;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-confirm {
+  background: #ef4444; /* Red for destructive action */
+  color: white;
+}
+.btn-confirm:hover {
+  background: #dc2626;
+}
+.btn-cancel {
+  background: #e2e8f0;
+  color: #475569;
+}
+.btn-cancel:hover {
+  background: #cbd5e1;
 }
 
 

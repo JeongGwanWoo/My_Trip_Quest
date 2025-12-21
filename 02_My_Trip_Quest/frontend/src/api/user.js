@@ -31,6 +31,18 @@ export const deleteAccount = async () => {
       }
     };
     
+export const checkNickname = async (nickname) => {
+  try {
+    const response = await api.get('/api/v1/users/check-nickname', {
+      params: { nickname }
+    });
+    return response.data.data.isAvailable;
+  } catch (error) {
+    console.error('Error checking nickname:', error);
+    throw error;
+  }
+};
+
     export const socialSignup = async (signupData) => {
       try {
         const response = await api.post('/api/v1/users/social-signup', signupData);

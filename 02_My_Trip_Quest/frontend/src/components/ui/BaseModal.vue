@@ -42,30 +42,44 @@ const close = () => {
 
 .modal-content {
   background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 90%; /* Take 90% of available width */
-  max-width: 500px; /* Max width on larger screens */
+  padding: 32px 28px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 440px;
   position: relative;
-  box-sizing: border-box; /* Include padding in width calculation */
+  box-sizing: border-box;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
 }
 
 @media (max-width: 600px) {
   .modal-content {
-    width: 95%; /* Wider on small screens */
-    max-width: none; /* No max-width on small screens */
-    padding: 15px; /* Slightly less padding */
+    width: 95%;
+    max-width: none;
+    padding: 24px 20px;
   }
 }
 
 .close-button {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #64748b;
   border: none;
-  font-size: 20px;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+.close-button:hover {
+  background: #e2e8f0;
+  transform: rotate(90deg);
 }
 
 /* Modal Transition Styles */

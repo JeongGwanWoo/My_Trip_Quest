@@ -25,23 +25,6 @@
           </li>
         </ul>
 
-        <div class="stats-row">
-          <div class="stat-item">
-            <strong class="stat-num">1,200+</strong>
-            <span class="stat-label">등록된 여행 스팟</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <strong class="stat-num">50+</strong>
-            <span class="stat-label">오픈된 챌린지</span>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <strong class="stat-num">Infinite</strong>
-            <span class="stat-label">나만의 여행 기록</span>
-          </div>
-        </div>
-
         <button class="btn-cta" @click="handleCtaClick">
           {{ isLoggedIn ? '여행 시작하기' : '로그인 하러가기 →' }}
         </button>

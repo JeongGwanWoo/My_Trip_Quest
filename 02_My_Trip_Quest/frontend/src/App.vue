@@ -13,12 +13,14 @@
       :class="{ 'mobile-open': isMobileMenuOpen }"
       @toggle-sidebar="toggleSidebar"
       @close-mobile-menu="closeMobileMenu" 
+      :key="authStore.isLoggedIn"
     />
     
     <div v-if="showLayout" class="content-wrapper">
       <Header 
         :is-collapsed="isCollapsed" 
         @open-mobile-menu="openMobileMenu" 
+        :key="authStore.isLoggedIn"
       />
       
       <div class="page-content" :class="{ 'no-scroll': isMapPage }">
