@@ -221,6 +221,54 @@
         </div>
       </div>
     </BaseModal>
+
+    <!-- Login Confirmation Modal -->
+    <BaseModal :show="showLoginModal" @close="closeLoginModal">
+      <div class="modal-body">
+        <h3 class="modal-title">로그인 필요</h3>
+        <p class="modal-text">로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="closeLoginModal">취소</button>
+          <button class="btn-confirm" @click="goToLogin">로그인</button>
+        </div>
+      </div>
+    </BaseModal>
+
+    <!-- Accept Quest Confirmation Modal -->
+    <BaseModal :show="showAcceptModal" @close="showAcceptModal = false">
+      <div class="modal-body">
+        <h3 class="modal-title">퀘스트 수락</h3>
+        <p class="modal-text">이 퀘스트를 시작하시겠습니까?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showAcceptModal = false">취소</button>
+          <button class="btn-confirm" @click="executeAcceptQuest">수락</button>
+        </div>
+      </div>
+    </BaseModal>
+
+    <!-- Complete Arrival Quest Confirmation Modal -->
+    <BaseModal :show="showCompleteArrivalModal" @close="showCompleteArrivalModal = false">
+      <div class="modal-body">
+        <h3 class="modal-title">도착 완료</h3>
+        <p class="modal-text">현재 위치에서 도착 퀘스트를 완료하시겠습니까?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showCompleteArrivalModal = false">취소</button>
+          <button class="btn-confirm" @click="executeCompleteArrival">완료</button>
+        </div>
+      </div>
+    </BaseModal>
+
+    <!-- Forfeit Quest Confirmation Modal -->
+    <BaseModal :show="showForfeitModal" @close="showForfeitModal = false">
+      <div class="modal-body">
+        <h3 class="modal-title">퀘스트 포기</h3>
+        <p class="modal-text">정말로 이 퀘스트를 포기하시겠습니까?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showForfeitModal = false">취소</button>
+          <button class="btn-confirm-delete" @click="executeForfeitQuest">포기</button>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -229,16 +277,18 @@ import { ref, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { storeToRefs } from "pinia";
+import { useToast } from "@/utils/toast";
 import MapComponent from "@/components/map/MapComponent.vue";
 import BaseModal from "@/components/ui/BaseModal.vue";
 import BottomSheet from "@/components/ui/BottomSheet.vue";
 import api from "@/api";
 import { completeArrivalQuest, forfeitQuest } from "@/api/quest";
-import { completePhotoQuest } from "@/api/photoQuest"; // ★ Add this import
+import { completePhotoQuest } from "@/api/photoQuest";
 
 const router = useRouter();
 const authStore = useAuthStore();
 const { isLoggedIn } = storeToRefs(authStore);
+const { showToast } = useToast();
 
 // --- State ---
 const isSheetOpen = ref(false);
@@ -247,6 +297,7 @@ const quests = ref([]);
 const areaLocations = ref([]);
 const locationQuests = ref([]);
 const selectedAreaCode = ref(null);
+const questIdToProcess = ref(null); // For modal actions
 
 // Search & Pagination State
 const searchKeyword = ref('');
@@ -257,19 +308,36 @@ const isLoadingMore = ref(false);
 // Modal State
 const isModalVisible = ref(false);
 const isHelpModalVisible = ref(false);
+const showLoginModal = ref(false);
 const modalContentType = ref('');
 const selectedQuestForModal = ref(null);
 const selectedLocationForModal = ref(null);
 
-// ★ New states for photo quest
-const fileInputRef = ref(null); // Reference to the hidden file input
-const selectedImageFile = ref(null); // Temporarily store the selected image file
-const showGeolocationButton = ref(false); // Controls visibility of "Get My Location" button
-const activePhotoQuestId = ref(null); // ID of the photo quest being processed
-const isUploading = ref(false); // Controls the loading state for uploads
-const photoQuestError = ref(null); // Stores error messages for photo quests
+// Confirmation Modals State
+const showAcceptModal = ref(false);
+const showCompleteArrivalModal = ref(false);
+const showForfeitModal = ref(false);
+
+// Photo Quest State
+const fileInputRef = ref(null);
+const selectedImageFile = ref(null);
+const showGeolocationButton = ref(false);
+const activePhotoQuestId = ref(null);
+const isUploading = ref(false);
+const photoQuestError = ref(null);
 
 // --- Methods ---
+
+const refreshQuestData = async () => {
+  if (selectedLocationForModal.value) {
+    await fetchQuestsForModal(selectedLocationForModal.value);
+  }
+  if (selectedAreaCode.value) {
+    await fetchLocations(selectedAreaCode.value, { reset: true });
+  }
+  await fetchAreas();
+};
+
 const handleAreaClick = (areaCode) => {
   handleQuestCardClick(areaCode);
   isSheetOpen.value = true;
@@ -309,77 +377,75 @@ const getQuestStyle = (areaName) => {
 
 const getLocationColorClass = (location) => {
   switch (location.status) {
-    case 'COMPLETED':
-      return 'dot-green';
-    case 'IN_PROGRESS':
-      return 'dot-orange';
-    default:
-      return 'dot-skyblue';
+    case 'COMPLETED': return 'dot-green';
+    case 'IN_PROGRESS': return 'dot-orange';
+    default: return 'dot-skyblue';
   }
 };
 
-    const fetchLocations = async (areaCode, { reset = false } = {}) => {
-      if (isLoadingMore.value && !reset) return;
+const fetchLocations = async (areaCode, { reset = false } = {}) => {
+  if (isLoadingMore.value && !reset) return;
+  if (reset) {
+    currentPage.value = 0;
+    areaLocations.value = [];
+    isLastPage.value = false;
+  }
+  isLoadingMore.value = true;
+  try {
+    const response = await api.get(`/api/v1/quest-map/areas/${areaCode}`, {
+      params: { page: currentPage.value, size: 10, keyword: searchKeyword.value },
+    });
+    const data = response.data.data;
+    areaLocations.value.push(...data.content);
+    isLastPage.value = data.last;
+    currentPage.value++;
+  } catch (error) {
+    console.error(`Error fetching locations for area ${areaCode}:`, error);
+  } finally {
+    isLoadingMore.value = false;
+  }
+};
 
-      if (reset) {
-        currentPage.value = 0;
-        areaLocations.value = [];
-        isLastPage.value = false;
-      }
+const handleQuestCardClick = (areaCode) => {
+  if (selectedAreaCode.value === areaCode) {
+    selectedAreaCode.value = null;
+    areaLocations.value = [];
+    searchKeyword.value = '';
+  } else {
+    selectedAreaCode.value = areaCode;
+    searchKeyword.value = '';
+    fetchLocations(areaCode, { reset: true });
+  }
+};
 
-      isLoadingMore.value = true;
-      try {
-        const response = await api.get(`/api/v1/quest-map/areas/${areaCode}`, {
-          params: {
-            page: currentPage.value,
-            size: 10,
-            keyword: searchKeyword.value,
-          },
-        });
-        const data = response.data.data;
-        areaLocations.value.push(...data.content);
-        isLastPage.value = data.last;
-        currentPage.value++;
-      } catch (error) {
-        console.error(`Error fetching locations for area ${areaCode}:`, error);
-      } finally {
-        isLoadingMore.value = false;
-      }
-    };
+const handleSearch = () => {
+  if (selectedAreaCode.value) {
+    fetchLocations(selectedAreaCode.value, { reset: true });
+  }
+};
 
-    const handleQuestCardClick = (areaCode) => {
-      if (selectedAreaCode.value === areaCode) {
-        selectedAreaCode.value = null;
-        areaLocations.value = [];
-        searchKeyword.value = '';
-      } else {
-        selectedAreaCode.value = areaCode;
-        searchKeyword.value = '';
-        fetchLocations(areaCode, { reset: true });
-      }
-    };
+const handleLoadMore = () => {
+  if (selectedAreaCode.value && !isLastPage.value) {
+    fetchLocations(selectedAreaCode.value);
+  }
+};
 
-    const handleSearch = () => {
-      if (selectedAreaCode.value) {
-        fetchLocations(selectedAreaCode.value, { reset: true });
-      }
-    };
+const closeLoginModal = () => {
+  showLoginModal.value = false;
+};
 
-    const handleLoadMore = () => {
-      if (selectedAreaCode.value && !isLastPage.value) {
-        fetchLocations(selectedAreaCode.value);
-      }
-    };
+const goToLogin = () => {
+  router.push('/login');
+  closeLoginModal();
+};
 
 const fetchQuestsForModal = async (location) => {
   if (!isLoggedIn.value) {
-    alert("로그인이 필요한 서비스입니다.");
-    router.push("/login");
+    showLoginModal.value = true;
     return;
   }
   try {
     const response = await api.get(`/api/v1/quest-map/locations/${location.locationId}`);
-    console.log('Quest list API response:', response.data.data); // 응답 데이터 구조 확인
     locationQuests.value = response.data.data;
     selectedLocationForModal.value = location;
     modalContentType.value = 'questList';
@@ -389,83 +455,100 @@ const fetchQuestsForModal = async (location) => {
   }
 };
 
-const acceptQuest = async (questId) => {
+const acceptQuest = (questId) => {
+  questIdToProcess.value = questId;
+  showAcceptModal.value = true;
+};
+
+const executeAcceptQuest = async () => {
+  if (!questIdToProcess.value) return;
   try {
-    await api.post(`/api/v1/quest-map/quests/${questId}/accept`);
-    alert(`퀘스트 #${questId}를 수락했습니다!`);
-    
-    // UI 상태를 동적으로 새로고침합니다.
-    if (selectedLocationForModal.value) {
-      await fetchQuestsForModal(selectedLocationForModal.value);
-    }
-    if (selectedAreaCode.value) {
-      await fetchLocations(selectedAreaCode.value, { reset: true });
-    }
-    await fetchAreas();
+    await api.post(`/api/v1/quest-map/quests/${questIdToProcess.value}/accept`);
+    showToast("퀘스트를 수락했습니다!", "success");
+    await refreshQuestData();
   } catch (error) {
     console.error(`Error accepting quest:`, error);
-    alert(`실패: ${error.response?.data?.message || error.message}`);
+    showToast(`실패: ${error.response?.data?.message || error.message}`, "error");
+  } finally {
+    showAcceptModal.value = false;
+    questIdToProcess.value = null;
   }
 };
 
-const handleCompleteArrival = async (questId) => {
+const handleCompleteArrival = (questId) => {
   if (!navigator.geolocation) {
-    alert("이 브라우저에서는 위치 정보 서비스를 사용할 수 없습니다.");
+    showToast("이 브라우저에서는 위치 정보 서비스를 사용할 수 없습니다.", "error");
     return;
   }
+  questIdToProcess.value = questId;
+  showCompleteArrivalModal.value = true;
+};
+
+const executeCompleteArrival = () => {
+  if (!questIdToProcess.value) return;
+  const questId = questIdToProcess.value;
 
   navigator.geolocation.getCurrentPosition(
     async (position) => {
       const { latitude, longitude } = position.coords;
       try {
         await completeArrivalQuest(questId, latitude, longitude);
-        alert(`퀘스트 #${questId} 완료!`);
-        
-        // UI 상태를 동적으로 새로고침합니다.
-        if (selectedLocationForModal.value) {
-          await fetchQuestsForModal(selectedLocationForModal.value);
-        }
-        if (selectedAreaCode.value) {
-          await fetchLocations(selectedAreaCode.value, { reset: true });
-        }
-        await fetchAreas();
+        showToast(`퀘스트 #${questId} 완료!`, "success");
+        await refreshQuestData();
       } catch (error) {
         console.error(`Error completing arrival quest:`, error);
-        alert(`퀘스트 완료 실패: ${error.response?.data?.message || error.message}`);
+        showToast(`퀘스트 완료 실패: ${error.response?.data?.message || error.message}`, "error");
       }
     },
     (error) => {
       console.error("Error getting location:", error);
-      alert(`위치 정보를 가져오는 데 실패했습니다: ${error.message}`);
+      showToast(`위치 정보를 가져오는 데 실패했습니다: ${error.message}`, "error");
     }
   );
+  showCompleteArrivalModal.value = false;
+  questIdToProcess.value = null;
 };
 
-// ★ Methods for photo quest, updated for reliability
+const handleForfeitQuest = (questId) => {
+  questIdToProcess.value = questId;
+  showForfeitModal.value = true;
+};
+
+const executeForfeitQuest = async () => {
+  if (!questIdToProcess.value) return;
+  const questId = questIdToProcess.value;
+  try {
+    await forfeitQuest(questId);
+    showToast("퀘스트를 포기했습니다.", "info");
+    const locationToRefresh = selectedLocationForModal.value;
+    closeModal();
+    if (locationToRefresh) {
+      await fetchQuestsForModal(locationToRefresh);
+    }
+    await refreshQuestData();
+  } catch (error) {
+    console.error(`Error forfeiting quest:`, error);
+    showToast(`퀘스트 포기에 실패했습니다: ${error.response?.data?.message || error.message}`, "error");
+  } finally {
+    showForfeitModal.value = false;
+    questIdToProcess.value = null;
+  }
+};
+
 const triggerFileInput = (questId) => {
-  photoQuestError.value = null; // Clear previous errors
-  activePhotoQuestId.value = questId; // Store current questId
+  photoQuestError.value = null;
+  activePhotoQuestId.value = questId;
   fileInputRef.value.click();
 };
 
 const uploadPhotoForQuest = async (questId, imageFile, latitude = null, longitude = null) => {
   isUploading.value = true;
-  photoQuestError.value = null; // Clear previous errors
+  photoQuestError.value = null;
   try {
-    showGeolocationButton.value = false; // Reset button visibility
+    showGeolocationButton.value = false;
     await completePhotoQuest(questId, imageFile, latitude, longitude);
-    alert(`사진 퀘스트 #${questId} 완료!`);
-    
-    // UI 상태를 동적으로 새로고침합니다.
-    if (selectedLocationForModal.value) {
-      await fetchQuestsForModal(selectedLocationForModal.value);
-    }
-    if (selectedAreaCode.value) {
-      await fetchLocations(selectedAreaCode.value, { reset: true });
-    }
-    await fetchAreas();
-
-    // Reset temporary states
+    showToast(`사진 퀘스트 #${questId} 완료!`, "success");
+    await refreshQuestData();
     selectedImageFile.value = null;
     activePhotoQuestId.value = null;
   } catch (error) {
@@ -474,11 +557,10 @@ const uploadPhotoForQuest = async (questId, imageFile, latitude = null, longitud
 
     if (error.response?.data?.code === 'PHOTO_METADATA_MISSING') {
       photoQuestError.value = "사진에 위치 정보가 없습니다. 현재 위치로 인증해주세요.";
-      selectedImageFile.value = imageFile; // Store file for re-upload with manual location
+      selectedImageFile.value = imageFile;
       showGeolocationButton.value = true;
     } else {
       photoQuestError.value = `${errorMessage}`;
-      // Reset temporary states on general failure
       selectedImageFile.value = null;
       showGeolocationButton.value = false;
       activePhotoQuestId.value = null;
@@ -497,7 +579,6 @@ const handleFileSelect = async (event) => {
       photoQuestError.value = "퀘스트 정보가 없습니다. 다시 시도해주세요.";
     }
   }
-  // Clear file input regardless of selection to allow re-selection of the same file
   event.target.value = null;
 };
 
@@ -506,15 +587,12 @@ const handleGetLocationAndUpload = async () => {
     photoQuestError.value = "이 브라우저에서는 위치 정보 서비스를 사용할 수 없습니다.";
     return;
   }
-
   if (!activePhotoQuestId.value) {
     photoQuestError.value = "퀘스트 정보가 없습니다. 다시 시도해주세요.";
     return;
   }
-
   isUploading.value = true;
-  photoQuestError.value = null; // Clear previous errors
-
+  photoQuestError.value = null;
   navigator.geolocation.getCurrentPosition(
     async (position) => {
       const { latitude, longitude } = position.coords;
@@ -522,13 +600,13 @@ const handleGetLocationAndUpload = async () => {
         await uploadPhotoForQuest(activePhotoQuestId.value, selectedImageFile.value, latitude.toString(), longitude.toString());
       } else {
         photoQuestError.value = "업로드할 사진 파일을 찾을 수 없습니다.";
-        isUploading.value = false; // Stop loading if no file is found
+        isUploading.value = false;
       }
     },
     (error) => {
       console.error("Error getting location for photo upload:", error);
       photoQuestError.value = `위치 정보를 가져오는 데 실패했습니다: ${error.message}`;
-      isUploading.value = false; // Stop loading on geolocation error
+      isUploading.value = false;
     }
   );
 };
@@ -542,37 +620,12 @@ const showQuestDetails = (quest) => {
   });
 };
 
-const handleForfeitQuest = async (questId) => {
-  if (confirm("정말 이 퀘스트를 포기하시겠습니까?")) {
-    try {
-      await forfeitQuest(questId);
-      alert("퀘스트를 포기했습니다.");
-      
-      const locationToRefresh = selectedLocationForModal.value;
-      closeModal();
-      
-      // UI 상태를 동적으로 새로고침합니다.
-      if (locationToRefresh) {
-        await fetchQuestsForModal(locationToRefresh);
-      }
-      if (selectedAreaCode.value) {
-        await fetchLocations(selectedAreaCode.value, { reset: true });
-      }
-      await fetchAreas();
-    } catch (error) {
-      console.error(`Error forfeiting quest:`, error);
-      alert(`퀘스트 포기에 실패했습니다: ${error.response?.data?.message || error.message}`);
-    }
-  }
-};
-
 const closeModal = () => {
   isModalVisible.value = false;
   selectedQuestForModal.value = null;
   selectedLocationForModal.value = null;
   locationQuests.value = [];
   modalContentType.value = '';
-  // ★ Reset photo quest specific states
   selectedImageFile.value = null;
   showGeolocationButton.value = false;
   activePhotoQuestId.value = null;
@@ -934,4 +987,63 @@ const closeModal = () => {
       cursor: not-allowed;
       opacity: 0.7;
     }
+</style>
+<style scoped>
+/* Modal Body Styles */
+.modal-body {
+  text-align: center;
+  padding: 20px;
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.modal-text {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.modal-actions button {
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  min-width: 120px;
+  transition: background-color 0.2s;
+}
+
+.btn-cancel {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+.btn-cancel:hover {
+  background-color: #e2e8f0;
+}
+
+.btn-confirm {
+  background-color: #3b82f6;
+  color: white;
+}
+.btn-confirm:hover {
+  background-color: #2563eb;
+}
+
+.btn-confirm-delete {
+  background: #ef4444;
+  color: white;
+}
+.btn-confirm-delete:hover {
+  background: #dc2626;
+}
 </style>

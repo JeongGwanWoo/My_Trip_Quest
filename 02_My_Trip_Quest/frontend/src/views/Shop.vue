@@ -78,6 +78,46 @@
       </div>
 
     </div>
+
+    <!-- Login Confirmation Modal -->
+    <BaseModal :show="showLoginModal" @close="closeLoginModal">
+      <div class="modal-body">
+        <h3 class="modal-title">로그인 필요</h3>
+        <p class="modal-text">로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="closeLoginModal">취소</button>
+          <button class="btn-confirm" @click="goToLogin">로그인</button>
+        </div>
+      </div>
+    </BaseModal>
+
+    <!-- Purchase Confirmation Modal -->
+    <BaseModal :show="showPurchaseConfirmModal" @close="closePurchaseConfirmModal">
+      <div class="modal-body">
+        <h3 class="modal-title">아이템 구매</h3>
+        <p class="modal-text" v-if="itemToPurchase">
+          '{{ itemToPurchase.name }}'을(를) {{ itemToPurchase.price.toLocaleString() }} 코인에 구매하시겠습니까?
+        </p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="closePurchaseConfirmModal">취소</button>
+          <button class="btn-confirm" @click="executePurchase">구매</button>
+        </div>
+      </div>
+    </BaseModal>
+
+    <!-- Purchase Result Modal -->
+    <BaseModal :show="showPurchaseResultModal" @close="closePurchaseResultModal">
+      <div class="modal-body">
+        <h3 class="modal-title" :class="{ 'text-green': purchaseResultType === 'success', 'text-red': purchaseResultType === 'error' }">
+          {{ purchaseResultType === 'success' ? '구매 완료!' : '구매 실패' }}
+        </h3>
+        <p class="modal-text">{{ purchaseResultMessage }}</p>
+        <div class="modal-actions">
+          <button class="btn-confirm" @click="closePurchaseResultModal">확인</button>
+        </div>
+      </div>
+    </BaseModal>
+
   </div>
 </template>
 
@@ -88,6 +128,7 @@ import { useAuthStore } from '@/stores/auth';
 import { storeToRefs } from 'pinia';
 import { getShopItems, buyItem } from '@/api/items.js';
 import { getProfile } from '@/api/user.js';
+import BaseModal from '@/components/ui/BaseModal.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -96,6 +137,14 @@ const { isLoggedIn } = storeToRefs(authStore);
 const userCoins = ref(0);
 const items = ref([]);
 const isLoading = ref(true);
+const showLoginModal = ref(false);
+
+// New states for purchase modals
+const showPurchaseConfirmModal = ref(false);
+const showPurchaseResultModal = ref(false);
+const purchaseResultMessage = ref('');
+const purchaseResultType = ref(''); // 'success' or 'error'
+const itemToPurchase = ref(null); // Stores the item object to be purchased
 
 const currentCategory = ref('all');
 
@@ -115,15 +164,15 @@ const getCategoryLabel = (catId) => {
   return cat ? cat.label : catId;
 }
 
-const fetchShopItemsData = async () => {
-  isLoading.value = true;
+const fetchShopItemsData = async (showLoading = true) => {
+  if (showLoading) isLoading.value = true;
   try {
     const shopItemsResponse = await getShopItems();
     if (shopItemsResponse.success) {
       items.value = shopItemsResponse.data;
     }
-  } catch (error) {
-    console.error("상점 아이템을 불러오는 데 실패했습니다.", error);
+  } finally {
+    if (showLoading) isLoading.value = false;
   }
 };
 
@@ -152,29 +201,74 @@ const filteredItems = computed(() => {
   return items.value.filter(item => item.category === currentCategory.value);
 });
 
+const closeLoginModal = () => {
+  showLoginModal.value = false;
+};
+
+const goToLogin = () => {
+  router.push('/login');
+  closeLoginModal();
+};
+
+// New functions for purchase modals
+const closePurchaseConfirmModal = () => {
+  showPurchaseConfirmModal.value = false;
+  itemToPurchase.value = null;
+};
+
+const closePurchaseResultModal = async () => {
+  showPurchaseResultModal.value = false;
+  purchaseResultMessage.value = '';
+  purchaseResultType.value = '';
+  // After purchase, refresh items and user data
+  if (isLoggedIn.value) {
+    await fetchShopItemsData();
+    await fetchUserData();
+  }
+};
+
+const executePurchase = async () => {
+  // 1. 아이템 정보가 있는지 먼저 확인
+  if (!itemToPurchase.value) return;
+
+  const targetItem = itemToPurchase.value; // 정보를 별도 변수에 복사해두면 더 안전합니다.
+  
+  // 2. 확인 모달만 닫기 (데이터는 유지)
+  showPurchaseConfirmModal.value = false;
+
+  try {
+    // 3. 복사해둔 정보로 API 호출
+    const response = await buyItem(targetItem.id);
+    
+    if (response.success) {
+      purchaseResultMessage.value = `'${targetItem.name}'을(를) 구매 완료했습니다!`;
+      purchaseResultType.value = 'success';
+    } else {
+      purchaseResultMessage.value = response.message || "구매에 실패했습니다.";
+      purchaseResultType.value = 'error';
+    }
+  } catch (error) {
+    console.error("구매 처리 중 오류 발생:", error);
+    purchaseResultMessage.value = error.response?.data?.message || "알 수 없는 오류가 발생했습니다.";
+    purchaseResultType.value = 'error';
+  } finally {
+    // 4. 모든 과정이 끝난 후 결과 모달을 띄우고 데이터 초기화
+    showPurchaseResultModal.value = true;
+    itemToPurchase.value = null; 
+  }
+};
+
 const handleBuy = async (item) => {
   if (item.owned) return;
 
   if (!isLoggedIn.value) {
-    alert("로그인이 필요한 서비스입니다.");
-    router.push('/login');
+    showLoginModal.value = true;
     return;
   }
 
-  if (confirm(`'${item.name}'을(를) ${item.price}코인에 구매하시겠습니까?`)) {
-    try {
-      const response = await buyItem(item.id);
-      if (response.success) {
-        alert("구매 완료!");
-        await fetchShopItemsData();
-        await fetchUserData();
-      }
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || "알 수 없는 오류가 발생했습니다.";
-      alert(`구매 실패: ${errorMessage}`);
-      console.error("구매 처리 중 오류 발생:", error);
-    }
-  }
+  // For logged-in users, show custom purchase confirmation modal
+  itemToPurchase.value = item;
+  showPurchaseConfirmModal.value = true;
 };
 </script>
 
@@ -528,5 +622,55 @@ const handleBuy = async (item) => {
     padding: 10px;
     font-size: 13px;
   }
+}
+
+/* Modal Body Styles */
+.modal-body {
+  text-align: center;
+  padding: 20px;
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.modal-text {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.modal-actions button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  min-width: 100px;
+  transition: background-color 0.2s;
+}
+
+.btn-cancel {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+.btn-cancel:hover {
+  background-color: #e2e8f0;
+}
+
+.btn-confirm {
+  background-color: #3b82f6;
+  color: white;
+}
+.btn-confirm:hover {
+  background-color: #2563eb;
 }
 </style>

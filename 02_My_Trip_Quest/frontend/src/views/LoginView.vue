@@ -142,7 +142,7 @@ const handleLogin = async () => {
   } catch (error) {
     console.error('로그인 오류:', error);
     const msg = error.response?.data?.message || '이메일 또는 비밀번호를 확인해주세요.';
-    alert(`로그인 실패: ${msg}`);
+    showToast(msg, 'error');
   } finally {
     isLoading.value = false;
   }

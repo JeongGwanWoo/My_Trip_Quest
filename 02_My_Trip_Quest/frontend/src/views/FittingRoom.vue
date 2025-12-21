@@ -43,7 +43,7 @@
             <div class="preview-actions">
               <div class="character-info">
                 <span class="role-badge">TRAVELER</span>
-                <span class="username">TRAVELMASTER</span>
+                <span class="username">{{ authStore.userInfo?.nickname || 'TRAVELMASTER' }}</span>
               </div>
 
               <button @click="saveCurrentAvatar" class="btn-save">
@@ -107,12 +107,41 @@
       </div>
 
     </div>
+
+    <!-- Save Confirmation Modal -->
+    <BaseModal :show="showSaveConfirmModal" @close="closeSaveConfirmModal">
+      <div class="modal-body">
+        <h3 class="modal-title">스타일 저장</h3>
+        <p class="modal-text">현재 스타일을 저장하시겠습니까?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="closeSaveConfirmModal">취소</button>
+          <button class="btn-confirm" @click="executeSaveAvatar">저장하기</button>
+        </div>
+      </div>
+    </BaseModal>
+
+    <!-- Save Result Modal -->
+    <BaseModal :show="showSaveResultModal" @close="closeSaveResultModal">
+      <div class="modal-body">
+        <h3 class="modal-title" :class="{ 'text-green': saveResultType === 'success', 'text-red': saveResultType === 'error' }">
+          {{ saveResultType === 'success' ? '저장 완료!' : '저장 실패' }}
+        </h3>
+        <p class="modal-text">{{ saveResultMessage }}</p>
+        <div class="modal-actions">
+          <button class="btn-confirm" @click="closeSaveResultModal">확인</button>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { getMyInventory, equipItemApi, unequipItemApi  } from '@/api/items';
+import BaseModal from '@/components/ui/BaseModal.vue';
+import { useAuthStore } from '@/stores/auth';
+
+const authStore = useAuthStore();
 
 const currentTab = ref('recent');
 const allBackendItems = ref([]); 
@@ -127,6 +156,12 @@ const equipped = ref({
   BOTTOM: null,
   FACE: null,
 });
+
+// New states for save modals
+const showSaveConfirmModal = ref(false);
+const showSaveResultModal = ref(false);
+const saveResultMessage = ref('');
+const saveResultType = ref(''); // 'success' or 'error'
 
 const tabs = [
   { id: 'recent', label: '전체' },
@@ -187,8 +222,15 @@ const equipItem = (item) => {
   }
 };
 
-const saveCurrentAvatar = async () => {
-  if (!confirm('현재 스타일을 저장하시겠습니까?')) return;
+const closeSaveResultModal = async () => {
+  showSaveResultModal.value = false;
+  saveResultMessage.value = '';
+  saveResultType.value = '';
+  // Optionally re-fetch inventory or equipped items here if needed
+};
+
+const executeSaveAvatar = async () => {
+  closeSaveConfirmModal(); // Close confirm modal first
   
   try {
     const promises = [];
@@ -208,12 +250,25 @@ const saveCurrentAvatar = async () => {
     }
 
     await Promise.all(promises);
-    alert('스타일이 저장되었습니다!');
+    saveResultMessage.value = '스타일이 성공적으로 저장되었습니다!';
+    saveResultType.value = 'success';
 
   } catch (err) {
     console.error(err);
-    alert('저장 중 오류가 발생했습니다.');
+    saveResultMessage.value = err.response?.data?.message || '스타일 저장 중 오류가 발생했습니다.';
+    saveResultType.value = 'error';
+  } finally {
+    showSaveResultModal.value = true;
   }
+};
+
+
+const saveCurrentAvatar = async () => {
+  showSaveConfirmModal.value = true;
+};
+
+const closeSaveConfirmModal = () => {
+  showSaveConfirmModal.value = false;
 };
 
 onMounted(async () => {
@@ -439,6 +494,58 @@ onMounted(async () => {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.5; }
+
+
+/* --- Modal Content Styling --- */
+.modal-body {
+  padding: 16px 8px;
+  text-align: center;
+}
+.modal-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+.modal-text {
+  font-size: 16px;
+  color: #64748b;
+  margin-bottom: 32px;
+}
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.modal-actions button {
+  flex: 1;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-confirm {
+  background: #2563eb;
+  color: white;
+}
+.btn-confirm:hover {
+  background: #1d4ed8;
+}
+.btn-cancel {
+  background: #e2e8f0;
+  color: #475569;
+}
+.btn-cancel:hover {
+  background: #cbd5e1;
+}
+
+/* Success/Error colors */
+.text-green { color: #22c55e; }
+.text-red { color: #ef4444; }
+
 
 /* ------------------------------------------- */
 /* ★ 반응형 미디어 쿼리 ★ */

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
@@ -59,6 +60,12 @@ public class UserController {
                 .getUserId();
         UserProfileResponseDto profile = profileService.getProfileData(userId);
         return ResponseEntity.ok(ApiResponse.success(profile));
+    }
+
+    @GetMapping("/check-nickname")
+    public ResponseEntity<ApiResponse> checkNickname(@RequestParam String nickname) {
+        boolean isAvailable = userService.checkNicknameAvailability(nickname);
+        return ResponseEntity.ok(ApiResponse.success(Collections.singletonMap("isAvailable", isAvailable)));
     }
 
     @PatchMapping("/me")

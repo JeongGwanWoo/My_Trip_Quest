@@ -36,6 +36,7 @@
         v-if="isModalOpen"
         :quest="selectedQuest"
         @close="closeModal"
+        @quest-updated="fetchOngoingQuests"
       />
     </div>
   </div>
@@ -59,8 +60,6 @@ const openQuestDetail = (quest) => {
 const closeModal = () => {
   isModalOpen.value = false;
   selectedQuest.value = null;
-  // Optionally, refresh the list after a quest is completed
-  // fetchOngoingQuests();
 };
 
 

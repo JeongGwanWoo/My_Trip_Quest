@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1/users/register", "/api/v1/users/login", "/login/oauth2/**", "/oauth2/**").permitAll()
+                        .requestMatchers("/api/v1/users/register", "/api/v1/users/login", "/api/v1/users/social-signup", "/api/v1/users/check-nickname", "/login/oauth2/**", "/oauth2/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/quest-map/**", "/api/v1/rankings", "/api/v1/items/shop").permitAll()
                         .anyRequest().authenticated()
                 )

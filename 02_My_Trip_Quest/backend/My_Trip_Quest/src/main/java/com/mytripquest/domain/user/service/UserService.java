@@ -70,6 +70,13 @@ public class UserService {
 		return userMapper.findIdByEmail(email).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 	}
 
+	public boolean checkNicknameAvailability(String nickname) {
+		if (!StringUtils.hasText(nickname)) {
+			return false;
+		}
+		return userMapper.findByNickname(nickname).isEmpty();
+	}
+
 	@Transactional
 	public void updateProfile(String email, UserRequestDto.Update updateDto) {
 		User user = userMapper.findByEmail(email).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -134,6 +141,7 @@ public class UserService {
 		User user = User.builder()
 				.email(email)
 				.nickname(request.getNickname())
+				.provider(provider) // 소셜 로그인 제공자 정보 추가
 				.passwordHash(passwordEncoder.encode(java.util.UUID.randomUUID().toString())) // 임시 비밀번호
 				.role(User.Role.USER)
 				.points(1000)

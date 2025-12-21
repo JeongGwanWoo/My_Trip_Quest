@@ -237,6 +237,11 @@
           <div class="form-group">
             <label>닉네임</label>
             <input type="text" v-model="editForm.nickname" class="form-input" />
+            <div v-if="nicknameMessage" 
+                 class="validation-message"
+                 :class="{ 'msg-valid': nicknameStatus === 'valid', 'msg-invalid': nicknameStatus === 'invalid' || nicknameStatus === 'checking' }">
+              {{ nicknameMessage }}
+            </div>
           </div>
 
           <div class="form-group">
@@ -269,7 +274,7 @@
             />
           </div>
 
-          <button type="submit" class="btn-save">저장하기</button>
+          <button type="submit" class="btn-save" :disabled="nicknameStatus === 'invalid' || nicknameStatus === 'checking'">저장하기</button>
         </form>
 
         <div class="divider"></div>
@@ -279,19 +284,45 @@
         </button>
       </div>
     </BaseModal>
+
+    <!-- Update Confirmation Modal -->
+    <BaseModal :show="showUpdateConfirmModal" @close="showUpdateConfirmModal = false">
+      <div class="modal-body">
+        <h3 class="modal-title">정보 수정</h3>
+        <p class="modal-text">입력한 내용으로 정보를 수정하시겠습니까?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showUpdateConfirmModal = false">취소</button>
+          <button class="btn-confirm" @click="executeUpdateProfile">수정하기</button>
+        </div>
+      </div>
+    </BaseModal>
+
+    <!-- Delete Confirmation Modal -->
+    <BaseModal :show="showDeleteConfirmModal" @close="showDeleteConfirmModal = false">
+      <div class="modal-body">
+        <h3 class="modal-title">회원 탈퇴</h3>
+        <p class="modal-text">정말로 탈퇴하시겠습니까? 모든 데이터가 삭제되며 복구할 수 없습니다.</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showDeleteConfirmModal = false">취소</button>
+          <button class="btn-confirm-delete" @click="executeDeleteAccount">탈퇴하기</button>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { getAvatar } from "@/api/avatar.js";
-import { getProfile, updateProfile, deleteAccount } from "@/api/user.js";
-import BaseModal from "@/components/ui/BaseModal.vue"; // 모달 컴포넌트 필수
+import { getProfile, updateProfile, deleteAccount, checkNickname } from "@/api/user.js";
+import BaseModal from "@/components/ui/BaseModal.vue";
 import { useAuthStore } from "@/stores/auth";
+import { useToast } from "@/utils/toast";
 
 const authStore = useAuthStore();
 const router = useRouter();
+const { showToast } = useToast();
 
 const goToOngoingQuests = () => {
   router.push("/profile/ongoing-quests");
@@ -303,13 +334,16 @@ const formattedJoinedDate = computed(() => {
   if (!userProfile.value?.joinedAt) return "N/A";
   const date = new Date(userProfile.value.joinedAt);
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}. ${month}. ${day}.`;
 });
 
-// --- 수정 모달 관련 상태 ---
+// --- Modal States ---
 const isEditModalOpen = ref(false);
+const showUpdateConfirmModal = ref(false);
+const showDeleteConfirmModal = ref(false);
+
 const editForm = ref({
   nickname: "",
   currentPassword: "",
@@ -317,11 +351,46 @@ const editForm = ref({
   confirmNewPassword: "",
 });
 
+// --- Nickname Validation State ---
+const nicknameStatus = ref('idle'); // idle, checking, valid, invalid
+const nicknameMessage = ref('');
+let debounceTimer = null;
+
+watch(() => editForm.value.nickname, (newNickname) => {
+  clearTimeout(debounceTimer);
+  if (!newNickname || newNickname === userProfile.value?.nickname) {
+    nicknameStatus.value = 'idle';
+    nicknameMessage.value = '';
+    return;
+  }
+  
+  nicknameStatus.value = 'checking';
+  nicknameMessage.value = '닉네임을 확인하는 중...';
+
+  debounceTimer = setTimeout(async () => {
+    try {
+      const isAvailable = await checkNickname(newNickname);
+      if (isAvailable) {
+        nicknameStatus.value = 'valid';
+        nicknameMessage.value = '사용 가능한 닉네임입니다.';
+      } else {
+        nicknameStatus.value = 'invalid';
+        nicknameMessage.value = '이미 사용 중인 닉네임입니다.';
+      }
+    } catch (error) {
+      nicknameStatus.value = 'invalid';
+      nicknameMessage.value = '닉네임 확인 중 오류가 발생했습니다.';
+    }
+  }, 500);
+});
+
 const openEditModal = () => {
   editForm.value.nickname = userProfile.value?.nickname || "";
   editForm.value.currentPassword = "";
   editForm.value.newPassword = "";
   editForm.value.confirmNewPassword = "";
+  nicknameStatus.value = 'idle';
+  nicknameMessage.value = '';
   isEditModalOpen.value = true;
 };
 
@@ -329,67 +398,83 @@ const closeEditModal = () => {
   isEditModalOpen.value = false;
 };
 
-const handleUpdateProfile = async () => {
+// --- Profile Update Logic ---
+const handleUpdateProfile = () => {
+  if (nicknameStatus.value === 'invalid') {
+    showToast('닉네임이 유효하지 않습니다.', 'error');
+    return;
+  }
+  if (nicknameStatus.value === 'checking') {
+    showToast('닉네임 확인이 완료될 때까지 기다려주세요.', 'info');
+    return;
+  }
+
   if (
     editForm.value.newPassword &&
     editForm.value.newPassword !== editForm.value.confirmNewPassword
   ) {
-    alert("새 비밀번호가 일치하지 않습니다.");
+    showToast("새 비밀번호가 일치하지 않습니다.", "error");
     return;
   }
 
+  const isNicknameChanged = editForm.value.nickname !== userProfile.value.nickname;
+  const isPasswordChanged = !!editForm.value.newPassword;
+
+  if (!isNicknameChanged && !isPasswordChanged) {
+    showToast("변경할 내용이 없습니다.", "info");
+    return;
+  }
+
+  if (isPasswordChanged && !editForm.value.currentPassword) {
+    showToast("현재 비밀번호를 입력해야 비밀번호를 변경할 수 있습니다.", "error");
+    return;
+  }
+  
+  showUpdateConfirmModal.value = true;
+};
+
+const executeUpdateProfile = async () => {
   const payload = {};
   if (editForm.value.nickname !== userProfile.value.nickname) {
     payload.nickname = editForm.value.nickname;
   }
-
   if (editForm.value.newPassword) {
-    if (!editForm.value.currentPassword) {
-      alert("현재 비밀번호를 입력해야 비밀번호를 변경할 수 있습니다.");
-      return;
-    }
     payload.currentPassword = editForm.value.currentPassword;
     payload.newPassword = editForm.value.newPassword;
   }
 
-  if (Object.keys(payload).length === 0) {
-    alert("변경할 내용이 없습니다.");
-    return;
-  }
-
   try {
-    const response = await updateProfile(payload);
-    if (response.success) {
-      alert("정보가 성공적으로 수정되었습니다.");
-      await fetchUserProfileData();
-      closeEditModal();
-    }
+    await updateProfile(payload);
+    showToast("정보가 성공적으로 수정되었습니다.", "success");
+    await fetchUserProfileData();
+    closeEditModal();
   } catch (error) {
-    const message =
-      error.response?.data?.message || "프로필 수정에 실패했습니다.";
-    alert(message);
-    console.error("Error updating profile:", error);
+    const message = error.response?.data?.message || "프로필 수정에 실패했습니다.";
+    showToast(message, "error");
+  } finally {
+    showUpdateConfirmModal.value = false;
   }
 };
 
-const handleWithdraw = async () => {
-  if (
-    confirm("정말로 탈퇴하시겠습니까? 탈퇴 시 모든 여행 기록이 삭제됩니다.")
-  ) {
-    try {
-      const response = await deleteAccount();
-      if (response.success) {
-        alert("회원 탈퇴가 완료되었습니다. 이용해주셔서 감사합니다.");
-        authStore.logout();
-      }
-    } catch (error) {
-      const message =
-        error.response?.data?.message || "회원 탈퇴에 실패했습니다.";
-      alert(message);
-      console.error("Error deleting account:", error);
-    }
+// --- Account Deletion Logic ---
+const handleWithdraw = () => {
+  showDeleteConfirmModal.value = true;
+};
+
+const executeDeleteAccount = async () => {
+  try {
+    await deleteAccount();
+    showToast("회원 탈퇴가 완료되었습니다. 이용해주셔서 감사합니다.", "success");
+    authStore.logout();
+  } catch (error) {
+    const message = error.response?.data?.message || "회원 탈퇴에 실패했습니다.";
+    showToast(message, "error");
+  } finally {
+    showDeleteConfirmModal.value = false;
+    closeEditModal();
   }
 };
+
 
 const getCityStyle = (cityName) => {
   switch (cityName) {
@@ -927,6 +1012,18 @@ const earnedBadges = ref([
   border-color: #3b82f6;
 }
 
+.validation-message {
+  font-size: 12px;
+  margin-top: 6px;
+  padding-left: 4px;
+}
+.msg-valid {
+  color: #22c55e;
+}
+.msg-invalid {
+  color: #ef4444;
+}
+
 .btn-save {
   margin-top: 8px;
   padding: 12px;
@@ -936,9 +1033,14 @@ const earnedBadges = ref([
   border-radius: 8px;
   font-weight: 700;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 .btn-save:hover {
   background-color: #2563eb;
+}
+.btn-save:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
 }
 
 .divider {
@@ -1043,5 +1145,59 @@ const earnedBadges = ref([
   text-align: center;
   padding: 20px;
   color: #94a3b8;
+}
+
+/* --- Modal Content Styling (Copied for consistency) --- */
+.modal-body {
+  padding: 16px 8px;
+  text-align: center;
+}
+.modal-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+.modal-text {
+  font-size: 16px;
+  color: #64748b;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.modal-actions button {
+  flex: 1;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-confirm {
+  background: #2563eb;
+  color: white;
+}
+.btn-confirm:hover {
+  background: #1d4ed8;
+}
+.btn-confirm-delete {
+  background: #ef4444; /* Red for destructive action */
+  color: white;
+}
+.btn-confirm-delete:hover {
+  background: #dc2626;
+}
+.btn-cancel {
+  background: #e2e8f0;
+  color: #475569;
+}
+.btn-cancel:hover {
+  background: #cbd5e1;
 }
 </style>

@@ -1,8 +1,6 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal-content">
-      <button class="close-button" @click="$emit('close')">&times;</button>
-      
+  <BaseModal :show="true" @close="$emit('close')">
+    <div class="modal-inner">
       <div v-if="quest">
         <header class="modal-header">
           <span class="quest-type-badge">{{ getQuestTypeName(quest.questTypeId) }}</span>
@@ -53,14 +51,56 @@
             </button>
           </div>
         </div>
+
+        <div class="actions-section">
+          <button @click="handleForfeitQuest" class="btn-danger">
+            <i class="fa-solid fa-flag"></i> 퀘스트 포기하기
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+
+    <!-- Confirmation Modals -->
+    <BaseModal :show="showCompleteArrivalModal" @close="showCompleteArrivalModal = false">
+      <div class="modal-body">
+        <h3 class="modal-title">도착 인증</h3>
+        <p class="modal-text">현재 위치로 도착 인증을 진행하시겠습니까?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showCompleteArrivalModal = false">취소</button>
+          <button class="btn-confirm" @click="executeCompleteArrival">인증하기</button>
+        </div>
+      </div>
+    </BaseModal>
+
+    <BaseModal :show="showCompletePhotoModal" @close="showCompletePhotoModal = false">
+      <div class="modal-body">
+        <h3 class="modal-title">사진 제출</h3>
+        <p class="modal-text">이 사진을 제출하여 퀘스트를 완료하시겠습니까?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showCompletePhotoModal = false">취소</button>
+          <button class="btn-confirm" @click="executeCompletePhoto">제출하기</button>
+        </div>
+      </div>
+    </BaseModal>
+
+    <BaseModal :show="showForfeitModal" @close="showForfeitModal = false">
+      <div class="modal-body">
+        <h3 class="modal-title">퀘스트 포기</h3>
+        <p class="modal-text">정말로 이 퀘스트를 포기하시겠습니까?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="showForfeitModal = false">취소</button>
+          <button class="btn-confirm-delete" @click="executeForfeitQuest">포기</button>
+        </div>
+      </div>
+    </BaseModal>
+  </BaseModal>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { completeArrivalQuest, completePhotoQuest } from '@/api/quest';
+import { completeArrivalQuest, completePhotoQuest, forfeitQuest } from '@/api/quest';
+import { useToast } from '@/utils/toast';
+import BaseModal from '@/components/ui/BaseModal.vue';
 
 const props = defineProps({
   quest: {
@@ -69,13 +109,19 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'quest-updated']);
+const { showToast } = useToast();
 
 const isCompleting = ref(false);
 const completionStatus = ref('');
 const selectedFile = ref(null);
 const fileInputRef = ref(null);
 const filePreviewUrl = ref('');
+
+// Modal State
+const showCompleteArrivalModal = ref(false);
+const showCompletePhotoModal = ref(false);
+const showForfeitModal = ref(false);
 
 const getQuestTypeName = (typeId) => {
   if (typeId === 1) return '도착 퀘스트';
@@ -84,11 +130,17 @@ const getQuestTypeName = (typeId) => {
 };
 
 const handleCompleteArrival = () => {
+  showCompleteArrivalModal.value = true;
+};
+
+const executeCompleteArrival = () => {
+  showCompleteArrivalModal.value = false;
   isCompleting.value = true;
   completionStatus.value = 'GPS 정보를 가져오는 중...';
 
   if (!navigator.geolocation) {
     completionStatus.value = '오류: Geolocation이 지원되지 않는 브라우저입니다.';
+    showToast(completionStatus.value, 'error');
     isCompleting.value = false;
     return;
   }
@@ -97,14 +149,13 @@ const handleCompleteArrival = () => {
     async (position) => {
       completionStatus.value = '위치 확인 완료! 퀘스트 완료 요청 중...';
       try {
-        const response = await completeArrivalQuest(props.quest.questId, position.coords.latitude, position.coords.longitude);
-        if (response.data.success) {
-          alert('퀘스트를 성공적으로 완료했습니다!');
-          emit('close');
-        }
+        await completeArrivalQuest(props.quest.questId, position.coords.latitude, position.coords.longitude);
+        showToast('퀘스트를 성공적으로 완료했습니다!', 'success');
+        emit('quest-updated');
+        emit('close');
       } catch (error) {
         const message = error.response?.data?.message || '퀘스트 완료에 실패했습니다.';
-        alert(message);
+        showToast(message, 'error');
         completionStatus.value = `오류: ${message}`;
       } finally {
         isCompleting.value = false;
@@ -112,6 +163,7 @@ const handleCompleteArrival = () => {
     },
     (error) => {
       completionStatus.value = `GPS 오류: ${error.message}`;
+      showToast(completionStatus.value, 'error');
       isCompleting.value = false;
     }
   );
@@ -129,25 +181,45 @@ const handleFileSelect = (event) => {
   }
 };
 
-const handleCompletePhoto = async () => {
+const handleCompletePhoto = () => {
+  if (!selectedFile.value) return;
+  showCompletePhotoModal.value = true;
+};
+
+const executeCompletePhoto = async () => {
   if (!selectedFile.value) return;
 
+  showCompletePhotoModal.value = false;
   isCompleting.value = true;
   try {
-    // Note: completePhotoQuest API function needs to be created
-    const response = await completePhotoQuest(props.quest.questId, selectedFile.value);
-    if (response.data.success) {
-      alert('사진 퀘스트를 성공적으로 완료했습니다!');
-      emit('close');
-    }
+    await completePhotoQuest(props.quest.questId, selectedFile.value);
+    showToast('사진 퀘스트를 성공적으로 완료했습니다!', 'success');
+    emit('quest-updated');
+    emit('close');
   } catch (error) {
     const message = error.response?.data?.message || '사진 퀘스트 완료에 실패했습니다.';
-    alert(message);
+    showToast(message, 'error');
   } finally {
     isCompleting.value = false;
   }
 };
 
+const handleForfeitQuest = () => {
+  showForfeitModal.value = true;
+};
+
+const executeForfeitQuest = async () => {
+  try {
+    await forfeitQuest(props.quest.questId);
+    showToast('퀘스트를 포기했습니다.', 'info');
+    emit('quest-updated');
+    emit('close');
+  } catch (error) {
+    showToast(`퀘스트 포기에 실패했습니다: ${error.response?.data?.message || error.message}`, 'error');
+  } finally {
+    showForfeitModal.value = false;
+  }
+};
 </script>
 
 <style scoped>
@@ -304,5 +376,82 @@ const handleCompletePhoto = async () => {
   max-height: 200px;
   border-radius: 8px;
   margin-top: 8px;
+}
+
+/* Scoped styles for nested modals */
+.modal-body {
+  padding: 16px 8px;
+  text-align: center;
+}
+.modal-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+.modal-text {
+  font-size: 16px;
+  color: #64748b;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.modal-actions button {
+  flex: 1;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-confirm {
+  background: #2563eb;
+  color: white;
+}
+.btn-confirm:hover {
+  background: #1d4ed8;
+}
+.btn-cancel {
+  background: #e2e8f0;
+  color: #475569;
+}
+.btn-cancel:hover {
+  background: #cbd5e1;
+}
+.btn-confirm-delete {
+  background: #ef4444;
+  color: white;
+}
+.btn-confirm-delete:hover {
+  background: #dc2626;
+}
+
+.actions-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-danger {
+  width: 100%;
+  background: #fee2e2;
+  color: #ef4444;
+  border: 1px solid #fecaca;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-danger:hover {
+  background: #fecaca;
+  color: #b91c1c;
 }
 </style>
