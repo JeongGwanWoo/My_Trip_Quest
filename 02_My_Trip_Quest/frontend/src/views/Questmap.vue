@@ -10,7 +10,7 @@
         
 
 
-        <BottomSheet v-model:isOpen="isSheetOpen" class="map-bottom-sheet">
+        <BottomSheet v-model:isOpen="isSheetOpen" class="map-bottom-sheet" :peekHeight="peekHeight">
           <div class="sheet-content">
             <div class="sheet-header">
               <div class="header-top-row">
@@ -273,7 +273,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { storeToRefs } from "pinia";
@@ -620,6 +620,8 @@ const showQuestDetails = (quest) => {
   });
 };
 
+
+
 const closeModal = () => {
   isModalVisible.value = false;
   selectedQuestForModal.value = null;
@@ -631,6 +633,26 @@ const closeModal = () => {
   activePhotoQuestId.value = null;
   photoQuestError.value = null;
 };
+
+// --- Responsive Peek Height ---
+const peekHeight = ref(window.innerWidth >= 769 ? 450 : 120);
+
+const updatePeekHeight = () => {
+  if (window.innerWidth >= 769) {
+    peekHeight.value = 450;
+  } else {
+    peekHeight.value = 120;
+  }
+};
+
+onMounted(async () => {
+  window.addEventListener('resize', updatePeekHeight);
+  await fetchAreas();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updatePeekHeight);
+});
 </script>
 
 <style scoped>
