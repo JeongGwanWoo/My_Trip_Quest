@@ -27,7 +27,7 @@ public class TourApiService {
     @Value("${tour.api.key}")
     private String ENCODED_KEY;
 
-    public JsonNode getAreaBasedList(String areaCode, int pageNo) {
+    public JsonNode getAreaBasedList(String areaCode, String cat1, int pageNo) {
         try {
             StringBuilder sb = new StringBuilder();
 
@@ -44,6 +44,10 @@ public class TourApiService {
 
             if (areaCode != null && !areaCode.isEmpty()) {
                 sb.append("&areaCode=").append(areaCode);
+            }
+            
+            if (cat1 != null && !cat1.isEmpty()) {
+                sb.append("&cat1=").append(cat1);
             }
 
             URI uri = URI.create(sb.toString());

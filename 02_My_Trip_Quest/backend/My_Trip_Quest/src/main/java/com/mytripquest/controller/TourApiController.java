@@ -18,16 +18,17 @@ public class TourApiController {
 
     /**
      * 지역 기반 관광지 조회
-     * 요청 URL 예시: /api/v1/tour/area?areaCode=6&pageNo=1
+     * 요청 URL 예시: /api/v1/tour/area?areaCode=6&cat1=A01&pageNo=1
      */
     @GetMapping("/area")
     public ResponseEntity<JsonNode> getAreaBasedList(
             @RequestParam(name = "areaCode", required = false) String areaCode, // 지역 코드는 없을 수도 있음 (전국 조회)
+            @RequestParam(name = "cat1", required = false) String cat1, // 카테고리 대분류
             @RequestParam(name = "pageNo", defaultValue = "1") int pageNo // 페이지 번호 없으면 1페이지 기본
     ) {
-        log.info("Controller 요청 진입 - areaCode: {}, pageNo: {}", areaCode, pageNo);
+        log.info("Controller 요청 진입 - areaCode: {}, cat1: {}, pageNo: {}", areaCode, cat1, pageNo);
 
-        JsonNode result = tourApiService.getAreaBasedList(areaCode, pageNo);
+        JsonNode result = tourApiService.getAreaBasedList(areaCode, cat1, pageNo);
 
         return ResponseEntity.ok(result);
     }
