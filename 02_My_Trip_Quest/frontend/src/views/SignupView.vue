@@ -12,17 +12,22 @@
         
         <div class="form-group">
           <label for="nickname" class="form-label">닉네임</label>
-          <div class="input-wrapper">
-            <span class="input-icon"><i class="fa-solid fa-user"></i></span>
-            <input 
-              type="text" 
-              id="nickname" 
-              v-model="nickname" 
-              class="form-input" 
-              placeholder="사용할 닉네임을 입력하세요"
-              required
-            >
+          <div class="input-group">
+            <div class="input-wrapper">
+              <span class="input-icon"><i class="fa-solid fa-user"></i></span>
+              <input 
+                type="text" 
+                id="nickname" 
+                v-model="nickname" 
+                @input="onNicknameInput"
+                class="form-input" 
+                placeholder="사용할 닉네임을 입력하세요"
+                required
+              >
+            </div>
+            <button type="button" @click="checkNickname" :disabled="!nickname" class="btn-check">중복 확인</button>
           </div>
+          <p v-if="nicknameMessage" :class="nicknameMessageClass" class="nickname-status">{{ nicknameMessage }}</p>
         </div>
 
         <div class="form-group">
@@ -70,7 +75,7 @@
           </div>
         </div>
         
-        <button type="submit" class="btn-signup" :disabled="isLoading">
+        <button type="submit" class="btn-signup" :disabled="isLoading || nicknameCheckStatus !== 'available'">
           <span v-if="!isLoading">회원가입 완료</span>
           <span v-else class="spinner"></span>
         </button>
@@ -89,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/api';
 import { useToast } from '@/utils/toast';
@@ -102,8 +107,54 @@ const password = ref('');
 const confirmPassword = ref('');
 const isLoading = ref(false);
 
+const nicknameCheckStatus = ref('idle'); // 'idle', 'checking', 'available', 'taken'
+const nicknameMessage = ref('');
+
+const nicknameMessageClass = computed(() => {
+  return {
+    'available': nicknameCheckStatus.value === 'available',
+    'taken': nicknameCheckStatus.value === 'taken',
+  };
+});
+
+const onNicknameInput = () => {
+  nicknameCheckStatus.value = 'idle';
+  nicknameMessage.value = '';
+};
+
+const checkNickname = async () => {
+  if (!nickname.value) {
+    showToast('닉네임을 입력해주세요.', 'warning');
+    return;
+  }
+  nicknameCheckStatus.value = 'checking';
+  nicknameMessage.value = '닉네임 중복을 확인 중입니다...';
+
+  try {
+    const response = await api.get(`/api/v1/users/check-nickname`, {
+      params: { nickname: nickname.value }
+    });
+    if (response.data.data.isAvailable) {
+      nicknameCheckStatus.value = 'available';
+      nicknameMessage.value = '사용 가능한 닉네임입니다.';
+    } else {
+      nicknameCheckStatus.value = 'taken';
+      nicknameMessage.value = '이미 사용 중인 닉네임입니다.';
+    }
+  } catch (error) {
+    console.error('닉네임 중복 확인 오류:', error);
+    nicknameCheckStatus.value = 'idle';
+    nicknameMessage.value = '확인 중 오류가 발생했습니다.';
+  }
+};
+
+
 const handleSignup = async () => {
-  if (!nickname.value || !email.value || !password.value || !confirmPassword.value) {
+  if (nicknameCheckStatus.value !== 'available') {
+    showToast('닉네임 중복 확인을 해주세요.', 'warning');
+    return;
+  }
+  if (!email.value || !password.value || !confirmPassword.value) {
     showToast('모든 필드를 입력해주세요.', 'warning');
     return;
   }
@@ -206,10 +257,16 @@ const handleSignup = async () => {
   margin-bottom: 8px;
 }
 
+.input-group {
+  display: flex;
+  gap: 8px;
+}
+
 .input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
+  flex-grow: 1;
 }
 
 .input-icon {
@@ -242,6 +299,44 @@ const handleSignup = async () => {
 .form-input::placeholder {
   color: #cbd5e1;
 }
+
+.btn-check {
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-check:hover:not(:disabled) {
+  background-color: #e2e8f0;
+}
+
+.btn-check:disabled {
+  background-color: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.nickname-status {
+  font-size: 13px;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.nickname-status.available {
+  color: #22c55e;
+}
+
+.nickname-status.taken {
+  color: #ef4444;
+}
+
 
 /* 회원가입 버튼 */
 .btn-signup {
