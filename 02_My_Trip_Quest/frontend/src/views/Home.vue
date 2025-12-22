@@ -7,7 +7,7 @@
         
         <h1 class="main-title">
           MyTripQuest<br />
-          여행에서 또다른 즐거움이 생기다
+          <span class="whitespace-nowrap">여행에서 또다른 즐거움이 생기다</span>
         </h1>
         
         <ul class="sub-desc-list">
@@ -302,5 +302,9 @@ const handleCtaClick = () => {
   .btn-cta {
     width: 100%; /* 버튼 꽉 차게 */
   }
+}
+
+.whitespace-nowrap {
+  white-space: nowrap;
 }
 </style>

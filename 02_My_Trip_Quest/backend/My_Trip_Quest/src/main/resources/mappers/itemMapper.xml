@@ -104,5 +104,19 @@
         WHERE ui.user_id = #{userId}
           AND i.slot = #{slot}
     </update>
+    
+    <select id="findPurchasableItemsWithPagination" resultType="com.mytripquest.domain.item.entity.Item">
+        SELECT item_id AS itemId, name, slot, image_url AS imageUrl, price, is_purchasable AS isPurchasable
+        FROM items
+        WHERE is_purchasable = TRUE
+        ORDER BY item_id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countPurchasableItems" resultType="long">
+        SELECT COUNT(*)
+        FROM items
+        WHERE is_purchasable = TRUE
+    </select>
 
 </mapper>
