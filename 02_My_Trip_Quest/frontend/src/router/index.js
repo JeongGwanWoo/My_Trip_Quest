@@ -18,15 +18,20 @@ const routes = [
     component: Home
   },
   {
-  path: '/rankings',
-  name: 'Rankings',
-  component: Rankings
- },
+    path: '/rankings',
+    name: 'Rankings',
+    component: Rankings
+  },
 
   {
     path: '/quest-map',
     name: 'QuestMap',
     component: QuestMap
+  },
+  {
+    path: '/travel',
+    name: 'TravelSearch',
+    component: () => import('@/views/TravelSearch.vue')
   },
   {
     path: '/fitting-room',

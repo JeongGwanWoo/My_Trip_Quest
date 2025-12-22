@@ -59,6 +59,8 @@ public class SecurityConfig {
                         ).permitAll()
                         
                         .requestMatchers(HttpMethod.GET, "/api/v1/quest-map/**", "/api/v1/rankings", "/api/v1/items/shop").permitAll()
+                        .requestMatchers("/api/v1/users/register", "/api/v1/users/login", "/api/v1/users/social-signup", "/api/v1/users/check-nickname", "/login/oauth2/**", "/oauth2/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/quest-map/**", "/api/v1/rankings", "/api/v1/items/shop", "/api/v1/tour/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
