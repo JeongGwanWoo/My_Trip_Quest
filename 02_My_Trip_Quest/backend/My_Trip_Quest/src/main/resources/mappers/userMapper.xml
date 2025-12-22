@@ -78,6 +78,12 @@
         WHERE email = #{email}
     </select>
 
+    <update id="updatePasswordByEmail">
+        UPDATE users
+        SET password_hash = #{passwordHash}, updated_at = NOW()
+        WHERE email = #{email}
+    </update>
+
     <delete id="deleteById" parameterType="long">
         DELETE FROM users WHERE user_id = #{userId}
     </delete>

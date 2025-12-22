@@ -9,6 +9,7 @@ import com.mytripquest.global.ApiResponse;
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,6 +27,7 @@ import java.util.Collections;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final UserService userService;
@@ -43,6 +45,31 @@ public class UserController {
         String token = userService.login(request);
         return ResponseEntity.ok(new ApiResponse(true, "로그인이 성공적으로 완료되었습니다.", Collections.singletonMap("token", token)));
     }
+
+    @PostMapping("/send-verification-code")
+    public ResponseEntity<ApiResponse> sendVerificationCode(@RequestBody UserRequestDto.SendVerificationCode request) {
+    	log.info("Received request to send verification code to: {}", request.getEmail());
+        userService.sendVerificationCode(request.getEmail()); // No return value
+        return ResponseEntity.ok(new ApiResponse(true, "인증 코드가 이메일로 발송되었습니다. 이메일을 확인해주세요.", null)); // Generic success
+    }
+    
+    @PostMapping("/verify-code")
+    public ResponseEntity<ApiResponse> verifyCode(@RequestBody UserRequestDto.VerifyCode request) {
+        boolean isVerified = userService.verifyCode(request.getEmail(), request.getCode());
+        
+        if (isVerified) {
+            return ResponseEntity.ok(new ApiResponse(true, "이메일 인증이 완료되었습니다.", null));
+        } else {
+            // 400 Bad Request 리턴
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "인증 코드가 일치하지 않습니다.", null));
+        }
+    }
+    
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse> resetPassword(@RequestBody UserRequestDto.ResetPassword request) {
+        userService.resetPassword(request);
+        return ResponseEntity.ok(new ApiResponse(true, "비밀번호가 성공적으로 변경되었습니다. 새 비밀번호로 로그인해주세요.", null));
+    }
     
     @PostMapping("/social-signup")
     public ResponseEntity<ApiResponse> socialSignup(@RequestBody UserRequestDto.SocialSignup request) {
@@ -50,6 +77,12 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse(true, "소셜 회원가입이 성공적으로 완료되었습니다.", Collections.singletonMap("token", token)));
     }
 
+    @PostMapping("/send-reset-code")
+    public ResponseEntity<ApiResponse> sendResetCode(@RequestBody UserRequestDto.SendVerificationCode request) {
+        userService.sendPasswordResetCode(request.getEmail());
+        return ResponseEntity.ok(new ApiResponse(true, "인증 코드가 발송되었습니다.", null));
+    }
+    
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserProfileResponseDto>> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {

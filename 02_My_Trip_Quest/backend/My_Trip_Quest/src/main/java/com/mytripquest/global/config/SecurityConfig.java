@@ -40,14 +40,31 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1/users/register", "/api/v1/users/login", "/api/v1/users/social-signup", "/api/v1/users/check-nickname", "/login/oauth2/**", "/oauth2/**").permitAll()
+                        
+                        // 👇 [수정됨] 여기에 비밀번호 찾기 관련 주소 3개를 추가했습니다!
+                        .requestMatchers(
+                                "/api/v1/users/register", 
+                                "/api/v1/users/login", 
+                                "/api/v1/users/social-signup", 
+                                "/api/v1/users/check-nickname",
+                                "/api/v1/users/send-verification-code", // 회원가입용
+                                
+                                // [추가] 비밀번호 찾기 관련 3인방
+                                "/api/v1/users/send-reset-code", 
+                                "/api/v1/users/verify-code",
+                                "/api/v1/users/reset-password",
+                                
+                                "/login/oauth2/**", 
+                                "/oauth2/**"
+                        ).permitAll()
+                        
                         .requestMatchers(HttpMethod.GET, "/api/v1/quest-map/**", "/api/v1/rankings", "/api/v1/items/shop").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2LoginSuccessHandler)
-                        .failureHandler(oAuth2LoginFailureHandler) // 추가
+                        .failureHandler(oAuth2LoginFailureHandler)
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)
                         )
@@ -60,19 +77,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 1. 프론트엔드 주소 허용 (그대로 유지)
+        // 1. 프론트엔드 주소 허용
         configuration.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
         
-        // 2. 모든 HTTP 메서드 허용 (그대로 유지)
+        // 2. 모든 HTTP 메서드 허용
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         
-        // 3. ❗수정됨: 모든 헤더 허용 (개발 편의를 위해 "*"로 변경 권장)
+        // 3. 모든 헤더 허용
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "x-auth-token"));
         
-        // 4. 자격 증명 허용 (그대로 유지)
+        // 4. 자격 증명 허용
         configuration.setAllowCredentials(true);
         
-        // 5. 브라우저가 'Authorization' 헤더를 읽을 수 있게 노출 (옵션, JWT 사용 시 필요할 수 있음)
+        // 5. 헤더 노출
         configuration.setExposedHeaders(Arrays.asList("Authorization", "x-auth-token"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
