@@ -35,6 +35,6 @@ public class NaverOAuth2UserInfo implements OAuth2UserInfo {
 
     @Override
     public String getName() {
-        return responseAttributes != null ? (String) responseAttributes.get("nickname") : null;
+        return null; // 닉네임을 프로젝트에서 새로 생성하므로 가져올 필요 없음
     }
 }
