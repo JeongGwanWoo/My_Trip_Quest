@@ -20,7 +20,7 @@
               <div class="stage-bg"></div>
               <div class="avatar-layers">
                 <div class="layer skin">
-                  <img :src="equipped.SKIN?.image || '/assets/avatar/avatar-base.png'" alt="skin"/>
+                  <img :src="equipped.SKIN?.image || '/assets/avatar/skin-base.png'" alt="skin"/>
                 </div>
                 <div class="layer bottom" v-if="equipped.BOTTOM">
                   <img :src="equipped.BOTTOM.image" alt="bottom"/>
@@ -149,7 +149,7 @@ const isLoading = ref(true);
 const error = ref(null);
 
 const equipped = ref({
-  SKIN: { id: null, type: 'SKIN', name: '기본 스킨', image: '/assets/avatar/avatar-base.png' },
+  SKIN: { id: null, type: 'SKIN', name: '기본 스킨', image: '/assets/avatar/skin-base.png' },
   HAIR: null,
   HAT: null,
   TOP: null,

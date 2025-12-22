@@ -18,11 +18,15 @@ export const getMyInventory = async () => {
 
 /**
  * 상점에 표시될 아이템 목록을 가져옵니다. (소유 여부 포함)
+ * @param {number} page 요청할 페이지 번호 (0-based)
+ * @param {number} size 페이지 당 아이템 수
  * @returns {Promise<object>} ApiResponse
  */
-export const getShopItems = async () => {
+export const getShopItems = async (page = 0, size = 12) => {
   try {
-    const response = await api.get('/api/v1/items/shop');
+    const response = await api.get('/api/v1/items/shop', {
+      params: { page, size }
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching shop items:', error);

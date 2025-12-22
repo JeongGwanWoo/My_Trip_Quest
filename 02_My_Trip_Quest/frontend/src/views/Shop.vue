@@ -26,18 +26,18 @@
           :key="cat.id"
           class="tab-btn"
           :class="{ active: currentCategory === cat.id }"
-          @click="currentCategory = cat.id"
+          @click="changeCategory(cat.id)"
         >
           {{ cat.label }}
         </button>
       </nav>
 
-      <div v-if="isLoading" class="loading-state">
+      <div v-if="isLoading && items.length === 0" class="loading-state">
         <div class="spinner"></div>
         <p>상점의 문을 여는 중입니다...</p>
       </div>
 
-      <div v-else class="item-grid">
+      <div v-else-if="items.length > 0" class="item-grid">
         <div 
           v-for="item in filteredItems" 
           :key="item.id" 
@@ -75,6 +75,22 @@
       <div v-if="!isLoading && filteredItems.length === 0" class="empty-state">
         <i class="fa-solid fa-box empty-icon"></i>
         <p>해당 카테고리에 아이템이 없습니다.</p>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div v-if="!isLoading && totalPages > 1" class="pagination-container">
+        <!-- Mobile: Load More Button -->
+        <button v-if="isMobile && currentPage < totalPages" @click="loadMore" class="load-more-btn" :disabled="isFetchingMore">
+          <span v-if="!isFetchingMore">더보기</span>
+          <div v-else class="spinner-small"></div>
+        </button>
+        <!-- Desktop: Pagination Component -->
+        <Pagination
+          v-if="!isMobile"
+          :current-page="currentPage"
+          :total-pages="totalPages"
+          @page-changed="onPageChange"
+        />
       </div>
 
     </div>
@@ -129,25 +145,36 @@ import { storeToRefs } from 'pinia';
 import { getShopItems, buyItem } from '@/api/items.js';
 import { getProfile } from '@/api/user.js';
 import BaseModal from '@/components/ui/BaseModal.vue';
+import Pagination from '@/components/ui/Pagination.vue';
+import { useBreakpoints } from '@/utils/useBreakpoints.js';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const { isLoggedIn } = storeToRefs(authStore);
+const { isMobile } = useBreakpoints();
 
+// Component State
 const userCoins = ref(0);
 const items = ref([]);
 const isLoading = ref(true);
-const showLoginModal = ref(false);
+const isFetchingMore = ref(false);
 
-// New states for purchase modals
+// Pagination State
+const currentPage = ref(1);
+const totalPages = ref(1);
+const totalItems = ref(0);
+const pageSize = 12;
+
+// Modal State
+const showLoginModal = ref(false);
 const showPurchaseConfirmModal = ref(false);
 const showPurchaseResultModal = ref(false);
 const purchaseResultMessage = ref('');
-const purchaseResultType = ref(''); // 'success' or 'error'
-const itemToPurchase = ref(null); // Stores the item object to be purchased
+const purchaseResultType = ref('');
+const itemToPurchase = ref(null);
 
+// Category State
 const currentCategory = ref('all');
-
 const categories = [
   { id: 'all', label: '전체' },
   { id: 'hair', label: '헤어' },
@@ -164,15 +191,31 @@ const getCategoryLabel = (catId) => {
   return cat ? cat.label : catId;
 }
 
-const fetchShopItemsData = async (showLoading = true) => {
-  if (showLoading) isLoading.value = true;
-  try {
-    const shopItemsResponse = await getShopItems();
-    if (shopItemsResponse.success) {
-      items.value = shopItemsResponse.data;
+const fetchShopItemsData = async (page = 1, loadMore = false) => {
+      if (!loadMore) {
+        isLoading.value = true;
+    } else {
+        isFetchingMore.value = true;
     }
+
+  try {
+    const response = await getShopItems(page - 1, pageSize);
+    if (response.success) {
+      const data = response.data;
+      if (loadMore) {
+        items.value.push(...data.items);
+      } else {
+        items.value = data.items;
+      }
+      currentPage.value = data.currentPage + 1;
+      totalPages.value = data.totalPages;
+      totalItems.value = data.totalItems;
+    }
+  } catch(error) {
+    console.error("아이템 목록을 불러오는 데 실패했습니다.", error);
   } finally {
-    if (showLoading) isLoading.value = false;
+    isLoading.value = false;
+    isFetchingMore.value = false;
   }
 };
 
@@ -189,17 +232,39 @@ const fetchUserData = async () => {
 };
 
 onMounted(async () => {
-  await fetchShopItemsData();
+  await fetchShopItemsData(1);
   await fetchUserData();
-  isLoading.value = false;
 });
 
 const filteredItems = computed(() => {
+  // The backend now handles pagination, but frontend filtering by category is still needed.
   if (currentCategory.value === 'all') {
     return items.value;
   }
   return items.value.filter(item => item.category === currentCategory.value);
 });
+
+const changeCategory = (categoryId) => {
+  currentCategory.value = categoryId;
+  // When category changes, we should ideally refetch from the server.
+  // For now, we reset to page 1 and filter the currently loaded items.
+  // A full implementation would require backend support for category filtering.
+  items.value = [];
+  fetchShopItemsData(1);
+};
+
+
+const onPageChange = (page) => {
+  window.scrollTo(0, 0);
+  fetchShopItemsData(page);
+};
+
+const loadMore = () => {
+  if (currentPage.value < totalPages.value) {
+    fetchShopItemsData(currentPage.value + 1, true);
+  }
+};
+
 
 const closeLoginModal = () => {
   showLoginModal.value = false;
@@ -210,7 +275,6 @@ const goToLogin = () => {
   closeLoginModal();
 };
 
-// New functions for purchase modals
 const closePurchaseConfirmModal = () => {
   showPurchaseConfirmModal.value = false;
   itemToPurchase.value = null;
@@ -220,26 +284,20 @@ const closePurchaseResultModal = async () => {
   showPurchaseResultModal.value = false;
   purchaseResultMessage.value = '';
   purchaseResultType.value = '';
-  // After purchase, refresh items and user data
   if (isLoggedIn.value) {
-    await fetchShopItemsData();
+    // Re-fetch current page data to update owned status
+    await fetchShopItemsData(currentPage.value);
     await fetchUserData();
   }
 };
 
 const executePurchase = async () => {
-  // 1. 아이템 정보가 있는지 먼저 확인
   if (!itemToPurchase.value) return;
-
-  const targetItem = itemToPurchase.value; // 정보를 별도 변수에 복사해두면 더 안전합니다.
-  
-  // 2. 확인 모달만 닫기 (데이터는 유지)
+  const targetItem = itemToPurchase.value;
   showPurchaseConfirmModal.value = false;
 
   try {
-    // 3. 복사해둔 정보로 API 호출
     const response = await buyItem(targetItem.id);
-    
     if (response.success) {
       purchaseResultMessage.value = `'${targetItem.name}'을(를) 구매 완료했습니다!`;
       purchaseResultType.value = 'success';
@@ -252,7 +310,6 @@ const executePurchase = async () => {
     purchaseResultMessage.value = error.response?.data?.message || "알 수 없는 오류가 발생했습니다.";
     purchaseResultType.value = 'error';
   } finally {
-    // 4. 모든 과정이 끝난 후 결과 모달을 띄우고 데이터 초기화
     showPurchaseResultModal.value = true;
     itemToPurchase.value = null; 
   }
@@ -260,13 +317,10 @@ const executePurchase = async () => {
 
 const handleBuy = async (item) => {
   if (item.owned) return;
-
   if (!isLoggedIn.value) {
     showLoginModal.value = true;
     return;
   }
-
-  // For logged-in users, show custom purchase confirmation modal
   itemToPurchase.value = item;
   showPurchaseConfirmModal.value = true;
 };
@@ -569,6 +623,43 @@ const handleBuy = async (item) => {
   color: #94a3b8;
 }
 .empty-icon { font-size: 48px; display: block; margin-bottom: 16px; opacity: 0.5; }
+
+/* --- Pagination & Load More --- */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+.load-more-btn {
+  width: 100%;
+  max-width: 300px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #334155;
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.load-more-btn:hover:not(:disabled) {
+  background-color: #f8fafc;
+}
+.load-more-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+.spinner-small {
+    width: 20px;
+    height: 20px;
+    margin: 0 auto;
+    border: 2px solid #334155;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
 
 /* ------------------------------------------- */
 /* ★ 반응형 미디어 쿼리 수정 ★ */

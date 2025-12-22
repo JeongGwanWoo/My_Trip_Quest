@@ -23,7 +23,7 @@
                 <img
                   :src="
                     equippedItemsBySlot.SKIN?.imageUrl ||
-                    '/assets/avatar/avatar-base.png'
+                    '/assets/avatar/skin-base.png'
                   "
                   alt="skin"
                   class="layer skin"

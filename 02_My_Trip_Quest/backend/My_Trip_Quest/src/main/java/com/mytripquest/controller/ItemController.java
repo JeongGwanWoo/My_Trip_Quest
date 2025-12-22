@@ -2,6 +2,7 @@ package com.mytripquest.controller;
 
 import com.mytripquest.domain.item.dto.ItemDto;
 import com.mytripquest.domain.item.dto.ShopItemDto;
+import com.mytripquest.domain.item.dto.ShopItemResponseDto;
 import com.mytripquest.domain.item.entity.UserItem;
 import com.mytripquest.domain.item.service.ItemService;
 import com.mytripquest.domain.user.service.UserService; // Import UserService
@@ -40,13 +41,15 @@ public class ItemController {
     }
 
     @GetMapping("/shop")
-    public ResponseEntity<ApiResponse<List<ShopItemDto>>> getShopItems(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<ApiResponse<ShopItemResponseDto>> getShopItems(@AuthenticationPrincipal UserDetails userDetails,
+                                                                         @RequestParam(defaultValue = "0") int page,
+                                                                         @RequestParam(defaultValue = "12") int size) {
         Long userId = null;
         if (userDetails != null) {
             userId = userService.findIdByEmail(userDetails.getUsername());
         }
-        List<ShopItemDto> shopItems = itemService.getShopItems(userId);
-        return ResponseEntity.ok(ApiResponse.success(shopItems));
+        ShopItemResponseDto shopItemsResponse = itemService.getShopItems(userId, page, size);
+        return ResponseEntity.ok(ApiResponse.success(shopItemsResponse));
     }
 
     @PostMapping("/{itemId}/buy")

@@ -22,6 +22,10 @@ public interface ItemMapper {
 
     Optional<UserItem> findEquippedItemBySlot(@Param("userId") Long userId, @Param("slot") Item.ItemSlot slot);
 
+    List<Item> findPurchasableItemsWithPagination(@Param("offset") int offset, @Param("limit") int limit);
+
+    long countPurchasableItems();
+
     // == Mutators == //
     void addUserItem(@Param("userId") Long userId, @Param("itemId") Long itemId, @Param("isEquipped") boolean isEquipped);
 

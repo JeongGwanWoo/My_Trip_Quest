@@ -2,6 +2,7 @@ package com.mytripquest.domain.item.service;
 
 import com.mytripquest.domain.item.dto.ItemDto;
 import com.mytripquest.domain.item.dto.ShopItemDto;
+import com.mytripquest.domain.item.dto.ShopItemResponseDto;
 import com.mytripquest.domain.item.entity.Item;
 import com.mytripquest.domain.item.entity.UserItem;
 import com.mytripquest.domain.item.repository.ItemMapper;
@@ -53,11 +54,16 @@ public class ItemService {
     }
     
     @Transactional(readOnly = true)
-    public List<ShopItemDto> getShopItems(Long userId) {
-        // 1. Get all items available in the game
-        List<Item> allItems = itemRepository.findAll();
+    public ShopItemResponseDto getShopItems(Long userId, int page, int size) {
+        // 1. Get total number of purchasable items
+        long totalItems = itemMapper.countPurchasableItems();
+        int totalPages = (int) Math.ceil((double) totalItems / size);
 
-        // 2. Get the items the user already owns
+        // 2. Get paginated items from the database
+        int offset = page * size;
+        List<Item> paginatedItems = itemMapper.findPurchasableItemsWithPagination(offset, size);
+
+        // 3. Get the items the user already owns
         Set<Long> myItemIds;
         if (userId != null) {
             List<UserItem> myItems = findMyItems(userId);
@@ -68,9 +74,8 @@ public class ItemService {
             myItemIds = Collections.emptySet();
         }
 
-        // 3. Combine the info to create ShopItemDto list
-        return allItems.stream()
-                .filter(Item::isPurchasable) // 구매 가능한 아이템만 필터링
+        // 4. Combine the info to create ShopItemDto list
+        List<ShopItemDto> shopItems = paginatedItems.stream()
                 .map(item -> ShopItemDto.builder()
                         .id(item.getItemId())
                         .name(item.getName())
@@ -80,6 +85,14 @@ public class ItemService {
                         .owned(myItemIds.contains(item.getItemId()))
                         .build())
                 .collect(Collectors.toList());
+
+        // 5. Build and return the response DTO
+        return ShopItemResponseDto.builder()
+                .items(shopItems)
+                .currentPage(page)
+                .totalPages(totalPages)
+                .totalItems(totalItems)
+                .build();
     }
 
     @Transactional
