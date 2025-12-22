@@ -82,7 +82,11 @@
           아직 계정이 없으신가요?
           <router-link to="/signup" class="link-highlight">회원가입</router-link>
         </p>
-        <router-link to="/" class="link-home">홈으로 돌아가기</router-link>
+        <div class="links-group">
+            <router-link to="/find-password" class="link-sub">비밀번호 찾기</router-link>
+            <span class="link-divider">|</span>
+            <router-link to="/" class="link-sub">홈으로 돌아가기</router-link>
+        </div>
       </div>
 
     </div>
@@ -392,6 +396,30 @@ const handleLogin = async () => {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+.links-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.link-sub {
+  color: #94a3b8;
+  font-size: 13px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.link-sub:hover {
+  color: #64748b;
+}
+
+.link-divider {
+  color: #e2e8f0;
+  font-size: 12px;
 }
 
 /* 반응형 */

@@ -3,6 +3,7 @@ package com.mytripquest.domain.user.repository;
 import com.mytripquest.domain.ranking.dto.UserRankDto;
 import com.mytripquest.domain.user.entity.User;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +25,8 @@ public interface UserMapper {
     Optional<UserRankDto> findUserRankById(long userId);
 
     Optional<Long> findIdByEmail(String email); // Added method
+
+    void updatePasswordByEmail(@Param("email") String email, @Param("passwordHash") String passwordHash);
 
     void deleteById(long userId);
 

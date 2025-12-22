@@ -3,8 +3,8 @@ import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
 const api = axios.create({
-  // ★ 주의: 만약 프록시 설정이 없다면 'http://localhost:8080'으로 바꿔야 할 수도 있습니다.
-  baseURL: 'http://localhost:8080',  
+  // Vite의 프록시 설정을 사용하므로 baseURL을 제거합니다.
+  // 이제 모든 요청은 '/api/...'와 같은 상대 경로로 시작해야 합니다.
   withCredentials: true, 
   headers: {
     'Content-Type': 'application/json',
