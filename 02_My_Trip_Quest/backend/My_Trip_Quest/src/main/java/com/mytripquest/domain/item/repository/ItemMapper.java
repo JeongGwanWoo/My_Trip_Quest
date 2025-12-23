@@ -14,7 +14,7 @@ public interface ItemMapper {
     // == Finders == //
     Optional<Item> findItemById(Long itemId);
 
-    Optional<Item> findItemByName(String name); // Add this method
+    Optional<Item> findItemByName(String name);
 
     List<UserItem> findUserItemsByUserId(Long userId);
 
@@ -22,9 +22,15 @@ public interface ItemMapper {
 
     Optional<UserItem> findEquippedItemBySlot(@Param("userId") Long userId, @Param("slot") Item.ItemSlot slot);
 
-    List<Item> findPurchasableItemsWithPagination(@Param("offset") int offset, @Param("limit") int limit);
+    // [수정됨] 상점 목록 조회: 카테고리 파라미터 추가 & 메서드명 변경 (XML ID와 일치)
+    List<Item> findShopItemsWithPagination(
+            @Param("offset") int offset, 
+            @Param("limit") int limit, 
+            @Param("category") String category
+    );
 
-    long countPurchasableItems();
+    // [수정됨] 상점 아이템 개수: 카테고리 파라미터 추가 & 메서드명 변경 (XML ID와 일치)
+    long countShopItems(@Param("category") String category);
 
     // == Mutators == //
     void addUserItem(@Param("userId") Long userId, @Param("itemId") Long itemId, @Param("isEquipped") boolean isEquipped);

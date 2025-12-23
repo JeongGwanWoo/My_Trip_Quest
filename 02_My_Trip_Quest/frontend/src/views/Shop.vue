@@ -199,7 +199,7 @@ const fetchShopItemsData = async (page = 1, loadMore = false) => {
     }
 
   try {
-    const response = await getShopItems(page - 1, pageSize);
+    const response = await getShopItems(page - 1, pageSize, currentCategory.value);
     if (response.success) {
       const data = response.data;
       if (loadMore) {
@@ -237,11 +237,9 @@ onMounted(async () => {
 });
 
 const filteredItems = computed(() => {
-  // The backend now handles pagination, but frontend filtering by category is still needed.
-  if (currentCategory.value === 'all') {
-    return items.value;
-  }
-  return items.value.filter(item => item.category === currentCategory.value);
+  // 백엔드에서 카테고리 필터링을 처리하므로, 클라이언트에서는 더 이상 필터링할 필요가 없습니다.
+  // 이 computed 속성은 이제 v-for 루프에서 일관성을 유지하기 위해 존재합니다.
+  return items.value;
 });
 
 const changeCategory = (categoryId) => {
