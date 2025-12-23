@@ -45,7 +45,7 @@ public class TourApiService {
             if (areaCode != null && !areaCode.isEmpty()) {
                 sb.append("&areaCode=").append(areaCode);
             }
-            
+
             if (cat1 != null && !cat1.isEmpty()) {
                 sb.append("&cat1=").append(cat1);
             }
@@ -190,6 +190,88 @@ public class TourApiService {
         } catch (Exception e) {
             log.error("행사 정보 조회 중 오류 발생", e);
             throw new RuntimeException("TourAPI Error (Festival)", e);
+        }
+    }
+
+    // 키워드 검색 (searchKeyword2)
+    public JsonNode searchKeyword(String keyword, String areaCode, String cat1, int pageNo) {
+        try {
+            StringBuilder sb = new StringBuilder();
+
+            // 키워드 검색 엔드포인트
+            sb.append(BASE_URL).append("/searchKeyword2");
+
+            sb.append("?serviceKey=").append(ENCODED_KEY);
+            sb.append("&numOfRows=10");
+            sb.append("&pageNo=").append(pageNo);
+            sb.append("&MobileOS=WEB");
+            sb.append("&MobileApp=MyTripQuest");
+            sb.append("&_type=json");
+
+            // 키워드는 필수
+            if (keyword != null && !keyword.isEmpty()) {
+                sb.append("&keyword=").append(keyword);
+            }
+
+            // 지역 필터 (선택)
+            if (areaCode != null && !areaCode.isEmpty()) {
+                sb.append("&areaCode=").append(areaCode);
+            }
+
+            // 카테고리 필터 (선택)
+            if (cat1 != null && !cat1.isEmpty()) {
+                sb.append("&cat1=").append(cat1);
+            }
+
+            URI uri = URI.create(sb.toString());
+
+            log.info(">>> 키워드 검색 URL: {}", uri);
+
+            String response = restClient.get()
+                    .uri(uri)
+                    .retrieve()
+                    .body(String.class);
+
+            return objectMapper.readTree(response);
+
+        } catch (Exception e) {
+            log.error("키워드 검색 중 오류 발생", e);
+            throw new RuntimeException("TourAPI Error (Keyword Search)", e);
+        }
+    }
+
+    // 위치 기반 관광지 조회 (locationBasedList2)
+    public JsonNode getLocationBasedList(String mapX, String mapY, String radius, int pageNo) {
+        try {
+            StringBuilder sb = new StringBuilder();
+
+            // 위치 기반 정보 조회 엔드포인트
+            sb.append(BASE_URL).append("/locationBasedList2");
+
+            sb.append("?serviceKey=").append(ENCODED_KEY);
+            sb.append("&numOfRows=10");
+            sb.append("&pageNo=").append(pageNo);
+            sb.append("&MobileOS=WEB");
+            sb.append("&MobileApp=MyTripQuest");
+            sb.append("&_type=json");
+            sb.append("&mapX=").append(mapX);
+            sb.append("&mapY=").append(mapY);
+            sb.append("&radius=").append(radius);
+
+            URI uri = URI.create(sb.toString());
+
+            log.info(">>> 위치 기반 검색 URL: {}", uri);
+
+            String response = restClient.get()
+                    .uri(uri)
+                    .retrieve()
+                    .body(String.class);
+
+            return objectMapper.readTree(response);
+
+        } catch (Exception e) {
+            log.error("위치 기반 검색 중 오류 발생", e);
+            throw new RuntimeException("TourAPI Error (Location Search)", e);
         }
     }
 }

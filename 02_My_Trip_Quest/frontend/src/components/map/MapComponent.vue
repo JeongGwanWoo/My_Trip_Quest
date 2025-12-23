@@ -101,15 +101,19 @@ onMounted(() => {
 
   if (window.kakao && window.kakao.maps) {
     // 카카오맵 스크립트가 이미 로드된 경우
-    initMap();
+    loadAndInitMap();
   } else {
-    // 카카오맵 스크립트가 로드되지 않은 경우
-    const script = document.createElement("script");
-    script.onload = () => {
-      loadAndInitMap();
-    };
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey=4a721b099696ef1b4f34ca52a919cbee&libraries=services`;
-    document.head.appendChild(script);
+    // 카카오맵 스크립트가 아직 로드 중인 경우 대기
+    let retryCount = 0;
+    const checkKakao = setInterval(() => {
+      if (window.kakao && window.kakao.maps) {
+        clearInterval(checkKakao);
+        loadAndInitMap();
+      } else if (retryCount++ > 20) {
+        clearInterval(checkKakao);
+        console.error('카카오 지도 스크립트 로드 실패');
+      }
+    }, 100);
   }
 });
 

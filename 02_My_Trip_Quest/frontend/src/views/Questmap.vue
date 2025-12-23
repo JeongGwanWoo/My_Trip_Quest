@@ -10,7 +10,7 @@
         
 
 
-        <BottomSheet v-model:isOpen="isSheetOpen" class="map-bottom-sheet" :peekHeight="peekHeight">
+        <BottomSheet v-model:isOpen="isSheetOpen" class="map-bottom-sheet" :peekHeight="peekHeight" maxOpenHeight="80vh">
           <div class="sheet-content">
             <div class="sheet-header">
               <div class="header-top-row">
@@ -708,78 +708,7 @@ onBeforeUnmount(() => {
   display: block;
 }
 
-/* ----------------------------------------------------- */
-/* ★ 바텀 시트 스타일 재정의 (적절한 높이, 클릭 가능) */
-/* ----------------------------------------------------- */
 
-/* 1. 바텀시트 컨테이너 */
-/* 1. 바텀시트 컨테이너 */
-:deep(.bottom-sheet-container),
-.map-bottom-sheet {
-  position: absolute !important;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: 40;
-  pointer-events: auto !important; /* 전체 영역 클릭 활성화 */
-}
-
-/* 2. 어두운 배경 (오버레이) */
-:deep(.sheet-overlay) {
-  position: absolute !important;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.3);
-  z-index: 41;
-  pointer-events: auto !important; /* 오버레이 클릭으로 닫기 가능 */
-}
-
-/* 3. 실제 올라오는 하얀색 시트 (내용물) */
-:deep(.sheet-content-wrapper) {
-  position: absolute !important;
-  top: auto !important;
-  bottom: 0 !important;
-  left: 0;
-  width: 100% !important;
-  max-width: none !important;
-  height: 50vh !important; /* 화면의 50% 높이로 적절하게 조정 */
-  max-height: none !important;
-  
-  z-index: 42; /* 오버레이보다 높게 */
-  
-  /* 스타일 */
-  border-radius: 24px 24px 0 0;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-  background-color: white;
-  
-  /* 클릭 활성화 */
-  pointer-events: auto !important;
-  
-  /* 부드러운 애니메이션 */
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* 스크롤 가능하도록 */
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 닫힌 상태 */
-:deep(.bottom-sheet-container:not(.is-open) .sheet-content-wrapper) {
-  transform: translateY(100%);
-}
-
-/* 열린 상태 */
-:deep(.bottom-sheet-container.is-open .sheet-content-wrapper) {
-  transform: translateY(0);
-}
-
-/* ----------------------------------------------------- */
 
 /* 지도 위 범례 (Legend) */
 .map-legend {
