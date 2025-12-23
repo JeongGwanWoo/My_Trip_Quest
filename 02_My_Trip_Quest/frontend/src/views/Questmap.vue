@@ -419,6 +419,26 @@ const handleQuestCardClick = (areaCode) => {
 };
 
 const handleSearch = () => {
+  // 1. 키워드로 지역 매칭 시도 (자동 확장 기능)
+  if (searchKeyword.value && searchKeyword.value.trim()) {
+    const keyword = searchKeyword.value.trim();
+    // areas는 raw data (areaName, areaCode)
+    const matchedArea = areas.value.find(area => 
+      area.areaName.includes(keyword) || keyword.includes(area.areaName)
+    );
+
+    if (matchedArea) {
+      // 매칭된 지역이 있으면 해당 지역 선택 (드롭다운 확장)
+      // 이미 선택된 상태라면 재검색만 수행
+      if (selectedAreaCode.value !== matchedArea.areaCode) {
+        selectedAreaCode.value = matchedArea.areaCode;
+      }
+      fetchLocations(matchedArea.areaCode, { reset: true });
+      return;
+    }
+  }
+
+  // 2. 기존 로직 (선택된 지역 내 검색)
   if (selectedAreaCode.value) {
     fetchLocations(selectedAreaCode.value, { reset: true });
   }
@@ -918,6 +938,8 @@ onBeforeUnmount(() => {
       border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
+      white-space: nowrap; /* 줄바꿈 방지 */
+      flex-shrink: 0; /* 공간 부족해도 줄어들지 않음 */
     }
 
     /* 더 보기 버튼 스타일 */
