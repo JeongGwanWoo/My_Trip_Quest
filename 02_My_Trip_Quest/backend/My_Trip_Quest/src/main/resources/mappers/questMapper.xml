@@ -25,6 +25,7 @@
         <result property="title" column="title"/>
         <result property="latitude" column="latitude"/>
         <result property="longitude" column="longitude"/>
+        <result property="areaCode" column="area_code"/>
         <result property="gpsVerifyRadius" column="gps_verify_radius"/>
         <result property="questCount" column="quest_count"/>
     </resultMap>
@@ -37,18 +38,22 @@
             l.latitude,
             l.longitude,
             l.gps_verify_radius,
+            l.area_code,
             COUNT(q.quest_id) AS quest_count
         FROM
             locations l
         JOIN
             quests q ON l.location_id = q.location_id
-        WHERE
-            l.area_code = #{areaCode}
+        <where>
+            <if test="areaCode != null and areaCode != 'ALL'">
+                l.area_code = #{areaCode}
+            </if>
             <if test="keyword != null and keyword != ''">
                 AND l.title LIKE CONCAT('%', #{keyword}, '%')
             </if>
+        </where>
         GROUP BY
-            l.location_id, l.title, l.latitude, l.longitude, l.gps_verify_radius
+            l.location_id, l.title, l.latitude, l.longitude, l.gps_verify_radius, l.area_code
         ORDER BY
             l.title ASC
         LIMIT #{pageable.pageSize} OFFSET #{pageable.offset}
@@ -119,10 +124,10 @@
         LIMIT 1
     </select>
 
-    <select id="findMaxLocationIdByAreaCode" resultType="long">
+    <select id="findMaxLocationIdByRange" resultType="long">
         SELECT COALESCE(MAX(location_id), 0)
         FROM locations
-        WHERE area_code = #{areaCode}
+        WHERE location_id BETWEEN #{startId} AND #{endId}
     </select>
 
     <select id="findMaxQuestIdByRange" resultType="long">
@@ -145,8 +150,19 @@
         VALUES (
             #{questId}, #{locationId}, #{questTypeId}, #{previousQuestId},
             #{difficulty}, #{title}, #{description}, #{rewardXp}, #{rewardPoints},
-            #{requireGpsVerify}, 1, NOW(), NOW()
+            #{requireGpsVerify}, true, NOW(), NOW()
         )
     </insert>
+
+    <update id="updateLocationRadius">
+        UPDATE locations
+        SET gps_verify_radius = #{radius}
+        WHERE location_id = #{locationId}
+    </update>
+
+    <delete id="deleteQuest">
+        DELETE FROM quests
+        WHERE quest_id = #{questId}
+    </delete>
 
 </mapper>

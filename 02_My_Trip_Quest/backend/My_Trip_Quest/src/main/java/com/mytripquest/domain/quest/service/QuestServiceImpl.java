@@ -2,7 +2,7 @@ package com.mytripquest.domain.quest.service;
 
 import com.mytripquest.domain.activitylog.service.ActivityLogService;
 import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
-import com.mytripquest.domain.ai.service.AIVisionService;
+import com.mytripquest.domain.ai.service.AIService;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestStatusDto;
@@ -55,7 +55,7 @@ public class QuestServiceImpl implements QuestService {
     private final QuestRepository questRepository;
     private final UserQuestRepository userQuestRepository;
     private final UserMapper userMapper;
-    private final AIVisionService aiVisionService;
+    private final AIService aiService;
     private final ActivityLogService activityLogService;
     private static final Map<String, String> AREA_CODES;
     private static final Map<String, String> CODE_TO_NAME;
@@ -99,7 +99,7 @@ public class QuestServiceImpl implements QuestService {
     @Transactional(readOnly = true)
     public QuestLocationSliceDto getLocationsByAreaCode(String areaCode, Long userId, String keyword,
             Pageable pageable) {
-        if (!CODE_TO_NAME.containsKey(areaCode)) {
+        if (!"ALL".equals(areaCode) && !CODE_TO_NAME.containsKey(areaCode)) {
             return new QuestLocationSliceDto(Collections.emptyList(), true);
         }
 
@@ -381,7 +381,7 @@ public class QuestServiceImpl implements QuestService {
                 throw new BusinessException(ErrorCode.DISTANCE_TOO_FAR);
             }
 
-            boolean isLandmarkPhoto = aiVisionService.isPhotoOfLandmark(fileBytes, location.getTitle());
+            boolean isLandmarkPhoto = aiService.isPhotoOfLandmark(fileBytes, location.getTitle());
             if (!isLandmarkPhoto) {
                 log.warn("사진 미션 실패 (사용자 {}): AI가 사진 내용이 랜드마크 '{}'와 일치하지 않는다고 판단했습니다.", userId, location.getTitle());
                 throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF);
@@ -466,38 +466,64 @@ public class QuestServiceImpl implements QuestService {
     }
 
     @Override
+    public int estimateLocationRadius(String locationName, String address) {
+        return aiService.estimateLocationRadius(locationName, address);
+    }
+
+    @Override
+    public void updateLocationRadius(Long locationId, int radius) {
+        questRepository.updateLocationRadius(locationId, radius);
+    }
+
+    @Override
+    public void deleteQuest(Long questId) {
+        questRepository.deleteQuest(questId);
+    }
+
+    @Override
+    public void createQuest(Quest quest) {
+        questRepository.saveQuest(quest);
+    }
+
+    @Override
     @Transactional
     public int generateQuestsFromTourApi(List<Map<String, Object>> items, List<String> types, String areaCode) {
+        if (types == null) {
+            types = new java.util.ArrayList<>();
+        }
         int count = 0;
 
         // 1. Location ID 시작점 계산
         long locationIdStart = 0;
-        long questIdStart = 0;
 
-        if ("5".equals(areaCode)) { // 광주
-            locationIdStart = 5000;
-            questIdStart = 50000;
-        } else if ("1".equals(areaCode)) { // 서울
-            locationIdStart = 10000;
-            questIdStart = 100000;
-        } else if ("6".equals(areaCode)) { // 부산
-            locationIdStart = 6000;
-            questIdStart = 60000;
-        } else {
-            // 기타 지역 (기본 20000~ 로 가정)
-            locationIdStart = 20000;
-            questIdStart = 200000;
+        try {
+            int code = Integer.parseInt(areaCode);
+            if (code == 1) { // 서울 (Special Case: 10000~)
+                locationIdStart = 10000;
+            } else if (code >= 1 && code <= 8) { // Metro Cities: Code * 1000
+                locationIdStart = code * 1000L;
+            } else if (code >= 31 && code <= 39) { // Provinces: Code * 1000
+                locationIdStart = code * 1000L;
+            } else {
+                // Fallback
+                locationIdStart = 90000;
+            }
+        } catch (NumberFormatException e) {
+            locationIdStart = 90000;
         }
 
-        // DB에서 현재 Max ID 조회
-        Long maxLocId = questRepository.findMaxLocationIdByAreaCode(areaCode);
+        long locationIdEnd = locationIdStart + 999;
+
+        // DB에서 해당 범위 내 Max ID 조회 (기존 잘못된 20000번대 데이터 무시)
+        Long maxLocId = questRepository.findMaxLocationIdByRange(locationIdStart, locationIdEnd);
         long nextLocId = (maxLocId < locationIdStart) ? locationIdStart : maxLocId + 1;
 
-        // Quest ID 범위 조회
-        Long maxQuestId = questRepository.findMaxQuestIdByRange(questIdStart, questIdStart + 9999);
-        long nextQuestId = (maxQuestId < questIdStart) ? questIdStart : maxQuestId + 1;
-
         for (Map<String, Object> item : items) {
+            // ID 범위 초과 체크
+            if (nextLocId > locationIdEnd) {
+                log.warn("ID Range Exceeded for AreaCode {}: Max {}", areaCode, locationIdEnd);
+                break; // 더 이상 생성 불가
+            }
             String title = (String) item.get("title");
             // API 응답 형식이 String일 수 있으므로 안전하게 파싱
             double mapx = Double.parseDouble(String.valueOf(item.get("mapx")));
@@ -510,11 +536,28 @@ public class QuestServiceImpl implements QuestService {
             loc.setLatitude(BigDecimal.valueOf(mapy));
             loc.setLongitude(BigDecimal.valueOf(mapx));
             loc.setAreaCode(areaCode);
-            loc.setGpsVerifyRadius(150);
+
+            // AI 반경이 계산되어 있으면 사용, 없으면 기본값 150
+            Integer aiRadius = 150; // 기본값
+            if (item.get("aiRadius") != null) {
+                try {
+                    aiRadius = Integer.parseInt(String.valueOf(item.get("aiRadius")));
+                    log.info("AI 반경 적용: {} -> {}m", title, aiRadius);
+                } catch (NumberFormatException e) {
+                    log.warn("AI 반경 파싱 실패 ({}), 기본값 사용: {}", title, e.getMessage());
+                    aiRadius = 150;
+                }
+            } else {
+                log.info("AI 반경 없음 ({}), 기본값 150m 사용", title);
+            }
+            loc.setGpsVerifyRadius(aiRadius);
 
             questRepository.saveLocation(loc);
 
-            // 2. Quest 저장
+            // 2. Quest 저장 (LocationID * 10 규칙 적용)
+            long currentQuestIdBase = nextLocId * 10;
+            long nextQuestId = currentQuestIdBase;
+
             if (types.contains("ARRIVAL")) {
                 Quest arrivalQuest = new Quest();
                 arrivalQuest.setQuestId(nextQuestId++);
@@ -533,6 +576,7 @@ public class QuestServiceImpl implements QuestService {
             if (types.contains("PHOTO")) {
                 Quest photoQuest = new Quest();
                 photoQuest.setQuestId(nextQuestId++);
+                // ... rest of logic uses nextQuestId which is now bound to location
                 photoQuest.setLocationId(nextLocId);
                 photoQuest.setQuestTypeId(2); // int
                 photoQuest.setTitle(title + " 사진 찍기");

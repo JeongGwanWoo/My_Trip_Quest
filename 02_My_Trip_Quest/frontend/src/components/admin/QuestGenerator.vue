@@ -83,8 +83,15 @@
           </label>
         </div>
         
+        <div class="option-group">
+          <label>
+            <input type="checkbox" v-model="useAiRadius"> AI로 GPS 인증 반경 자동 산정 (추천)
+          </label>
+          <small class="hint">체크하면 각 관광지마다 AI가 적절한 인증 반경을 계산합니다. (시간이 다소 소요될 수 있습니다)</small>
+        </div>
+        
         <button @click="handleGenerate" :disabled="selectedAttractions.length === 0 || questTypes.length === 0 || generating" class="btn-success">
-          <span v-if="generating">생성 중...</span>
+          <span v-if="generating">생성 중... ({{ generationProgress }})</span>
           <span v-else>선택한 {{ selectedAttractions.length }}개 관광지로 퀘스트 생성</span>
         </button>
       </div>
@@ -106,18 +113,20 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { getTourApiAttractions, generateQuests } from '@/api/admin';
+import { getTourApiAttractions, generateQuests, estimateLocationRadius } from '@/api/admin';
 
 const selectedAreaCode = ref('1');
 const selectedContentTypeId = ref('12');
 const attractions = ref([]);
 const selectedAttractions = ref([]);
 const questTypes = ref(['ARRIVAL', 'PHOTO']);
+const useAiRadius = ref(false);
 const loading = ref(false);
 const generating = ref(false);
 const searched = ref(false);
 const successMessage = ref('');
 const errorMessage = ref('');
+const generationProgress = ref('');
 
 const selectAll = ref(false);
 
@@ -200,17 +209,70 @@ const handleGenerate = async () => {
   generating.value = true;
   successMessage.value = '';
   errorMessage.value = '';
+  generationProgress.value = '';
 
   try {
+    // 깊은 복사로 원본 객체 보호
+    let itemsToGenerate = selectedAttractions.value.map(item => ({...item}));
+    
+    // AI 반경 산정 옵션이 체크되어 있으면 각 관광지마다 AI로 반경 계산
+    if (useAiRadius.value) {
+      generationProgress.value = 'AI 반경 계산 중...';
+      
+      for (let i = 0; i < itemsToGenerate.length; i++) {
+        const item = itemsToGenerate[i];
+        generationProgress.value = `AI 반경 계산 중... (${i + 1}/${itemsToGenerate.length})`;
+        
+        try {
+          const res = await estimateLocationRadius({
+            locationName: item.title,
+            address: item.addr1 || ""
+          });
+          
+          if (res.data.success && res.data.data) {
+            // AI가 계산한 반경을 item에 추가
+            item.aiRadius = res.data.data;
+            console.log(`AI 반경 계산 완료: ${item.title} -> ${res.data.data}m`);
+          } else {
+            // AI 실패 시 기본값 150 사용
+            item.aiRadius = 150;
+            console.warn(`AI 반경 계산 실패 (기본값 사용): ${item.title}`);
+          }
+        } catch (error) {
+          console.error(`AI 반경 계산 실패 (${item.title}):`, error);
+          item.aiRadius = 150; // 실패 시 기본값
+        }
+        
+        // API 호출 간 짧은 딜레이 (과부하 방지)
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      console.log('최종 전송 데이터:', itemsToGenerate.map(i => ({title: i.title, aiRadius: i.aiRadius})));
+    }
+    
+    generationProgress.value = '퀘스트 생성 중...';
+    
     const payload = {
-      items: selectedAttractions.value, // 선택된 객체들 그대로 전송 (Backend에서 mapx, mapy, title 등 추출 사용)
-      questTypes: questTypes.value,
-      areaCode: selectedAreaCode.value
+      items: itemsToGenerate,
+      types: questTypes.value,
+      areaCode: selectedAreaCode.value,
+      useAiRadius: useAiRadius.value
     };
+    
+    console.log('백엔드로 전송하는 전체 payload:', {
+      itemCount: payload.items.length,
+      items: payload.items.map(i => ({
+        title: i.title,
+        aiRadius: i.aiRadius,
+        hasAiRadius: i.aiRadius !== undefined
+      })),
+      types: payload.types,
+      areaCode: payload.areaCode,
+      useAiRadius: payload.useAiRadius
+    });
 
     const response = await generateQuests(payload);
     if (response.data && response.data.success) {
-      // response.data.data는 생성된 퀘스트 수(int)
       successMessage.value = `성공적으로 ${response.data.data}개의 퀘스트가 생성되었습니다!`;
       selectedAttractions.value = [];
       selectAll.value = false;
@@ -222,6 +284,7 @@ const handleGenerate = async () => {
     errorMessage.value = '퀘스트 생성 중 오류가 발생했습니다. (백엔드 로그 확인 필요)';
   } finally {
     generating.value = false;
+    generationProgress.value = '';
   }
 };
 </script>
@@ -382,10 +445,33 @@ select {
   border-top: 1px solid #eee;
 }
 
+.generation-options h4 {
+  margin-bottom: 12px;
+  color: #334155;
+}
+
 .option-group {
   display: flex;
-  gap: 20px;
+  flex-direction: column;
+  gap: 8px;
   margin: 10px 0;
+}
+
+.option-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #475569;
+}
+
+.hint {
+  display: block;
+  margin-left: 24px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #64748b;
+  font-style: italic;
 }
 
 .loading, .no-data {

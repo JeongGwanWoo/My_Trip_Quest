@@ -34,7 +34,7 @@ public class AdminQuestController {
 
     // 2. 퀘스트 생성 요청
     @PostMapping("/generate")
-    public ApiResponse<String> generateQuests(@RequestBody Map<String, Object> requestBody) {
+    public ApiResponse<Integer> generateQuests(@RequestBody Map<String, Object> requestBody) {
         // requestBody: { "items": [...], "types": ["ARRIVAL", "PHOTO"], "areaCode": "1"
         // }
         List<Map<String, Object>> items = (List<Map<String, Object>>) requestBody.get("items");
@@ -42,6 +42,51 @@ public class AdminQuestController {
         String areaCode = (String) requestBody.get("areaCode");
 
         int count = questService.generateQuestsFromTourApi(items, types, areaCode);
-        return ApiResponse.success(count + "개의 퀘스트가 생성되었습니다.");
+        return ApiResponse.success(count + "개의 퀘스트가 생성되었습니다.", count); // data에 count(int) 포함
+    }
+
+    // 3. AI 반경 추정
+    @PostMapping("/ai/estimate-radius")
+    public ApiResponse<Integer> estimateRadius(@RequestBody Map<String, String> request) {
+        String locationName = request.get("locationName");
+        String address = request.get("address");
+        int radius = questService.estimateLocationRadius(locationName, address); // Need to add to Service? No, use
+                                                                                 // AIService directly or via
+                                                                                 // QuestService wrapper?
+        // Wait, I should probably expose AIService via QuestService or inject AIService
+        // here.
+        // User pattern: Controller uses Service.
+        // I'll inject AIService here as AdminQuestController is for admin tools.
+        return ApiResponse.success(radius);
+    }
+
+    // 4. 관광지 반경 수정
+    @PutMapping("/locations/{locationId}")
+    public ApiResponse<Void> updateLocationRadius(@PathVariable Long locationId,
+            @RequestBody Map<String, Integer> request) {
+        int radius = request.get("radius");
+        questService.updateLocationRadius(locationId, radius);
+        return ApiResponse.successWithoutData();
+    }
+
+    // 5. 퀘스트 수동 추가
+    @PostMapping("/locations/{locationId}/quests")
+    public ApiResponse<Void> addQuest(@PathVariable Long locationId,
+            @RequestBody com.mytripquest.domain.quest.entity.Quest quest) {
+        quest.setLocationId(locationId);
+        // ID generation logic needed? For now, we assume frontend sends ID or we handle
+        // it?
+        // User requested "Add", implies new.
+        // I will assume the frontend generator handles ID logic or I need a simple one.
+        // For now, I'll let the user input ID in the frontend modal (to be safe).
+        questService.createQuest(quest);
+        return ApiResponse.successWithoutData();
+    }
+
+    // 6. 퀘스트 삭제
+    @DeleteMapping("/{questId}")
+    public ApiResponse<Void> deleteQuest(@PathVariable Long questId) {
+        questService.deleteQuest(questId);
+        return ApiResponse.successWithoutData();
     }
 }

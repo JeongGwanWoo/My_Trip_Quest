@@ -32,4 +32,12 @@ public interface QuestService {
     List<InProgressQuestDto> getInProgressQuests(Long userId);
 
     int generateQuestsFromTourApi(List<java.util.Map<String, Object>> items, List<String> types, String areaCode);
+
+    int estimateLocationRadius(String locationName, String address);
+
+    void updateLocationRadius(Long locationId, int radius);
+
+    void deleteQuest(Long questId);
+
+    void createQuest(Quest quest);
 }
