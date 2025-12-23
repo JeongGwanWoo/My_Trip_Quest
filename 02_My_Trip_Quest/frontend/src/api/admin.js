@@ -11,3 +11,15 @@ export function updateUserRole(userId, role) {
 export function getQuestStats() {
     return api.get('/api/v1/admin/stats/quests');
 }
+
+export function getDashboardStats() {
+    return api.get('/api/v1/admin/dashboard');
+}
+
+export function getEconomyStats() {
+    return api.get('/api/v1/admin/stats/economy');
+}
+
+export function getContentStats() {
+    return api.get('/api/v1/admin/stats/content');
+}

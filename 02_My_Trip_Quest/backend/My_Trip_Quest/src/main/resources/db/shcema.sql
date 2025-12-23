@@ -143,3 +143,21 @@ CREATE TABLE IF NOT EXISTS `activity_logs` (
         FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`)
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 9. SYSTEM_LOGS (시스템/어드민 로그 - FK 없음)
+CREATE TABLE IF NOT EXISTS `system_logs` (
+    `log_id`        BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `feature_name`  VARCHAR(100) NOT NULL,
+    `target_id`     BIGINT NULL,              -- 퀘스트ID, 상품ID 등 대상 식별자
+    `user_id`       BIGINT NULL,
+    `user_ip`       VARCHAR(45) NULL,
+    `status`        ENUM('SUCCESS', 'FAIL', 'ERROR') NOT NULL,
+    `error_code`    VARCHAR(50) NULL,
+    `execution_time` INT NOT NULL DEFAULT 0,
+    `log_message`   TEXT NULL,
+    `created_at`    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX `idx_system_logs_created` (`created_at`),
+    INDEX `idx_system_logs_feature_status` (`feature_name`, `status`),
+    INDEX `idx_system_logs_target` (`target_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

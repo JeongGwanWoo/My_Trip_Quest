@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mytripquest.domain.systemlog.mapper.SystemLogMapper">
+
+    <insert id="insertLog" parameterType="com.mytripquest.domain.systemlog.dto.SystemLogDto" useGeneratedKeys="true" keyProperty="logId">
+        INSERT INTO system_logs (feature_name, target_id, user_id, user_ip, status, error_code, execution_time, log_message, created_at)
+        VALUES (#{featureName}, #{targetId}, #{userId}, #{userIp}, #{status}, #{errorCode}, #{executionTime}, #{logMessage}, NOW())
+    </insert>
+
+    <!-- 1시간 내 10분 단위 에러 통계 -->
+    <select id="selectErrorRateStats" resultType="map">
+        SELECT
+            DATE_FORMAT(MAX(created_at), '%H:%i') as timeSlot,
+            COUNT(*) as errorCount
+        FROM system_logs
+        WHERE status IN ('FAIL', 'ERROR')
+          AND created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
+        GROUP BY FLOOR(UNIX_TIMESTAMP(created_at) / 600)
+        ORDER BY timeSlot
+    </select>
+
+    <!-- 실행 시간 Top 5 -->
+    <select id="selectSlowestFeatures" resultType="map">
+        SELECT
+            feature_name as featureName,
+            AVG(execution_time) as avgTime,
+            COUNT(*) as callCount
+        FROM system_logs
+        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+        GROUP BY feature_name
+        ORDER BY avgTime DESC
+        LIMIT 5
+    </select>
+
+    <!-- 시간대별 트래픽 (최근 24시간) -->
+    <select id="selectTrafficStats" resultType="map">
+        SELECT
+            DATE_FORMAT(created_at, '%H:00') as timeGroup,
+            COUNT(*) as requestCount
+        FROM system_logs
+        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+        GROUP BY DATE_FORMAT(created_at, '%H:00')
+        ORDER BY timeGroup
+    </select>
+
+    <!-- Economy Stats: Total Earned (Quest Rewards) -->
+    <select id="selectTotalPointsEarned" resultType="long">
+        SELECT COALESCE(SUM(q.reward_points), 0)
+        FROM user_quests uq
+        JOIN quests q ON uq.quest_id = q.quest_id
+        WHERE uq.status = 'COMPLETED'
+    </select>
+
+    <!-- Economy Stats: Total Spent (Shop Purchases) -->
+    <select id="selectTotalPointsSpent" resultType="long">
+        SELECT COALESCE(SUM(i.price * ui.quantity), 0)
+        FROM user_items ui
+        JOIN items i ON ui.item_id = i.item_id
+    </select>
+
+    <!-- Economy Stats: Top Selling Items -->
+    <select id="selectTopSellingItems" resultType="com.mytripquest.domain.systemlog.dto.EconomyStatDto$ItemSalesDto">
+        SELECT 
+            i.name AS itemName,
+            COUNT(ui.item_id) AS salesCount
+        FROM user_items ui
+        JOIN items i ON ui.item_id = i.item_id
+        GROUP BY i.item_id, i.name
+        ORDER BY salesCount DESC
+        LIMIT 5
+    </select>
+
+</mapper>

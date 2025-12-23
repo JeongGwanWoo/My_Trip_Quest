@@ -20,6 +20,7 @@ import java.util.List;
 public class AdminController {
 
     private final AdminService adminService;
+    private final com.mytripquest.domain.systemlog.service.SystemLogService systemLogService;
 
     @GetMapping("/hello")
     public ResponseEntity<String> helloAdmin() {
@@ -32,7 +33,8 @@ public class AdminController {
     }
 
     @PatchMapping("/users/{userId}/role")
-    public ResponseEntity<Void> updateUserRole(@PathVariable Long userId, @RequestBody com.mytripquest.domain.user.dto.UpdateUserRoleRequestDto request) {
+    public ResponseEntity<Void> updateUserRole(@PathVariable Long userId,
+            @RequestBody com.mytripquest.domain.user.dto.UpdateUserRoleRequestDto request) {
         adminService.updateUserRole(userId, request.getRole());
         return ResponseEntity.ok().build();
     }
@@ -40,5 +42,20 @@ public class AdminController {
     @GetMapping("/stats/quests")
     public ResponseEntity<List<QuestStatDto>> getQuestStats() {
         return ResponseEntity.ok(adminService.getQuestCompletionStats());
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<java.util.Map<String, Object>> getDashboardStats() {
+        return ResponseEntity.ok(systemLogService.getDashboardStats());
+    }
+
+    @GetMapping("/stats/economy")
+    public ResponseEntity<com.mytripquest.domain.systemlog.dto.EconomyStatDto> getEconomyStats() {
+        return ResponseEntity.ok(systemLogService.getEconomyStats());
+    }
+
+    @GetMapping("/stats/content")
+    public ResponseEntity<com.mytripquest.domain.systemlog.dto.ContentStatDto> getContentStats() {
+        return ResponseEntity.ok(systemLogService.getContentStats());
     }
 }

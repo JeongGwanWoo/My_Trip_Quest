@@ -96,4 +96,8 @@
         ORDER BY created_at DESC
     </select>
 
+    <select id="findAllUserXp" resultType="int">
+        SELECT COALESCE(total_xp, 0) FROM users
+    </select>
+
 </mapper>
