@@ -1,0 +1,37 @@
+package com.mytripquest.global;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+	
+	@Value("${file.upload.dir}")
+	private String uploadDir;
+	
+	@Value("${file.upload.url-path}")
+	private String uploadUrlPath;
+	
+	@Override
+	public void addResourceHandlers(ResourceHandlerRegistry registry) {
+		// 업로드 파일에 대한 핸들러 설정
+        // 요청 경로: /images/** // 실제 위치: file:C:/mytripquest_data/uploads/
+        registry.addResourceHandler(uploadUrlPath + "**")
+                // file: 접두사는 파일 시스템의 경로임을 Spring에게 알려줍니다.
+                .addResourceLocations("file:" + uploadDir);
+
+        // 정적 리소스 핸들러 (img 폴더는 이미 있으니 그대로 유지)
+        registry.addResourceHandler("/img/**")
+                .addResourceLocations("classpath:/img/");
+	}
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+
+}
