@@ -3,6 +3,8 @@ package com.mytripquest.domain.quest.service;
 import com.mytripquest.domain.activitylog.service.ActivityLogService;
 import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.ai.service.AIService;
+import com.mytripquest.domain.ai.dto.LocationRadiusRequest;
+import com.mytripquest.domain.ai.dto.RadiusEstimateResult;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestStatusDto;
@@ -63,7 +65,22 @@ public class QuestServiceImpl implements QuestService {
     static {
         Map<String, String> aMap = new HashMap<>();
         aMap.put("서울특별시", "1");
+        aMap.put("인천광역시", "2");
+        aMap.put("대전광역시", "3");
+        aMap.put("대구광역시", "4");
         aMap.put("광주광역시", "5");
+        aMap.put("부산광역시", "6");
+        aMap.put("울산광역시", "7");
+        aMap.put("세종특별자치시", "8");
+        aMap.put("경기도", "31");
+        aMap.put("강원특별자치도", "32");
+        aMap.put("충청북도", "33");
+        aMap.put("충청남도", "34");
+        aMap.put("경상북도", "35");
+        aMap.put("경상남도", "36");
+        aMap.put("전북특별자치도", "37");
+        aMap.put("전라남도", "38");
+        aMap.put("제주특별자치도", "39");
         AREA_CODES = Collections.unmodifiableMap(aMap);
         CODE_TO_NAME = Collections.unmodifiableMap(
                 aMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)));
@@ -73,11 +90,22 @@ public class QuestServiceImpl implements QuestService {
     @Transactional(readOnly = true)
     public List<UserAreaQuestStatusDto> getUserAreaQuestCounts(Long userId) {
         List<UserAreaQuestStatusDto> areaQuestStatus = new ArrayList<>();
+        // 순서 보장을 위해 정렬된 키셋 사용 (가나다 순) 또는 코드 순?
+        // 여기서는 Map 순서에 의존하지 않고 리스트에 담은 뒤 필요시 정렬하거나, 클라이언트가 처리.
+        // HashMap이라 순서 보장 안됨. -> TreeMap 사용이나 Stream sorted 고려 가능.
+        // 일단 기존 로직 유지하되 필터링 추가.
+
         for (Map.Entry<String, String> entry : AREA_CODES.entrySet()) {
             String areaName = entry.getKey();
             String areaCode = entry.getValue();
 
             int totalLocations = questRepository.countTotalLocationsByArea(areaCode);
+
+            // 퀘스트(장소)가 하나도 없는 지역은 제외
+            if (totalLocations == 0) {
+                continue;
+            }
+
             int incompleteLocations;
             if (userId == null) {
                 incompleteLocations = totalLocations;
@@ -92,6 +120,16 @@ public class QuestServiceImpl implements QuestService {
                     .totalLocationCount(totalLocations)
                     .build());
         }
+
+        // areaCode 기준으로 오름차순 정렬 (1, 2, ... 31, ...)
+        areaQuestStatus.sort((o1, o2) -> {
+            try {
+                return Integer.compare(Integer.parseInt(o1.getAreaCode()), Integer.parseInt(o2.getAreaCode()));
+            } catch (NumberFormatException e) {
+                return o1.getAreaCode().compareTo(o2.getAreaCode());
+            }
+        });
+
         return areaQuestStatus;
     }
 
@@ -471,6 +509,51 @@ public class QuestServiceImpl implements QuestService {
     }
 
     @Override
+    public List<RadiusEstimateResult> estimateLocationRadiusBatch(List<LocationRadiusRequest> locations) {
+        return aiService.estimateLocationRadiusBatch(locations);
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> batchRecalculateRadius(List<Long> locationIds) {
+        if (locationIds == null || locationIds.isEmpty()) {
+            return Map.of("success", false, "message", "No locations selected");
+        }
+
+        log.info("Batch recalculating radius for {} locations", locationIds.size());
+
+        // 1. locationIds로 관광지 정보 조회
+        List<LocationRadiusRequest> requests = new ArrayList<>();
+        for (Long locationId : locationIds) {
+            LocationWithQuestCountDto location = questRepository.findLocationById(locationId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.LOCATION_NOT_FOUND));
+
+            requests.add(new LocationRadiusRequest(
+                    location.getTitle(),
+                    location.getAddr1() != null ? location.getAddr1() : ""));
+        }
+
+        // 2. 배치 AI 호출
+        List<RadiusEstimateResult> results = aiService.estimateLocationRadiusBatch(requests);
+
+        // 3. DB 업데이트
+        int updated = 0;
+        for (int i = 0; i < locationIds.size() && i < results.size(); i++) {
+            Long locationId = locationIds.get(i);
+            int newRadius = results.get(i).getRadius();
+
+            questRepository.updateLocationRadius(locationId, newRadius);
+            log.info("Updated location {} radius to {}m", locationId, newRadius);
+            updated++;
+        }
+
+        return Map.of(
+                "success", true,
+                "updated", updated,
+                "total", locationIds.size());
+    }
+
+    @Override
     public void updateLocationRadius(Long locationId, int radius) {
         questRepository.updateLocationRadius(locationId, radius);
     }
@@ -528,6 +611,7 @@ public class QuestServiceImpl implements QuestService {
             // API 응답 형식이 String일 수 있으므로 안전하게 파싱
             double mapx = Double.parseDouble(String.valueOf(item.get("mapx")));
             double mapy = Double.parseDouble(String.valueOf(item.get("mapy")));
+            String addr1 = (String) item.get("addr1"); // TourAPI 주소 정보
 
             // 1. Location 저장
             LocationWithQuestCountDto loc = new LocationWithQuestCountDto();
@@ -536,6 +620,7 @@ public class QuestServiceImpl implements QuestService {
             loc.setLatitude(BigDecimal.valueOf(mapy));
             loc.setLongitude(BigDecimal.valueOf(mapx));
             loc.setAreaCode(areaCode);
+            loc.setAddr1(addr1); // 주소 정보 저장 (AI 반경 산정에 사용)
 
             // AI 반경이 계산되어 있으면 사용, 없으면 기본값 150
             Integer aiRadius = 150; // 기본값

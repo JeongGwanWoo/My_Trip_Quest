@@ -111,7 +111,7 @@ const autoCalculateRadius = async () => {
     try {
         const res = await estimateLocationRadius({
             locationName: localLocation.value.title,
-            address: "" // 주소 정보가 있다면 좋겠지만, 현재 DTO에는 없을 수 있음. 이름만으로 시도하거나 상위에서 받아와야 함.
+            address: localLocation.value.addr1 || "" // DB에서 가져온 실제 주소 사용
         });
         if (res.data.success && res.data.data) {
             localLocation.value.gpsVerifyRadius = res.data.data;
