@@ -30,4 +30,6 @@ public interface UserMapper {
 
     void deleteById(long userId);
 
+    List<User> findAll();
+
 }

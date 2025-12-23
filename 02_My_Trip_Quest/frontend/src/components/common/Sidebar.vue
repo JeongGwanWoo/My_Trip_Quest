@@ -87,7 +87,6 @@
         </router-link>
       </nav>
     </div>
-
   </aside>
 </template>
 
@@ -98,7 +97,7 @@ import { storeToRefs } from 'pinia';
 
 const router = useRouter();
 const authStore = useAuthStore();
-const { isLoggedIn } = storeToRefs(authStore);
+const { isLoggedIn, isAdmin } = storeToRefs(authStore);
 
 defineProps({
   isCollapsed: Boolean
@@ -246,69 +245,37 @@ const goHome = () => {
 }
 
 /* ------------------------------------------- */
-
 /* ★ 모바일 반응형 스타일 (768px 이하) ★ */
-
 /* ------------------------------------------- */
 
 @media (max-width: 768px) {
-
   .sidebar {
-
     position: fixed;
-
     top: 0; left: 0; bottom: 0;
-
     width: 280px !important;
-
     transform: translateX(-100%);
-
     transition: transform 0.3s ease;
-
     box-shadow: 4px 0 20px rgba(0,0,0,0.1);
-
     z-index: 1000;
-
   }
-
-
 
   .sidebar.mobile-open {
-
     transform: translateX(0);
-
   }
-
-
 
   .btn-toggle {
-
     display: none;
-
   }
-
-
 
   .mobile-close-btn {
-
     display: block;
-
     position: absolute;
-
     top: 24px;
-
     right: 20px;
-
   }
 
-
-
   .sidebar.collapsed { width: 280px; padding: 24px 20px; }
-
   .sidebar.collapsed .logo-area { display: flex; }
-
   .sidebar.collapsed .nav-item .text { display: block; }
-
 }
-
 </style>

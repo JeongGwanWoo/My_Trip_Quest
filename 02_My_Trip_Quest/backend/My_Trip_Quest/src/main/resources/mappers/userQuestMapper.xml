@@ -126,4 +126,24 @@
           AND l.area_code = #{areaCode}
     </select>
 
+    <select id="getQuestCompletionStats" resultType="com.mytripquest.domain.quest.dto.QuestStatDto">
+        SELECT
+            q.quest_id AS questId,
+            q.title AS questTitle,
+            COUNT(CASE WHEN uq.status = 'COMPLETED' THEN 1 END) AS completionCount,
+            COUNT(uq.quest_id) AS acceptanceCount,
+            CASE
+                WHEN COUNT(uq.quest_id) = 0 THEN 0
+                ELSE (COUNT(CASE WHEN uq.status = 'COMPLETED' THEN 1 END) * 100.0 / COUNT(uq.quest_id))
+            END AS completionRate
+        FROM
+            quests q
+        LEFT JOIN
+            user_quests uq ON q.quest_id = uq.quest_id
+        GROUP BY
+            q.quest_id, q.title
+        ORDER BY
+            completionRate DESC
+    </select>
+
 </mapper>

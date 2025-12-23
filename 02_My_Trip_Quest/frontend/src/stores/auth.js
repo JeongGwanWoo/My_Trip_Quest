@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { jwtDecode } from 'jwt-decode'
 import { getProfile } from '@/api/user' // 제공해주신 파일의 함수명 사용
 
 export const useAuthStore = defineStore('auth', () => {
@@ -11,6 +12,20 @@ export const useAuthStore = defineStore('auth', () => {
   // --- Getters ---
   const isLoggedIn = computed(() => !!token.value)
   const userInfo = computed(() => user.value) // 컴포넌트에서 유저 정보를 쓸 때 사용
+
+  const isAdmin = computed(() => {
+    if (!token.value) {
+      return false
+    }
+    try {
+      const decodedToken = jwtDecode(token.value);
+      // 백엔드(JwtTokenProvider)에서 "role"이라는 이름으로 클레임을 생성했으므로 "role"을 사용합니다.
+      return decodedToken.role === 'ADMIN';
+    } catch (error) {
+      console.error("Invalid token:", error);
+      return false;
+    }
+  });
 
   // --- Actions ---
 
@@ -58,6 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     user,
     isLoggedIn,
+    isAdmin,
     userInfo,
     registrationToken,
     login,
