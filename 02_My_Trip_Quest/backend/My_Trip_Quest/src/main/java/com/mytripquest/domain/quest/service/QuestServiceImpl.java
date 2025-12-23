@@ -2,7 +2,7 @@ package com.mytripquest.domain.quest.service;
 
 import com.mytripquest.domain.activitylog.service.ActivityLogService;
 import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
-import com.mytripquest.domain.ai.service.AIVisionService;
+import com.mytripquest.domain.ai.service.AIService;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.LocationWithQuestStatusDto;
@@ -18,6 +18,7 @@ import com.mytripquest.domain.user.entity.User;
 import com.mytripquest.domain.user.repository.UserMapper;
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
+import com.mytripquest.domain.quest.entity.Difficulty;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,18 +55,18 @@ public class QuestServiceImpl implements QuestService {
     private final QuestRepository questRepository;
     private final UserQuestRepository userQuestRepository;
     private final UserMapper userMapper;
-    private final AIVisionService aiVisionService;
+    private final AIService aiService;
     private final ActivityLogService activityLogService;
     private static final Map<String, String> AREA_CODES;
     private static final Map<String, String> CODE_TO_NAME;
-
 
     static {
         Map<String, String> aMap = new HashMap<>();
         aMap.put("서울특별시", "1");
         aMap.put("광주광역시", "5");
         AREA_CODES = Collections.unmodifiableMap(aMap);
-        CODE_TO_NAME = Collections.unmodifiableMap(aMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)));
+        CODE_TO_NAME = Collections.unmodifiableMap(
+                aMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)));
     }
 
     @Override
@@ -96,13 +97,15 @@ public class QuestServiceImpl implements QuestService {
 
     @Override
     @Transactional(readOnly = true)
-    public QuestLocationSliceDto getLocationsByAreaCode(String areaCode, Long userId, String keyword, Pageable pageable) {
-        if (!CODE_TO_NAME.containsKey(areaCode)) {
+    public QuestLocationSliceDto getLocationsByAreaCode(String areaCode, Long userId, String keyword,
+            Pageable pageable) {
+        if (!"ALL".equals(areaCode) && !CODE_TO_NAME.containsKey(areaCode)) {
             return new QuestLocationSliceDto(Collections.emptyList(), true);
         }
 
         Pageable queryPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize() + 1);
-        List<LocationWithQuestCountDto> locations = questRepository.findLocationsByAreaCode(areaCode, keyword, queryPageable);
+        List<LocationWithQuestCountDto> locations = questRepository.findLocationsByAreaCode(areaCode, keyword,
+                queryPageable);
 
         boolean hasNext = locations.size() > pageable.getPageSize();
         List<LocationWithQuestCountDto> content = hasNext ? locations.subList(0, pageable.getPageSize()) : locations;
@@ -126,7 +129,8 @@ public class QuestServiceImpl implements QuestService {
             return new QuestLocationSliceDto(dtoList, !hasNext);
         }
 
-        List<Long> locationIds = content.stream().map(LocationWithQuestCountDto::getLocationId).collect(Collectors.toList());
+        List<Long> locationIds = content.stream().map(LocationWithQuestCountDto::getLocationId)
+                .collect(Collectors.toList());
         List<Quest> questsInArea = questRepository.findQuestsByAreaCode(areaCode);
         List<Quest> questsForContent = questsInArea.stream()
                 .filter(q -> locationIds.contains(q.getLocationId()))
@@ -150,7 +154,8 @@ public class QuestServiceImpl implements QuestService {
         List<Long> questIds = questsForContent.stream().map(Quest::getQuestId).collect(Collectors.toList());
         List<UserQuest> userQuests = userQuestRepository.findByUserIdAndQuestIds(userId, questIds);
         Map<Long, List<QuestStatus>> locationToStatusMap = new HashMap<>();
-        Map<Long, Quest> questIdToQuestMap = questsForContent.stream().collect(Collectors.toMap(Quest::getQuestId, q -> q));
+        Map<Long, Quest> questIdToQuestMap = questsForContent.stream()
+                .collect(Collectors.toMap(Quest::getQuestId, q -> q));
 
         for (UserQuest userQuest : userQuests) {
             Quest quest = questIdToQuestMap.get(userQuest.getQuestId());
@@ -260,11 +265,13 @@ public class QuestServiceImpl implements QuestService {
     }
 
     @Override
-    public void completePhotoQuest(long questId, long userId, MultipartFile imageFile, BigDecimal latitude, BigDecimal longitude) throws IOException {
+    public void completePhotoQuest(long questId, long userId, MultipartFile imageFile, BigDecimal latitude,
+            BigDecimal longitude) throws IOException {
         completeQuestInternal(questId, userId, null, imageFile, latitude, longitude);
     }
 
-    private void completeQuestInternal(long questId, long userId, QuestCompleteRequestDto arrivalRequest, MultipartFile photoFile, BigDecimal currentLat, BigDecimal currentLon) {
+    private void completeQuestInternal(long questId, long userId, QuestCompleteRequestDto arrivalRequest,
+            MultipartFile photoFile, BigDecimal currentLat, BigDecimal currentLon) {
         Quest quest = questRepository.findQuestById(questId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.QUEST_NOT_FOUND));
         UserQuest userQuest = userQuestRepository.findByUserIdAndQuestId(userId, questId)
@@ -295,10 +302,12 @@ public class QuestServiceImpl implements QuestService {
         grantQuestRewards(userId, quest);
 
         // 활동 로그 기록
-        activityLogService.logQuestCompletion(userId, quest.getQuestId(), quest.getTitle(), quest.getRewardXp(), quest.getRewardPoints());
+        activityLogService.logQuestCompletion(userId, quest.getQuestId(), quest.getTitle(), quest.getRewardXp(),
+                quest.getRewardPoints());
     }
 
-    private void performPhotoVerification(Quest quest, Long userId, MultipartFile imageFile, BigDecimal currentLat, BigDecimal currentLon) {
+    private void performPhotoVerification(Quest quest, Long userId, MultipartFile imageFile, BigDecimal currentLat,
+            BigDecimal currentLon) {
         if (imageFile == null || imageFile.isEmpty()) {
             throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF);
         }
@@ -321,31 +330,37 @@ public class QuestServiceImpl implements QuestService {
                 Metadata metadata = ImageMetadataReader.readMetadata(new ByteArrayInputStream(fileBytes));
                 GpsDirectory gpsDirectory = metadata.getFirstDirectoryOfType(GpsDirectory.class);
 
-                if (gpsDirectory == null || !gpsDirectory.containsTag(GpsDirectory.TAG_LATITUDE) || !gpsDirectory.containsTag(GpsDirectory.TAG_LONGITUDE)) {
+                if (gpsDirectory == null || !gpsDirectory.containsTag(GpsDirectory.TAG_LATITUDE)
+                        || !gpsDirectory.containsTag(GpsDirectory.TAG_LONGITUDE)) {
                     throw new BusinessException(ErrorCode.PHOTO_METADATA_MISSING);
                 }
-                
+
                 GeoLocation photoLocation = gpsDirectory.getGeoLocation();
                 verificationLat = BigDecimal.valueOf(photoLocation.getLatitude());
                 verificationLon = BigDecimal.valueOf(photoLocation.getLongitude());
 
                 Date photoTimestamp;
                 ExifSubIFDDirectory exifSubIFDDirectory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
-                photoTimestamp = (exifSubIFDDirectory != null) ? exifSubIFDDirectory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL) : null;
+                photoTimestamp = (exifSubIFDDirectory != null)
+                        ? exifSubIFDDirectory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)
+                        : null;
 
                 if (photoTimestamp == null) {
                     throw new BusinessException(ErrorCode.PHOTO_METADATA_MISSING);
                 }
                 log.info("사진 촬영 시간: {}", photoTimestamp);
 
-                Quest arrivalQuest = questRepository.findFirstByLocationIdAndQuestTypeIdOrderByQuestIdAsc(location.getLocationId(), 1)
+                Quest arrivalQuest = questRepository
+                        .findFirstByLocationIdAndQuestTypeIdOrderByQuestIdAsc(location.getLocationId(), 1)
                         .orElseThrow(() -> new BusinessException(ErrorCode.ARRIVAL_QUEST_NOT_FOUND));
 
-                UserQuest arrivalUserQuest = userQuestRepository.findByUserIdAndQuestId(userId, arrivalQuest.getQuestId())
+                UserQuest arrivalUserQuest = userQuestRepository
+                        .findByUserIdAndQuestId(userId, arrivalQuest.getQuestId())
                         .filter(uq -> uq.getStatus() == QuestStatus.COMPLETED)
                         .orElseThrow(() -> new BusinessException(ErrorCode.ARRIVAL_QUEST_NOT_COMPLETED));
 
-                Date arrivalMissionCompletionTime = Date.from(arrivalUserQuest.getCompletedAt().atZone(ZoneId.systemDefault()).toInstant());
+                Date arrivalMissionCompletionTime = Date
+                        .from(arrivalUserQuest.getCompletedAt().atZone(ZoneId.systemDefault()).toInstant());
                 log.info("도착 미션 완료 시간: {}", arrivalMissionCompletionTime);
 
                 long timeDifferenceMillis = photoTimestamp.getTime() - arrivalMissionCompletionTime.getTime();
@@ -355,16 +370,18 @@ public class QuestServiceImpl implements QuestService {
                     throw new BusinessException(ErrorCode.PHOTO_TIME_EXCEEDS_24_HOURS);
                 }
             }
-            
-            double distance = calculateDistance(verificationLat, verificationLon, location.getLatitude(), location.getLongitude());
+
+            double distance = calculateDistance(verificationLat, verificationLon, location.getLatitude(),
+                    location.getLongitude());
             double maxDistance = location.getGpsVerifyRadius() != null ? location.getGpsVerifyRadius() : 50.0;
 
             if (distance > maxDistance) {
-                log.warn("사진 미션 실패 (사용자 {}): 거리 {}m가 요구 반경 {}m보다 큽니다.", userId, String.format("%.2f", distance), maxDistance);
+                log.warn("사진 미션 실패 (사용자 {}): 거리 {}m가 요구 반경 {}m보다 큽니다.", userId, String.format("%.2f", distance),
+                        maxDistance);
                 throw new BusinessException(ErrorCode.DISTANCE_TOO_FAR);
             }
 
-            boolean isLandmarkPhoto = aiVisionService.isPhotoOfLandmark(fileBytes, location.getTitle());
+            boolean isLandmarkPhoto = aiService.isPhotoOfLandmark(fileBytes, location.getTitle());
             if (!isLandmarkPhoto) {
                 log.warn("사진 미션 실패 (사용자 {}): AI가 사진 내용이 랜드마크 '{}'와 일치하지 않는다고 판단했습니다.", userId, location.getTitle());
                 throw new BusinessException(ErrorCode.INVALID_PHOTO_PROOF);
@@ -403,7 +420,8 @@ public class QuestServiceImpl implements QuestService {
             throw new BusinessException(ErrorCode.GPS_COORDINATES_REQUIRED);
         }
 
-        double distance = calculateDistance(BigDecimal.valueOf(request.getLatitude()), BigDecimal.valueOf(request.getLongitude()),
+        double distance = calculateDistance(BigDecimal.valueOf(request.getLatitude()),
+                BigDecimal.valueOf(request.getLongitude()),
                 location.getLatitude(), location.getLongitude());
 
         double maxDistance = location.getGpsVerifyRadius() != null ? location.getGpsVerifyRadius() : 50.0;
@@ -428,7 +446,7 @@ public class QuestServiceImpl implements QuestService {
         double lonDistance = dLon2 - dLon1;
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
                 + Math.cos(dLat1) * Math.cos(dLat2)
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+                        * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
         return R * c * 1000;
@@ -437,11 +455,149 @@ public class QuestServiceImpl implements QuestService {
     @Override
     @Transactional(readOnly = true)
     public List<InProgressQuestDto> getInProgressQuests(Long userId) {
-        List<InProgressQuestDto> acceptedQuests = userQuestRepository.findUserQuestsByStatus(userId, QuestStatus.ACCEPTED);
-        List<InProgressQuestDto> inProgressQuests = userQuestRepository.findUserQuestsByStatus(userId, QuestStatus.IN_PROGRESS);
+        List<InProgressQuestDto> acceptedQuests = userQuestRepository.findUserQuestsByStatus(userId,
+                QuestStatus.ACCEPTED);
+        List<InProgressQuestDto> inProgressQuests = userQuestRepository.findUserQuestsByStatus(userId,
+                QuestStatus.IN_PROGRESS);
         List<InProgressQuestDto> allInProgressQuests = new ArrayList<>();
         allInProgressQuests.addAll(acceptedQuests);
         allInProgressQuests.addAll(inProgressQuests);
         return allInProgressQuests;
+    }
+
+    @Override
+    public int estimateLocationRadius(String locationName, String address) {
+        return aiService.estimateLocationRadius(locationName, address);
+    }
+
+    @Override
+    public void updateLocationRadius(Long locationId, int radius) {
+        questRepository.updateLocationRadius(locationId, radius);
+    }
+
+    @Override
+    public void deleteQuest(Long questId) {
+        questRepository.deleteQuest(questId);
+    }
+
+    @Override
+    public void createQuest(Quest quest) {
+        questRepository.saveQuest(quest);
+    }
+
+    @Override
+    @Transactional
+    public int generateQuestsFromTourApi(List<Map<String, Object>> items, List<String> types, String areaCode) {
+        if (types == null) {
+            types = new java.util.ArrayList<>();
+        }
+        int count = 0;
+
+        // 1. Location ID 시작점 계산
+        long locationIdStart = 0;
+
+        try {
+            int code = Integer.parseInt(areaCode);
+            if (code == 1) { // 서울 (Special Case: 10000~)
+                locationIdStart = 10000;
+            } else if (code >= 1 && code <= 8) { // Metro Cities: Code * 1000
+                locationIdStart = code * 1000L;
+            } else if (code >= 31 && code <= 39) { // Provinces: Code * 1000
+                locationIdStart = code * 1000L;
+            } else {
+                // Fallback
+                locationIdStart = 90000;
+            }
+        } catch (NumberFormatException e) {
+            locationIdStart = 90000;
+        }
+
+        long locationIdEnd = locationIdStart + 999;
+
+        // DB에서 해당 범위 내 Max ID 조회 (기존 잘못된 20000번대 데이터 무시)
+        Long maxLocId = questRepository.findMaxLocationIdByRange(locationIdStart, locationIdEnd);
+        long nextLocId = (maxLocId < locationIdStart) ? locationIdStart : maxLocId + 1;
+
+        for (Map<String, Object> item : items) {
+            // ID 범위 초과 체크
+            if (nextLocId > locationIdEnd) {
+                log.warn("ID Range Exceeded for AreaCode {}: Max {}", areaCode, locationIdEnd);
+                break; // 더 이상 생성 불가
+            }
+            String title = (String) item.get("title");
+            // API 응답 형식이 String일 수 있으므로 안전하게 파싱
+            double mapx = Double.parseDouble(String.valueOf(item.get("mapx")));
+            double mapy = Double.parseDouble(String.valueOf(item.get("mapy")));
+
+            // 1. Location 저장
+            LocationWithQuestCountDto loc = new LocationWithQuestCountDto();
+            loc.setLocationId(nextLocId);
+            loc.setTitle(title);
+            loc.setLatitude(BigDecimal.valueOf(mapy));
+            loc.setLongitude(BigDecimal.valueOf(mapx));
+            loc.setAreaCode(areaCode);
+
+            // AI 반경이 계산되어 있으면 사용, 없으면 기본값 150
+            Integer aiRadius = 150; // 기본값
+            if (item.get("aiRadius") != null) {
+                try {
+                    aiRadius = Integer.parseInt(String.valueOf(item.get("aiRadius")));
+                    log.info("AI 반경 적용: {} -> {}m", title, aiRadius);
+                } catch (NumberFormatException e) {
+                    log.warn("AI 반경 파싱 실패 ({}), 기본값 사용: {}", title, e.getMessage());
+                    aiRadius = 150;
+                }
+            } else {
+                log.info("AI 반경 없음 ({}), 기본값 150m 사용", title);
+            }
+            loc.setGpsVerifyRadius(aiRadius);
+
+            questRepository.saveLocation(loc);
+
+            // 2. Quest 저장 (LocationID * 10 규칙 적용)
+            long currentQuestIdBase = nextLocId * 10;
+            long nextQuestId = currentQuestIdBase;
+
+            if (types.contains("ARRIVAL")) {
+                Quest arrivalQuest = new Quest();
+                arrivalQuest.setQuestId(nextQuestId++);
+                arrivalQuest.setLocationId(nextLocId);
+                arrivalQuest.setQuestTypeId(1); // int
+                arrivalQuest.setTitle(title + " 도착");
+                arrivalQuest.setDescription(title + "에 도착하여 인증하세요.");
+                arrivalQuest.setDifficulty(Difficulty.EASY); // Enum
+                arrivalQuest.setRewardXp(50);
+                arrivalQuest.setRewardPoints(5);
+                arrivalQuest.setRequireGpsVerify(true);
+                questRepository.saveQuest(arrivalQuest);
+                count++;
+            }
+
+            if (types.contains("PHOTO")) {
+                Quest photoQuest = new Quest();
+                photoQuest.setQuestId(nextQuestId++);
+                // ... rest of logic uses nextQuestId which is now bound to location
+                photoQuest.setLocationId(nextLocId);
+                photoQuest.setQuestTypeId(2); // int
+                photoQuest.setTitle(title + " 사진 찍기");
+                photoQuest.setDescription(title + "의 멋진 사진을 찍어보세요!");
+                photoQuest.setDifficulty(Difficulty.NORMAL); // Enum
+                photoQuest.setRewardXp(150);
+                photoQuest.setRewardPoints(15);
+                photoQuest.setRequireGpsVerify(false);
+                photoQuest.setPreviousQuestId(nextQuestId - 1 - (types.contains("ARRIVAL") ? 0 : 1));
+                if (!types.contains("ARRIVAL"))
+                    photoQuest.setPreviousQuestId(null);
+                else
+                    photoQuest.setPreviousQuestId(nextQuestId - 2);
+
+                questRepository.saveQuest(photoQuest);
+                count++;
+            }
+
+            nextLocId++;
+        }
+
+        return count;
     }
 }

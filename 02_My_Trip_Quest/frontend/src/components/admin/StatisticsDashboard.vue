@@ -191,9 +191,12 @@ const slowestData = computed(() => {
 
 // 4. Quest Chart (Stacked: Completed vs Incomplete)
 const questData = computed(() => {
-  if (!questStats.value.length) return null;
+  const stats = questStats.value;
+  // Defensive check: Ensure stats is an array
+  if (!Array.isArray(stats) || stats.length === 0) return null;
+  
   return {
-    labels: questStats.value.map(s => s.questTitle),
+    labels: stats.map(s => s.questTitle),
     datasets: [
       {
         label: '완료 (Success)',

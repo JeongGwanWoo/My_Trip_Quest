@@ -1,7 +1,7 @@
 package com.mytripquest.controller;
 
 import com.mytripquest.domain.item.dto.ItemDto;
-import com.mytripquest.domain.item.dto.ShopItemDto;
+
 import com.mytripquest.domain.item.dto.ShopItemResponseDto;
 import com.mytripquest.domain.item.entity.UserItem;
 import com.mytripquest.domain.item.service.ItemService;
@@ -55,14 +55,15 @@ public class ItemController {
 
         // 서비스로 category 전달
         ShopItemResponseDto shopItemsResponse = itemService.getShopItems(userId, page, size, category);
-        
+
         return ResponseEntity.ok(ApiResponse.success(shopItemsResponse));
     }
 
     @PostMapping("/{itemId}/buy")
-    public ResponseEntity<ApiResponse<Void>> buyItem(@PathVariable Long itemId, @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<ApiResponse<Void>> buyItem(@PathVariable Long itemId,
+            @AuthenticationPrincipal UserDetails userDetails) {
         Long userId = userService.findIdByEmail(userDetails.getUsername());
         itemService.buyItem(userId, itemId);
-        return ResponseEntity.ok(ApiResponse.success(null));
+        return ResponseEntity.ok(ApiResponse.successWithoutData());
     }
 }
