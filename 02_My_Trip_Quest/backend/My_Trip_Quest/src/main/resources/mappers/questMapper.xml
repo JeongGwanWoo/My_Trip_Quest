@@ -119,4 +119,34 @@
         LIMIT 1
     </select>
 
+    <select id="findMaxLocationIdByAreaCode" resultType="long">
+        SELECT COALESCE(MAX(location_id), 0)
+        FROM locations
+        WHERE area_code = #{areaCode}
+    </select>
+
+    <select id="findMaxQuestIdByRange" resultType="long">
+        SELECT COALESCE(MAX(quest_id), 0)
+        FROM quests
+        WHERE quest_id BETWEEN #{startId} AND #{endId}
+    </select>
+
+    <insert id="saveLocation" parameterType="com.mytripquest.domain.quest.dto.LocationWithQuestCountDto">
+        INSERT INTO locations (location_id, title, latitude, longitude, area_code, gps_verify_radius)
+        VALUES (#{locationId}, #{title}, #{latitude}, #{longitude}, #{areaCode}, #{gpsVerifyRadius})
+    </insert>
+
+    <insert id="saveQuest" parameterType="com.mytripquest.domain.quest.entity.Quest">
+        INSERT INTO quests (
+            quest_id, location_id, quest_type_id, previous_quest_id, 
+            difficulty, title, description, reward_xp, reward_points, 
+            require_gps_verify, is_active, created_at, updated_at
+        )
+        VALUES (
+            #{questId}, #{locationId}, #{questTypeId}, #{previousQuestId},
+            #{difficulty}, #{title}, #{description}, #{rewardXp}, #{rewardPoints},
+            #{requireGpsVerify}, 1, NOW(), NOW()
+        )
+    </insert>
+
 </mapper>

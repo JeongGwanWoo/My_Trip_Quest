@@ -35,56 +35,59 @@ public class UserController {
     private final UserMapper userMapper;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse> register(@RequestBody UserRequestDto.Register request) {
+    public ResponseEntity<ApiResponse<Void>> register(@RequestBody UserRequestDto.Register request) {
         userService.register(request);
-        return ResponseEntity.ok(new ApiResponse(true, "회원가입이 성공적으로 완료되었습니다.", null));
+        return ResponseEntity.ok(ApiResponse.success("회원가입이 성공적으로 완료되었습니다."));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> login(@RequestBody UserRequestDto.Login request) {
+    public ResponseEntity<ApiResponse<Object>> login(@RequestBody UserRequestDto.Login request) {
         String token = userService.login(request);
-        return ResponseEntity.ok(new ApiResponse(true, "로그인이 성공적으로 완료되었습니다.", Collections.singletonMap("token", token)));
+        return ResponseEntity.ok(ApiResponse.success("로그인이 성공적으로 완료되었습니다.", Collections.singletonMap("token", token)));
     }
 
     @PostMapping("/send-verification-code")
-    public ResponseEntity<ApiResponse> sendVerificationCode(@RequestBody UserRequestDto.SendVerificationCode request) {
-    	log.info("Received request to send verification code to: {}", request.getEmail());
+    public ResponseEntity<ApiResponse<Void>> sendVerificationCode(
+            @RequestBody UserRequestDto.SendVerificationCode request) {
+        log.info("Received request to send verification code to: {}", request.getEmail());
         userService.sendVerificationCode(request.getEmail()); // No return value
-        return ResponseEntity.ok(new ApiResponse(true, "인증 코드가 이메일로 발송되었습니다. 이메일을 확인해주세요.", null)); // Generic success
+        return ResponseEntity.ok(ApiResponse.success("인증 코드가 이메일로 발송되었습니다. 이메일을 확인해주세요."));
     }
-    
+
     @PostMapping("/verify-code")
-    public ResponseEntity<ApiResponse> verifyCode(@RequestBody UserRequestDto.VerifyCode request) {
+    public ResponseEntity<ApiResponse<Void>> verifyCode(@RequestBody UserRequestDto.VerifyCode request) {
         boolean isVerified = userService.verifyCode(request.getEmail(), request.getCode());
-        
+
         if (isVerified) {
-            return ResponseEntity.ok(new ApiResponse(true, "이메일 인증이 완료되었습니다.", null));
+            return ResponseEntity.ok(ApiResponse.success("이메일 인증이 완료되었습니다."));
         } else {
             // 400 Bad Request 리턴
-            return ResponseEntity.badRequest().body(new ApiResponse(false, "인증 코드가 일치하지 않습니다.", null));
+            return ResponseEntity.badRequest().body(ApiResponse.failure("인증 코드가 일치하지 않습니다."));
         }
     }
-    
+
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse> resetPassword(@RequestBody UserRequestDto.ResetPassword request) {
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody UserRequestDto.ResetPassword request) {
         userService.resetPassword(request);
-        return ResponseEntity.ok(new ApiResponse(true, "비밀번호가 성공적으로 변경되었습니다. 새 비밀번호로 로그인해주세요.", null));
+        return ResponseEntity.ok(ApiResponse.success("비밀번호가 성공적으로 변경되었습니다. 새 비밀번호로 로그인해주세요."));
     }
-    
+
     @PostMapping("/social-signup")
-    public ResponseEntity<ApiResponse> socialSignup(@RequestBody UserRequestDto.SocialSignup request) {
+    public ResponseEntity<ApiResponse<Object>> socialSignup(@RequestBody UserRequestDto.SocialSignup request) {
         String token = userService.socialSignup(request);
-        return ResponseEntity.ok(new ApiResponse(true, "소셜 회원가입이 성공적으로 완료되었습니다.", Collections.singletonMap("token", token)));
+        return ResponseEntity
+                .ok(ApiResponse.success("소셜 회원가입이 성공적으로 완료되었습니다.", Collections.singletonMap("token", token)));
     }
 
     @PostMapping("/send-reset-code")
-    public ResponseEntity<ApiResponse> sendResetCode(@RequestBody UserRequestDto.SendVerificationCode request) {
+    public ResponseEntity<ApiResponse<Void>> sendResetCode(@RequestBody UserRequestDto.SendVerificationCode request) {
         userService.sendPasswordResetCode(request.getEmail());
-        return ResponseEntity.ok(new ApiResponse(true, "인증 코드가 발송되었습니다.", null));
+        return ResponseEntity.ok(ApiResponse.success("인증 코드가 발송되었습니다."));
     }
-    
+
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserProfileResponseDto>> getProfile(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<ApiResponse<UserProfileResponseDto>> getProfile(
+            @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(401).body(ApiResponse.failure("인증되지 않은 사용자입니다."));
         }
@@ -96,13 +99,14 @@ public class UserController {
     }
 
     @GetMapping("/check-nickname")
-    public ResponseEntity<ApiResponse> checkNickname(@RequestParam String nickname) {
+    public ResponseEntity<ApiResponse<Object>> checkNickname(@RequestParam String nickname) {
         boolean isAvailable = userService.checkNicknameAvailability(nickname);
         return ResponseEntity.ok(ApiResponse.success(Collections.singletonMap("isAvailable", isAvailable)));
     }
 
     @PatchMapping("/me")
-    public ResponseEntity<ApiResponse> updateProfile(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UserRequestDto.Update request) {
+    public ResponseEntity<ApiResponse<String>> updateProfile(@AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody UserRequestDto.Update request) {
         if (userDetails == null) {
             return ResponseEntity.status(401).body(ApiResponse.failure("인증되지 않은 사용자입니다."));
         }
@@ -111,7 +115,7 @@ public class UserController {
     }
 
     @DeleteMapping("/me")
-    public ResponseEntity<ApiResponse> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<ApiResponse<String>> deleteUser(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(401).body(ApiResponse.failure("인증되지 않은 사용자입니다."));
         }

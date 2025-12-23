@@ -23,3 +23,11 @@ export function getEconomyStats() {
 export function getContentStats() {
     return api.get('/api/v1/admin/stats/content');
 }
+
+export function getTourApiAttractions(params) {
+    return api.get('/api/v1/admin/quests/tourapi/attractions', { params });
+}
+
+export function generateQuests(data) {
+    return api.post('/api/v1/admin/quests/generate', data);
+}

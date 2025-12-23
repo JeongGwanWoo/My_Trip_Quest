@@ -19,20 +19,19 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class FileUploadController {
-	
-	private final FileUploadService fileUploadService;
+
+    private final FileUploadService fileUploadService;
 
     @PostMapping("/upload")
-    public ApiResponse<String> uploadSingleFile(@RequestParam("file") MultipartFile file
-    		, @RequestParam(value = "userId", required = false) Long userId) throws IOException {
-    	
+    public ApiResponse<String> uploadSingleFile(@RequestParam("file") MultipartFile file,
+            @RequestParam(value = "userId", required = false) Long userId) throws IOException {
+
         log.debug("file 모듈 호출");
-    	Long finalUserId = (userId != null) ? userId : 999L;
-    	
+
         // 1. 서비스 호출 (S3 업로드 로직 실행)
         String uploadedUrl = fileUploadService.upload(file);
-        
+
         // 2. 저장된 URL만 클라이언트에 반환
-        return ApiResponse.success(uploadedUrl); 
+        return ApiResponse.success(uploadedUrl);
     }
 }
