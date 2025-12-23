@@ -41,7 +41,11 @@ public enum ErrorCode {
     ITEM_ALREADY_OWNED(HttpStatus.CONFLICT, "이미 소유하고 있는 아이템입니다."),
     INSUFFICIENT_FUNDS(HttpStatus.BAD_REQUEST, "코인이 부족합니다."),
     CANNOT_UNEQUIP_SKIN(HttpStatus.BAD_REQUEST, "기본 스킨은 해제할 수 없습니다."), 
-    PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "현재 비밀번호를 입력해주세요.");
+    PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "현재 비밀번호를 입력해주세요."),
+
+    // File
+    FILE_IS_EMPTY(HttpStatus.BAD_REQUEST, "업로드할 파일이 비어 있습니다."),
+    FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.");
 
 
     private final HttpStatus status;

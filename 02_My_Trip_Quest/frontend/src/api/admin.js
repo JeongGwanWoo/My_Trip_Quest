@@ -78,3 +78,36 @@ export function getDbLocations(params) {
 export function getDbQuests(locationId) {
     return api.get(`/api/v1/quest-map/locations/${locationId}`);
 }
+
+// Avatar Item Management
+export function getAllAvatarItems(page, size) {
+    return api.get(`/api/v1/admin/items`, { params: { page, size } });
+}
+
+export function createAvatarItem(itemData, imageFile) {
+    const formData = new FormData();
+    formData.append('item', JSON.stringify(itemData));
+    formData.append('image', imageFile);
+    return api.post(`/api/v1/admin/items`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+}
+
+export function deleteAvatarItem(itemId) {
+    return api.delete(`/api/v1/admin/items/${itemId}`);
+}
+
+export function updateAvatarItem(itemId, itemData, imageFile) {
+    const formData = new FormData();
+    formData.append('item', JSON.stringify(itemData));
+    if (imageFile) { // imageFile is optional for update
+        formData.append('image', imageFile);
+    }
+    return api.put(`/api/v1/admin/items/${itemId}`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+}

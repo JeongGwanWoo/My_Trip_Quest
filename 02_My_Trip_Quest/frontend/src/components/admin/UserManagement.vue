@@ -28,7 +28,7 @@
             <td>{{ user.points }}</td>
             <td>{{ formatDate(user.createdAt) }}</td>
             <td>
-              <select :value="user.role" @change="handleRoleChange(user.userId, $event.target.value)">
+              <select :value="user.role" @change="promptRoleChange(user.userId, $event.target.value)">
                 <option value="USER">USER</option>
                 <option value="ADMIN">ADMIN</option>
               </select>
@@ -40,6 +40,18 @@
     <div v-else-if="!loading && !error">
       <p>등록된 사용자가 없습니다.</p>
     </div>
+
+    <!-- Confirmation Modal -->
+    <BaseModal :show="isModalVisible" @close="cancelRoleChange">
+      <div class="modal-body">
+        <h3>역할 변경 확인</h3>
+        <p>{{ modalMessage }}</p>
+        <div class="modal-actions">
+          <button @click="confirmRoleChange" class="btn-confirm">확인</button>
+          <button @click="cancelRoleChange" class="btn-cancel">취소</button>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -48,12 +60,20 @@ import { ref, onMounted } from 'vue';
 import { getAllUsers, updateUserRole } from '@/api/admin';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
+import { useToast } from '@/utils/toast';
+import BaseModal from '@/components/ui/BaseModal.vue';
 
 const users = ref([]);
 const loading = ref(false);
 const error = ref(null);
 const authStore = useAuthStore();
 const router = useRouter();
+const { showToast } = useToast();
+
+// Modal state
+const isModalVisible = ref(false);
+const modalMessage = ref('');
+const pendingRoleChange = ref(null);
 
 const formatDate = (dateString) => {
   if (!dateString) return '';
@@ -71,7 +91,7 @@ const fetchUsers = async () => {
     console.error('사용자 목록 가져오기 실패:', err);
     error.value = '사용자 목록을 가져오는데 실패했습니다.';
     if (err.response && err.response.status === 403) {
-      alert('관리자 권한이 없습니다. 로그인 페이지로 이동합니다.');
+      showToast('관리자 권한이 없습니다. 로그인 페이지로 이동합니다.', 'error');
       authStore.logout();
       router.push('/login');
     }
@@ -80,19 +100,32 @@ const fetchUsers = async () => {
   }
 };
 
-const handleRoleChange = async (userId, newRole) => {
-  if (!confirm(`${userId}번 사용자의 역할을 ${newRole}(으)로 변경하시겠습니까?`)) {
-    await fetchUsers(); 
-    return;
-  }
+const promptRoleChange = (userId, newRole) => {
+  modalMessage.value = `${userId}번 사용자의 역할을 ${newRole}(으)로 변경하시겠습니까?`;
+  pendingRoleChange.value = { userId, newRole };
+  isModalVisible.value = true;
+};
+
+const cancelRoleChange = async () => {
+  isModalVisible.value = false;
+  pendingRoleChange.value = null;
+  await fetchUsers(); // Re-fetch to reset the dropdown
+};
+
+const confirmRoleChange = async () => {
+  if (!pendingRoleChange.value) return;
+
+  const { userId, newRole } = pendingRoleChange.value;
+  isModalVisible.value = false;
 
   try {
     await updateUserRole(userId, newRole);
-    alert('사용자 역할이 성공적으로 변경되었습니다!');
-    await fetchUsers();
+    showToast('사용자 역할이 성공적으로 변경되었습니다!', 'success');
   } catch (err) {
     console.error('역할 변경 실패:', err);
-    alert('사용자 역할 변경에 실패했습니다.');
+    showToast('사용자 역할 변경에 실패했습니다.', 'error');
+  } finally {
+    pendingRoleChange.value = null;
     await fetchUsers();
   }
 };
@@ -166,5 +199,53 @@ td select:focus {
   border-color: #2563eb;
   outline: none;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* Modal Styles */
+.modal-body {
+  text-align: center;
+}
+
+.modal-body h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.modal-body p {
+  margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.modal-actions button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.btn-confirm {
+  background-color: #2563eb;
+  color: white;
+}
+
+.btn-confirm:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-cancel {
+  background-color: #e2e8f0;
+  color: #333;
+}
+
+.btn-cancel:hover {
+  background-color: #cbd5e1;
 }
 </style>

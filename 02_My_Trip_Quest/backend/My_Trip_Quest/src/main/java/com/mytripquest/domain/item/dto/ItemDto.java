@@ -14,7 +14,7 @@ public class ItemDto {
     private String name;
     private String slot; // ENUM('HAIR', 'HAT', 'TOP', 'BOTTOM', 'FACE', 'SKIN')
     private String imageUrl;
-    private boolean isPurchasable;
+    private boolean purchasable;
     private Integer price;
     private LocalDateTime createdAt;
 }
