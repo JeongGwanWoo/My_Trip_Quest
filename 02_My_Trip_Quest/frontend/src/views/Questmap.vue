@@ -370,7 +370,22 @@ onMounted(async () => {
 const getQuestStyle = (areaName) => {
   switch (areaName) {
     case '서울특별시': return { colorClass: 'accent-red', icon: '🏙️' };
-    case '광주광역시': return { colorClass: 'accent-blue', icon: '🌊' };
+    case '부산광역시': return { colorClass: 'accent-blue', icon: '🌊' };
+    case '인천광역시': return { colorClass: 'accent-sky', icon: '✈️' }; // accent-sky는 CSS 추가 필요 또는 기존 blue 사용
+    case '대전광역시': return { colorClass: 'accent-green', icon: '🧬' };
+    case '대구광역시': return { colorClass: 'accent-red', icon: '🍎' };
+    case '광주광역시': return { colorClass: 'accent-orange', icon: '🍱' };
+    case '울산광역시': return { colorClass: 'accent-blue', icon: '🏭' };
+    case '세종특별자치시': return { colorClass: 'accent-gray', icon: '🏛️' };
+    case '제주특별자치도': return { colorClass: 'accent-orange', icon: '🍊' };
+    case '강원특별자치도': return { colorClass: 'accent-green', icon: '⛰️' };
+    case '경기도': return { colorClass: 'accent-blue', icon: '🚌' };
+    case '경상북도': return { colorClass: 'accent-green', icon: '🗿' }; // 경주 등
+    case '경상남도': return { colorClass: 'accent-blue', icon: '🚢' };
+    case '전북특별자치도': return { colorClass: 'accent-orange', icon: '🍚' };
+    case '전라남도': return { colorClass: 'accent-green', icon: '🌾' };
+    case '충청북도': return { colorClass: 'accent-green', icon: '🏞️' };
+    case '충청남도': return { colorClass: 'accent-gray', icon: '🏺' };
     default: return { colorClass: 'accent-gray', icon: '📍' };
   }
 };

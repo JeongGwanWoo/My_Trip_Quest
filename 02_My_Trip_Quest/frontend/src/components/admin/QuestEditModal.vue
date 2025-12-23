@@ -129,7 +129,7 @@ const autoCalculateRadius = async () => {
     try {
         const res = await estimateLocationRadius({
             locationName: localLocation.value.title,
-            address: ""
+            address: localLocation.value.addr1 || "" // DB에서 가져온 실제 주소 사용
         });
         if (res.data.success && res.data.data) {
             localLocation.value.gpsVerifyRadius = res.data.data;

@@ -32,10 +32,21 @@ export function generateQuests(data) {
     return api.post('/api/v1/admin/quests/generate', data);
 }
 
-// AI 반경 추정
+// AI 반경 추정 (단일)
 export function estimateLocationRadius(data) {
     return api.post('/api/v1/admin/quests/ai/estimate-radius', data);
 }
+
+// AI 반경 추정 (배치 - 토큰 절약)
+export function estimateLocationRadiusBatch(locations) {
+    return api.post('/api/v1/admin/quests/ai/estimate-radius-batch', locations);
+}
+
+// 관광지 AI 반경 일괄 재산정
+export function batchRecalculateRadius(locationIds) {
+    return api.post('/api/v1/admin/quests/locations/batch-recalculate-radius', locationIds);
+}
+
 
 // 관광지 반경 수정
 export function updateLocationRadius(locationId, radius) {
