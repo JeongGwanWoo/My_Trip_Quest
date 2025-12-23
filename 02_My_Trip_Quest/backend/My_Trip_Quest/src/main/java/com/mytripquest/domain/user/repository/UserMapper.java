@@ -32,4 +32,6 @@ public interface UserMapper {
 
     List<User> findAll();
 
+    List<Integer> findAllUserXp(); // 레벨 분포 계산용 모든 유저 XP 조회
+
 }
