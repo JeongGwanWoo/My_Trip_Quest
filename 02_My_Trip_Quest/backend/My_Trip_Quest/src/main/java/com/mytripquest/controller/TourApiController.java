@@ -79,4 +79,39 @@ public class TourApiController {
 
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * 키워드 검색 (searchKeyword2)
+     * 요청 URL 예시: /api/v1/tour/keyword?keyword=박물관&areaCode=1&pageNo=1
+     */
+    @GetMapping("/keyword")
+    public ResponseEntity<JsonNode> searchKeyword(
+            @RequestParam(name = "keyword") String keyword, // 키워드 필수
+            @RequestParam(name = "areaCode", required = false) String areaCode,
+            @RequestParam(name = "cat1", required = false) String cat1,
+            @RequestParam(name = "pageNo", defaultValue = "1") int pageNo) {
+        log.info("Controller 키워드 검색 요청 - keyword: {}, area: {}, cat1: {}", keyword, areaCode, cat1);
+
+        JsonNode result = tourApiService.searchKeyword(keyword, areaCode, cat1, pageNo);
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * 위치 기반 관광지 조회 (locationBasedList2)
+     * 요청 URL 예시:
+     * /api/v1/tour/location?mapX=126.981611&mapY=37.568477&radius=1000&pageNo=1
+     */
+    @GetMapping("/location")
+    public ResponseEntity<JsonNode> getLocationBasedList(
+            @RequestParam(name = "mapX") String mapX,
+            @RequestParam(name = "mapY") String mapY,
+            @RequestParam(name = "radius", defaultValue = "2000") String radius,
+            @RequestParam(name = "pageNo", defaultValue = "1") int pageNo) {
+        log.info("Controller 위치 기반 검색 요청 - mapX: {}, mapY: {}, radius: {}", mapX, mapY, radius);
+
+        JsonNode result = tourApiService.getLocationBasedList(mapX, mapY, radius, pageNo);
+
+        return ResponseEntity.ok(result);
+    }
 }

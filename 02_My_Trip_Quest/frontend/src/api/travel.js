@@ -72,3 +72,36 @@ export const getFestivalList = async (eventStartDate, areaCode, sigunguCode, pag
     throw error;
   }
 };
+
+/**
+ * 키워드 검색
+ */
+export const searchKeyword = async (keyword, areaCode, cat1, pageNo = 1) => {
+  try {
+    const params = { keyword, pageNo };
+    if (areaCode) params.areaCode = areaCode;
+    if (cat1) params.cat1 = cat1;
+
+    const response = await axios.get(`${BASE_URL}/keyword`, { params });
+    return response.data;
+  } catch (error) {
+    console.error('키워드 검색 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 위치 기반 관광지 조회
+ */
+export const getLocationBasedList = async (mapX, mapY, radius = 2000, pageNo = 1) => {
+  try {
+    console.log(`위치 검색 요청: x=${mapX}, y=${mapY}, r=${radius}`);
+    const response = await axios.get(`${BASE_URL}/location`, {
+      params: { mapX, mapY, radius, pageNo }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('위치 기반 조회 실패:', error);
+    throw error;
+  }
+};

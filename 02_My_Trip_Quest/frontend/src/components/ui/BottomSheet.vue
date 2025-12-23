@@ -26,6 +26,10 @@ const props = defineProps({
   peekHeight: { // peekHeight도 prop으로 설정
     type: Number,
     default: 100, // 기본값 100px
+  },
+  snap: {
+    type: Boolean,
+    default: true,
   }
 });
 
@@ -41,25 +45,44 @@ const startDragY = ref(0);
 
 // maxOpenHeight prop을 기반으로 실제 열린 높이를 계산
 const updateCalculatedOpenHeight = () => {
+  let targetHeight = 0;
+
+  // 1. 기본 높이 계산
   if (typeof props.maxOpenHeight === 'number') {
-    calculatedOpenHeight.value = props.maxOpenHeight;
+    targetHeight = props.maxOpenHeight;
   } else if (typeof props.maxOpenHeight === 'string') {
     if (props.maxOpenHeight.endsWith('vh')) {
-      calculatedOpenHeight.value = window.innerHeight * (parseFloat(props.maxOpenHeight) / 100);
+      targetHeight = window.innerHeight * (parseFloat(props.maxOpenHeight) / 100);
     } else if (props.maxOpenHeight.endsWith('%')) {
-      // 부모 요소 대비 % 계산을 위해 sheetElement가 마운트 되어야 함
       if (sheetElement.value && sheetElement.value.parentElement) {
-        calculatedOpenHeight.value = sheetElement.value.parentElement.clientHeight * (parseFloat(props.maxOpenHeight) / 100);
+        targetHeight = sheetElement.value.parentElement.clientHeight * (parseFloat(props.maxOpenHeight) / 100);
       } else {
-        // Fallback or warning if parent is not available yet
-        calculatedOpenHeight.value = window.innerHeight * 0.8; // Fallback to 80vh
+        targetHeight = window.innerHeight * 0.8;
       }
-    } else { // 'px' 또는 단위 없는 숫자
-      calculatedOpenHeight.value = parseFloat(props.maxOpenHeight);
+    } else {
+      targetHeight = parseFloat(props.maxOpenHeight);
     }
   }
-  // 최소 높이 제한 (peekHeight보다 작아지지 않게)
-  calculatedOpenHeight.value = Math.max(calculatedOpenHeight.value, props.peekHeight + 50); // 최소한 peekHeight + @ px
+
+  // 2. 부모 요소 기반 Capping 및 예외 처리
+  if (sheetElement.value && sheetElement.value.parentElement) {
+    const parentHeight = sheetElement.value.parentElement.clientHeight;
+    
+    // (1) 목표 높이는 부모 높이를 넘을 수 없음 (Capping)
+    targetHeight = Math.min(targetHeight, parentHeight);
+    
+    // (2) 안전한 Peek 높이 계산 (부모보다 클 수 없음)
+    const safePeek = Math.min(props.peekHeight, parentHeight);
+    
+    // (3) 최종 높이 결정 (최소 safePeek + 50px 보장하되, parentHeight 초과 불가)
+    const minHeight = Math.min(safePeek + 50, parentHeight);
+    targetHeight = Math.max(targetHeight, minHeight);
+  } else {
+    // 부모 요소가 없는 경우 (Fallback)
+    targetHeight = Math.max(targetHeight, props.peekHeight + 50);
+  }
+
+  calculatedOpenHeight.value = targetHeight;
 };
 
 
@@ -118,7 +141,9 @@ const endDrag = () => {
   if (!isDragging.value) return;
   isDragging.value = false;
   
-  snapToPosition();
+  if (props.snap) {
+    snapToPosition();
+  }
 
   window.removeEventListener('mousemove', onDrag);
   window.removeEventListener('touchmove', onDrag);
@@ -142,18 +167,41 @@ watch(() => props.maxOpenHeight, () => {
   if (props.isOpen) {
     sheetY.value = 0;
   } else {
-    sheetY.value = calculatedOpenHeight.value - props.peekHeight;
+    // 닫힌 상태이면 새로운 높이에 맞춰서 sheetY 위치 조정
+    sheetY.value = Math.max(0, calculatedOpenHeight.value - props.peekHeight);
+  }
+});
+
+// peekHeight 변경 감지 (반응형 대응)
+watch(() => props.peekHeight, (newPeekHeight) => {
+  updateCalculatedOpenHeight();
+  if (!props.isOpen) {
+    // 닫힌 상태일 때 peekHeight가 변하면 위치 업데이트
+    sheetY.value = Math.max(0, calculatedOpenHeight.value - newPeekHeight);
   }
 });
 
 
+// 창 크기 변경 시 높이 및 위치 재계산
+const handleWindowResize = () => {
+  updateCalculatedOpenHeight();
+  if (!isDragging.value) {
+    if (props.isOpen) {
+      sheetY.value = 0;
+    } else {
+      // 닫힌 상태이면 새로운 높이에 맞춰서 sheetY 위치 조정
+      sheetY.value = Math.max(0, calculatedOpenHeight.value - props.peekHeight);
+    }
+  }
+};
+
 // 컴포넌트 마운트 시 초기 위치 설정
 onMounted(() => {
   updateCalculatedOpenHeight(); // 초기 높이 계산
-  sheetY.value = props.isOpen ? 0 : calculatedOpenHeight.value - props.peekHeight;
+  sheetY.value = props.isOpen ? 0 : Math.max(0, calculatedOpenHeight.value - props.peekHeight);
   
   // 창 크기 변경 시 높이 재계산 (vh 또는 % 단위 사용 시 유용)
-  window.addEventListener('resize', updateCalculatedOpenHeight);
+  window.addEventListener('resize', handleWindowResize);
 });
 
 // 컴포넌트 언마운트 시 이벤트 리스너 정리
@@ -162,7 +210,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('touchmove', onDrag);
   window.removeEventListener('mouseup', endDrag);
   window.removeEventListener('touchend', endDrag);
-  window.removeEventListener('resize', updateCalculatedOpenHeight);
+  window.removeEventListener('resize', handleWindowResize);
 });
 </script>
 
@@ -172,6 +220,7 @@ onBeforeUnmount(() => {
   bottom: 0;
   left: 0;
   right: 0;
+  max-height: 100%; /* 부모 높이를 넘지 않도록 물리적 제한 */
   background-color: white;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
@@ -202,5 +251,6 @@ onBeforeUnmount(() => {
   overflow-y: auto;
   flex-grow: 1;
   padding: 0 20px 20px 20px;
+  min-height: 0; /* Flex 자식 요소 오버플로우 방지 */
 }
 </style>
