@@ -46,7 +46,9 @@
         <set>
             <if test="nickname != null">nickname = #{nickname},</if>
             <if test="passwordHash != null">password_hash = #{passwordHash},</if>
-            <if test="provider != null">provider = #{provider},</if> <if test="totalXp != null">total_xp = #{totalXp},</if>
+            <if test="provider != null">provider = #{provider},</if>
+            <if test="role != null">role = #{role},</if>
+            <if test="totalXp != null">total_xp = #{totalXp},</if>
             <if test="points != null">points = #{points},</if>
             updated_at = NOW() 
         </set>
@@ -87,5 +89,11 @@
     <delete id="deleteById" parameterType="long">
         DELETE FROM users WHERE user_id = #{userId}
     </delete>
+
+    <select id="findAll" resultMap="userResultMap">
+        SELECT <include refid="userColumns"/>
+        FROM users
+        ORDER BY created_at DESC
+    </select>
 
 </mapper>

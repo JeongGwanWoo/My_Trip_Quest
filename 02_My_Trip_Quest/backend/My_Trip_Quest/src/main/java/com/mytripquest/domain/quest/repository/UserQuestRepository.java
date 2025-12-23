@@ -29,4 +29,6 @@ public interface UserQuestRepository {
 
     int countCompletedQuestsByArea(@Param("userId") Long userId, @Param("areaCode") String areaCode);
 
+    List<com.mytripquest.domain.quest.dto.QuestStatDto> getQuestCompletionStats();
+
 }
