@@ -90,7 +90,7 @@
           <small class="hint">체크하면 각 관광지마다 AI가 적절한 인증 반경을 계산합니다. (시간이 다소 소요될 수 있습니다)</small>
         </div>
         
-        <button @click="handleGenerate" :disabled="selectedAttractions.length === 0 || questTypes.length === 0 || generating" class="btn-success">
+        <button @click="promptGenerate" :disabled="selectedAttractions.length === 0 || questTypes.length === 0 || generating" class="btn-success">
           <span v-if="generating">생성 중... ({{ generationProgress }})</span>
           <span v-else>선택한 {{ selectedAttractions.length }}개 관광지로 퀘스트 생성</span>
         </button>
@@ -108,12 +108,24 @@
       {{ errorMessage }}
     </div>
 
+    <!-- Confirmation Modal -->
+    <BaseModal :show="isModalVisible" @close="isModalVisible = false">
+      <div class="modal-body">
+        <h3>퀘스트 생성 확인</h3>
+        <p>{{ modalMessage }}</p>
+        <div class="modal-actions">
+          <button @click="handleGenerate" class="btn-confirm">생성</button>
+          <button @click="isModalVisible = false" class="btn-cancel">취소</button>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { getTourApiAttractions, generateQuests, estimateLocationRadius } from '@/api/admin';
+import BaseModal from '@/components/ui/BaseModal.vue';
 
 const selectedAreaCode = ref('1');
 const selectedContentTypeId = ref('12');
@@ -127,6 +139,10 @@ const searched = ref(false);
 const successMessage = ref('');
 const errorMessage = ref('');
 const generationProgress = ref('');
+
+// Modal state
+const isModalVisible = ref(false);
+const modalMessage = ref('');
 
 const selectAll = ref(false);
 
@@ -201,11 +217,13 @@ const fetchAttractions = async (isLoadMore = false) => {
   }
 };
 
-const handleGenerate = async () => {
-  if (!confirm(`${selectedAttractions.value.length}개의 관광지에 대해 퀘스트를 생성하시겠습니까?`)) {
-    return;
-  }
+const promptGenerate = () => {
+  modalMessage.value = `${selectedAttractions.value.length}개의 관광지에 대해 퀘스트를 생성하시겠습니까?`;
+  isModalVisible.value = true;
+};
 
+const handleGenerate = async () => {
+  isModalVisible.value = false;
   generating.value = true;
   successMessage.value = '';
   errorMessage.value = '';
@@ -496,5 +514,53 @@ select {
   color: #991b1b;
   border-radius: 6px;
   text-align: center;
+}
+
+/* Modal Styles */
+.modal-body {
+  text-align: center;
+}
+
+.modal-body h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.modal-body p {
+  margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.modal-actions button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.btn-confirm {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-confirm:hover {
+  background-color: #059669;
+}
+
+.btn-cancel {
+  background-color: #e2e8f0;
+  color: #333;
+}
+
+.btn-cancel:hover {
+  background-color: #cbd5e1;
 }
 </style>

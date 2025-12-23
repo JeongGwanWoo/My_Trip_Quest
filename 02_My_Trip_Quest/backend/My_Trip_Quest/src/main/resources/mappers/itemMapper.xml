@@ -17,7 +17,7 @@
             <result property="slot" column="slot"/>
             <result property="imageUrl" column="image_url"/>
             <result property="price" column="price"/>
-            <result property="isPurchasable" column="is_purchasable"/>
+            <result property="purchasable" column="is_purchasable"/>
         </association>
     </resultMap>
 
@@ -28,7 +28,7 @@
             slot, 
             image_url AS imageUrl, 
             price,
-            is_purchasable AS isPurchasable  FROM items
+            is_purchasable AS purchasable  FROM items
         WHERE item_id = #{itemId}
     </select>
 
@@ -39,7 +39,7 @@
             slot, 
             image_url AS imageUrl, 
             price,
-            is_purchasable AS isPurchasable FROM items
+            is_purchasable AS purchasable FROM items
         WHERE name = #{name}
     </select>
 
@@ -106,7 +106,7 @@
     </update>
     
     <select id="findShopItemsWithPagination" resultType="com.mytripquest.domain.item.entity.Item">
-        SELECT item_id AS itemId, name, slot, image_url AS imageUrl, price, is_purchasable AS isPurchasable
+        SELECT item_id AS itemId, name, slot, image_url AS imageUrl, price, is_purchasable AS purchasable
         FROM items
         WHERE is_purchasable = TRUE
         <if test="category != null and category != ''">

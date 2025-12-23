@@ -36,7 +36,7 @@
                 <span class="quest-type">[{{ getQuestTypeName(quest.questTypeId) }}]</span>
                 <span class="quest-title">{{ quest.title }}</span>
               </div>
-              <button @click="deleteQuestItem(quest.questId)" class="btn-delete">삭제</button>
+              <button @click="promptDeleteQuest(quest.questId)" class="btn-delete">삭제</button>
             </li>
           </ul>
         </div>
@@ -58,12 +58,26 @@
       
       <button @click="close" class="btn-close">닫기</button>
     </div>
+
+    <!-- Confirmation Modal -->
+    <BaseModal :show="isConfirmModalVisible" @close="isConfirmModalVisible = false">
+        <div class="modal-body">
+            <h3>퀘스트 삭제 확인</h3>
+            <p>정말 이 퀘스트를 삭제하시겠습니까?</p>
+            <div class="modal-actions">
+                <button @click="confirmDeleteQuest" class="btn-confirm-delete">삭제</button>
+                <button @click="isConfirmModalVisible = false" class="btn-cancel">취소</button>
+            </div>
+        </div>
+    </BaseModal>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 import { getDbQuests, updateLocationRadius, deleteQuest, addQuest, estimateLocationRadius } from '@/api/admin';
+import { useToast } from '@/utils/toast';
+import BaseModal from '@/components/ui/BaseModal.vue';
 
 const props = defineProps({
   isVisible: Boolean,
@@ -76,6 +90,11 @@ const loading = ref(false);
 const aiLoading = ref(false);
 const quests = ref([]);
 const localLocation = ref({});
+const { showToast } = useToast();
+
+// Modal state
+const isConfirmModalVisible = ref(false);
+const questToDeleteId = ref(null);
 
 const newQuestType = ref("2"); // 기본 사진 퀘스트
 const newQuestTitle = ref("");
@@ -83,7 +102,6 @@ const newQuestTitle = ref("");
 watch(() => props.isVisible, async (newVal) => {
   if (newVal && props.location) {
     localLocation.value = { ...props.location };
-    // fetch quests
     await fetchQuests();
   }
 });
@@ -95,7 +113,7 @@ const fetchQuests = async () => {
         quests.value = res.data.data;
     } catch (error) {
         console.error("퀘스트 조회 실패:", error);
-        alert("퀘스트 목록을 불러오지 못했습니다.");
+        showToast("퀘스트 목록을 불러오지 못했습니다.", 'error');
     } finally {
         loading.value = false;
     }
@@ -111,17 +129,17 @@ const autoCalculateRadius = async () => {
     try {
         const res = await estimateLocationRadius({
             locationName: localLocation.value.title,
-            address: "" // 주소 정보가 있다면 좋겠지만, 현재 DTO에는 없을 수 있음. 이름만으로 시도하거나 상위에서 받아와야 함.
+            address: ""
         });
         if (res.data.success && res.data.data) {
             localLocation.value.gpsVerifyRadius = res.data.data;
-            alert(`AI가 추천하는 반경은 ${res.data.data}m 입니다.`);
+            showToast(`AI 추천 반경: ${res.data.data}m`, 'success');
         } else {
-            alert("AI 산출에 실패했습니다: " + (res.data.message || "알 수 없는 오류"));
+            showToast("AI 산출에 실패했습니다: " + (res.data.message || "알 수 없는 오류"), 'error');
         }
     } catch (error) {
         console.error("AI 산출 실패:", error);
-        alert("AI 산출에 실패했습니다.");
+        showToast("AI 산출 중 오류가 발생했습니다.", 'error');
     } finally {
         aiLoading.value = false;
     }
@@ -130,30 +148,41 @@ const autoCalculateRadius = async () => {
 const saveLocation = async () => {
     try {
         await updateLocationRadius(localLocation.value.locationId, localLocation.value.gpsVerifyRadius);
-        alert("관광지 정보가 수정되었습니다.");
+        showToast("관광지 정보가 수정되었습니다.", 'success');
         emit('refresh');
     } catch (error) {
         console.error("수정 실패:", error);
-        alert("수정 실패");
+        showToast("정보 수정에 실패했습니다.", 'error');
     }
 };
 
-const deleteQuestItem = async (questId) => {
-    if(!confirm("정말 이 퀘스트를 삭제하시겠습니까?")) return;
+const promptDeleteQuest = (questId) => {
+    questToDeleteId.value = questId;
+    isConfirmModalVisible.value = true;
+};
+
+const confirmDeleteQuest = async () => {
+    if (questToDeleteId.value === null) return;
+    isConfirmModalVisible.value = false;
     try {
-        await deleteQuest(questId);
+        await deleteQuest(questToDeleteId.value);
+        showToast("퀘스트가 삭제되었습니다.", 'success');
         await fetchQuests();
         emit('refresh'); // 퀘스트 개수 갱신 위해
     } catch (error) {
         console.error("삭제 실패:", error);
-        alert("삭제 실패");
+        showToast("삭제에 실패했습니다.", 'error');
+    } finally {
+        questToDeleteId.value = null;
     }
 };
 
 const addNewQuest = async () => {
-    if (!newQuestTitle.value) return alert("제목을 입력하세요");
+    if (!newQuestTitle.value) {
+        showToast("퀘스트 제목을 입력하세요.", 'warn');
+        return;
+    }
     
-    // 간단한 퀘스트 객체 생성 (나머지는 기본값 등 처리)
     const questData = {
         title: newQuestTitle.value,
         questTypeId: parseInt(newQuestType.value),
@@ -166,13 +195,13 @@ const addNewQuest = async () => {
 
     try {
         await addQuest(localLocation.value.locationId, questData);
-        alert("퀘스트가 추가되었습니다.");
+        showToast("퀘스트가 추가되었습니다.", 'success');
         newQuestTitle.value = "";
         await fetchQuests();
         emit('refresh');
     } catch (error) {
         console.error("추가 실패:", error);
-        alert("퀘스트 추가 실패");
+        showToast("퀘스트 추가에 실패했습니다.", 'error');
     }
 };
 
@@ -408,6 +437,54 @@ const close = () => {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Modal Styles */
+.modal-body {
+  text-align: center;
+}
+
+.modal-body h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.modal-body p {
+  margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.modal-actions button {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.btn-confirm-delete {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-confirm-delete:hover {
+  background-color: #dc2626;
+}
+
+.btn-cancel {
+  background-color: #e2e8f0;
+  color: #333;
+}
+
+.btn-cancel:hover {
+  background-color: #cbd5e1;
 }
 
 /* 스크롤바 스타일링 */

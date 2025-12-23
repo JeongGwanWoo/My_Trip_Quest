@@ -31,7 +31,7 @@ public class Item {
     private String imageUrl;
 
     @Column(name = "is_purchasable", nullable = false)
-    private boolean isPurchasable;
+    private boolean purchasable;
 
     @Column(name = "price")
     private Integer price;
