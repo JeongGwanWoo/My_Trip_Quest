@@ -18,14 +18,25 @@ export const getMyInventory = async () => {
 
 /**
  * 상점에 표시될 아이템 목록을 가져옵니다. (소유 여부 포함)
- * @param {number} page 요청할 페이지 번호 (0-based)
+ * * [수정됨] 카테고리 필터링을 위해 category 파라미터가 추가되었습니다.
+ * * @param {number} page 요청할 페이지 번호 (0-based)
  * @param {number} size 페이지 당 아이템 수
+ * @param {string} category (선택) 필터링할 카테고리 (예: 'HAIR', 'TOP'). 'all'이거나 없으면 전체 조회.
  * @returns {Promise<object>} ApiResponse
  */
-export const getShopItems = async (page = 0, size = 12) => {
+export const getShopItems = async (page = 0, size = 12, category) => {
   try {
+    // 1. 기본 파라미터 설정
+    const params = { page, size };
+
+    // 2. category가 유효하고 'all'이 아닐 경우에만 params에 추가
+    // 백엔드 컨트롤러에서는 @RequestParam(required = false) String category 로 받아야 함
+    if (category && category !== 'all') {
+      params.category = category;
+    }
+
     const response = await api.get('/api/v1/items/shop', {
-      params: { page, size }
+      params // { page: 0, size: 12, category: 'HAIR' } 형태로 전송됨
     });
     return response.data;
   } catch (error) {

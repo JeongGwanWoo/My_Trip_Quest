@@ -12,7 +12,7 @@ import com.mytripquest.domain.user.repository.UserMapper;
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j; // Import Slf4j
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j // Add Slf4j annotation
+@Slf4j
 public class ItemService {
 
     private final ItemRepository itemRepository;
@@ -53,23 +53,29 @@ public class ItemService {
         return itemMapper.findUserItemsByUserId(userId);
     }
     
+    // [수정] category 파라미터 추가
     @Transactional(readOnly = true)
-    public ShopItemResponseDto getShopItems(Long userId, int page, int size) {
-        // 1. Get total number of purchasable items
-        long totalItems = itemMapper.countPurchasableItems();
+    public ShopItemResponseDto getShopItems(Long userId, int page, int size, String category) {
+        
+        // 카테고리 필터링 조건 설정 ('all' 이거나 null이면 필터 없음)
+        String searchCategory = (category == null || category.equals("all") || category.isEmpty()) ? null : category;
+
+        // 1. Get total number of items (searchCategory 조건 추가)
+        // 매퍼 메서드 이름도 명확하게 변경하거나, 기존 메서드에 파라미터 추가 필요
+        long totalItems = itemMapper.countShopItems(searchCategory);
         int totalPages = (int) Math.ceil((double) totalItems / size);
 
-        // 2. Get paginated items from the database
+        // 2. Get paginated items from the database (searchCategory 조건 추가)
         int offset = page * size;
-        List<Item> paginatedItems = itemMapper.findPurchasableItemsWithPagination(offset, size);
+        List<Item> paginatedItems = itemMapper.findShopItemsWithPagination(offset, size, searchCategory);
 
         // 3. Get the items the user already owns
         Set<Long> myItemIds;
         if (userId != null) {
             List<UserItem> myItems = findMyItems(userId);
             myItemIds = myItems.stream()
-                                         .map(UserItem::getItemId)
-                                         .collect(Collectors.toSet());
+                               .map(UserItem::getItemId)
+                               .collect(Collectors.toSet());
         } else {
             myItemIds = Collections.emptySet();
         }
@@ -79,7 +85,8 @@ public class ItemService {
                 .map(item -> ShopItemDto.builder()
                         .id(item.getItemId())
                         .name(item.getName())
-                        .category(item.getSlot() != null ? item.getSlot().name().toLowerCase() : "etc")
+                        // Enum 타입을 소문자 문자열로 변환 (null safe)
+                        .category(item.getSlot() != null ? item.getSlot().name() : "ETC") 
                         .price(item.getPrice())
                         .imageUrl(item.getImageUrl())
                         .owned(myItemIds.contains(item.getItemId()))
