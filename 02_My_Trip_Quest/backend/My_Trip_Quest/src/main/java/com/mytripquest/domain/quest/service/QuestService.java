@@ -6,12 +6,15 @@ import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
 import com.mytripquest.domain.quest.dto.QuestLocationSliceDto;
 import com.mytripquest.domain.quest.dto.QuestInfoWithStatusDto;
 import com.mytripquest.domain.quest.entity.Quest;
+import com.mytripquest.domain.ai.dto.LocationRadiusRequest;
+import com.mytripquest.domain.ai.dto.RadiusEstimateResult;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public interface QuestService {
     List<UserAreaQuestStatusDto> getUserAreaQuestCounts(Long userId);
@@ -34,6 +37,10 @@ public interface QuestService {
     int generateQuestsFromTourApi(List<java.util.Map<String, Object>> items, List<String> types, String areaCode);
 
     int estimateLocationRadius(String locationName, String address);
+
+    List<RadiusEstimateResult> estimateLocationRadiusBatch(List<LocationRadiusRequest> locations);
+
+    Map<String, Object> batchRecalculateRadius(List<Long> locationIds);
 
     void updateLocationRadius(Long locationId, int radius);
 

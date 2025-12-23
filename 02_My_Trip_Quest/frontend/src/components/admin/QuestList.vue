@@ -23,6 +23,9 @@
           <option value="39">제주 (39)</option>
       </select>
       <button @click="fetchLocations" class="btn-refresh">새로고침</button>
+      <button v-if="selectedLocationIds.length > 0" @click="batchRecalculate" class="btn-batch-ai" :disabled="recalculating">
+        {{ recalculating ? 'AI 재산정 중...' : `선택 항목 AI 재산정 (${selectedLocationIds.length}개)` }}
+      </button>
     </div>
 
     <div v-if="loading" class="loading">데이터 불러오는 중...</div>
@@ -34,6 +37,7 @@
     <table v-else class="quest-table">
       <thead>
         <tr>
+          <th><input type="checkbox" @change="toggleAll" :checked="allSelected" /></th>
           <th>ID</th>
           <th>지역</th>
           <th>관광지명</th>
@@ -44,6 +48,7 @@
       </thead>
       <tbody>
         <tr v-for="loc in locations" :key="loc.locationId">
+          <td><input type="checkbox" :value="loc.locationId" v-model="selectedLocationIds" /></td>
           <td>{{ loc.locationId }}</td>
           <td>{{ getAreaName(loc.areaCode) }}</td>
           <td>{{ loc.title }}</td>
@@ -57,7 +62,7 @@
     </table>
 
     <div v-if="hasMore" class="load-more">
-        <button @click="loadMore" class="btn-secondary">더 보기 ({{ locations.length }}개 조회됨)</button>
+        <button @click.prevent="loadMore" class="btn-secondary">더 보기 ({{ locations.length }}개 조회됨)</button>
     </div>
 
     <QuestEditModal 
@@ -70,14 +75,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { getDbLocations } from '@/api/admin';
+import { ref, onMounted, computed, nextTick } from 'vue';
+import { getDbLocations, batchRecalculateRadius } from '@/api/admin';
 import QuestEditModal from './QuestEditModal.vue';
 
 const selectedAreaCode = ref("ALL"); // 기본 전체 보기
 const locations = ref([]);
 const loading = ref(false);
 const pageNo = ref(0);
+const selectedLocationIds = ref([]);
+const recalculating = ref(false);
+
+const allSelected = computed(() => {
+  return locations.value.length > 0 && selectedLocationIds.value.length === locations.value.length;
+});
 const hasMore = ref(false);
 
 const isModalOpen = ref(false);
@@ -124,8 +135,52 @@ const fetchLocations = async (reset = true) => {
     }
 };
 
-const loadMore = () => {
-    fetchLocations(false);
+const loadMore = async () => {
+    // 현재 스크롤 위치 저장
+    const scrollY = window.scrollY;
+    
+    await fetchLocations(false); // reset=false
+    
+    // 다음 틱에 스크롤 위치 복원
+    await nextTick();
+    window.scrollTo(0, scrollY);
+};
+
+const toggleAll = () => {
+  if (allSelected.value) {
+    selectedLocationIds.value = [];
+  } else {
+    selectedLocationIds.value = locations.value.map(loc => loc.locationId);
+  }
+};
+
+const batchRecalculate = async () => {
+  if (selectedLocationIds.value.length === 0) {
+    alert('선택된 관광지가 없습니다.');
+    return;
+  }
+  
+  if (!confirm(`선택한 ${selectedLocationIds.value.length}개 관광지의 GPS 반경을 AI로 재산정하시겠습니까?`)) {
+    return;
+  }
+  
+  recalculating.value = true;
+  try {
+    const res = await batchRecalculateRadius(selectedLocationIds.value);
+    if (res.data.success) {
+      const result = res.data.data;
+      alert(`AI 재산정 완료!\n업데이트: ${result.updated}/${result.total}개`);
+      selectedLocationIds.value = [];
+      await fetchLocations();
+    } else {
+      alert('AI 재산정 실패: ' + (res.data.message || '알 수 없는 오류'));
+    }
+  } catch (error) {
+    console.error('AI 재산정 오류:', error);
+    alert('AI 재산정 중 오류가 발생했습니다.');
+  } finally {
+    recalculating.value = false;
+  }
 };
 
 const openEditModal = (loc) => {
@@ -263,6 +318,28 @@ onMounted(() => {
 
 .btn-refresh:hover {
   background-color: #059669;
+}
+
+.btn-batch-ai {
+  background: #8b5cf6;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
+  transition: background 0.2s;
+  margin-left: auto;
+}
+
+.btn-batch-ai:hover:not(:disabled) {
+  background: #7c3aed;
+}
+
+.btn-batch-ai:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
 }
 
 .btn-secondary {

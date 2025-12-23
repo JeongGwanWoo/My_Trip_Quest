@@ -113,7 +113,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { getTourApiAttractions, generateQuests, estimateLocationRadius } from '@/api/admin';
+import { getTourApiAttractions, generateQuests, estimateLocationRadiusBatch } from '@/api/admin';
 
 const selectedAreaCode = ref('1');
 const selectedContentTypeId = ref('12');
@@ -217,34 +217,44 @@ const handleGenerate = async () => {
     
     // AI 반경 산정 옵션이 체크되어 있으면 각 관광지마다 AI로 반경 계산
     if (useAiRadius.value) {
-      generationProgress.value = 'AI 반경 계산 중...';
+      generationProgress.value = 'AI 반경 계산 중... (배치 처리로 토큰 절약!)';
       
-      for (let i = 0; i < itemsToGenerate.length; i++) {
-        const item = itemsToGenerate[i];
-        generationProgress.value = `AI 반경 계산 중... (${i + 1}/${itemsToGenerate.length})`;
+      try {
+        // 배치 요청 데이터 생성
+        const batchRequest = itemsToGenerate.map(item => ({
+          name: item.title,
+          address: item.addr1 || ""
+        }));
         
-        try {
-          const res = await estimateLocationRadius({
-            locationName: item.title,
-            address: item.addr1 || ""
+        console.log('배치 AI 요청:', batchRequest);
+        
+        // 한 번에 전체 배치 호출 (토큰 75% 절감!)
+        const res = await estimateLocationRadiusBatch(batchRequest);
+        
+        if (res.data.success && res.data.data) {
+          const results = res.data.data;
+          
+          // 결과 매핑
+          results.forEach((result, index) => {
+            if (index < itemsToGenerate.length) {
+              itemsToGenerate[index].aiRadius = result.radius;
+              console.log(`AI 반경 산출: ${result.name} -> ${result.radius}m`);
+            }
           });
           
-          if (res.data.success && res.data.data) {
-            // AI가 계산한 반경을 item에 추가
-            item.aiRadius = res.data.data;
-            console.log(`AI 반경 계산 완료: ${item.title} -> ${res.data.data}m`);
-          } else {
-            // AI 실패 시 기본값 150 사용
+          console.log('배치 AI 처리 완료!');
+        } else {
+          console.warn('배치 AI 요청 실패, 기본값 150m 사용');
+          itemsToGenerate.forEach(item => {
             item.aiRadius = 150;
-            console.warn(`AI 반경 계산 실패 (기본값 사용): ${item.title}`);
-          }
-        } catch (error) {
-          console.error(`AI 반경 계산 실패 (${item.title}):`, error);
-          item.aiRadius = 150; // 실패 시 기본값
+          });
         }
-        
-        // API 호출 간 짧은 딜레이 (과부하 방지)
-        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error('배치 AI 요청 오류:', error);
+        // 오류 시 모두 기본값
+        itemsToGenerate.forEach(item => {
+          item.aiRadius = 150;
+        });
       }
       
       console.log('최종 전송 데이터:', itemsToGenerate.map(i => ({title: i.title, aiRadius: i.aiRadius})));

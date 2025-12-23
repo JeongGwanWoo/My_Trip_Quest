@@ -1,6 +1,8 @@
 package com.mytripquest.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.mytripquest.domain.ai.dto.LocationRadiusRequest;
+import com.mytripquest.domain.ai.dto.RadiusEstimateResult;
 import com.mytripquest.domain.quest.service.QuestService;
 import com.mytripquest.domain.tourapi.service.TourApiService;
 import com.mytripquest.global.ApiResponse;
@@ -45,19 +47,28 @@ public class AdminQuestController {
         return ApiResponse.success(count + "개의 퀘스트가 생성되었습니다.", count); // data에 count(int) 포함
     }
 
-    // 3. AI 반경 추정
+    // 3. AI 반경 추정 (단일)
     @PostMapping("/ai/estimate-radius")
     public ApiResponse<Integer> estimateRadius(@RequestBody Map<String, String> request) {
         String locationName = request.get("locationName");
         String address = request.get("address");
-        int radius = questService.estimateLocationRadius(locationName, address); // Need to add to Service? No, use
-                                                                                 // AIService directly or via
-                                                                                 // QuestService wrapper?
-        // Wait, I should probably expose AIService via QuestService or inject AIService
-        // here.
-        // User pattern: Controller uses Service.
-        // I'll inject AIService here as AdminQuestController is for admin tools.
+        int radius = questService.estimateLocationRadius(locationName, address);
         return ApiResponse.success(radius);
+    }
+
+    // 3-1. AI 반경 추정 (배치 - 토큰 절약)
+    @PostMapping("/ai/estimate-radius-batch")
+    public ApiResponse<List<RadiusEstimateResult>> estimateRadiusBatch(
+            @RequestBody List<LocationRadiusRequest> locations) {
+        List<RadiusEstimateResult> results = questService.estimateLocationRadiusBatch(locations);
+        return ApiResponse.success(results);
+    }
+
+    // 3-2. 관광지 AI 반경 일괄 재산정 (여러 관광지 선택 → 배치 처리 → DB 업데이트)
+    @PostMapping("/locations/batch-recalculate-radius")
+    public ApiResponse<Map<String, Object>> batchRecalculateRadius(@RequestBody List<Long> locationIds) {
+        Map<String, Object> result = questService.batchRecalculateRadius(locationIds);
+        return ApiResponse.success(result);
     }
 
     // 4. 관광지 반경 수정
