@@ -173,7 +173,8 @@ const categorizedInventory = computed(() => {
     SKIN: [], HAIR: [], HAT: [], TOP: [], BOTTOM: [], FACE: [],
   };
 
-  allBackendItems.value.forEach(userItem => {
+  if (Array.isArray(allBackendItems.value)) {
+    allBackendItems.value.forEach(userItem => {
     const itemDetail = userItem.item;
     if (itemDetail && itemDetail.slot) {
       const slotCategory = itemDetail.slot.toUpperCase();
@@ -187,6 +188,7 @@ const categorizedInventory = computed(() => {
       }
     }
   });
+  }
   return inventory;
 });
 
@@ -269,25 +271,31 @@ const closeSaveConfirmModal = () => {
 onMounted(async () => {
   try {
     const data = await getMyInventory();
-    allBackendItems.value = data;
+    
+    if (Array.isArray(data)) {
+        allBackendItems.value = data;
 
-    data.forEach(userItem => {
-      const isOn = userItem.equipped || userItem.isEquipped;
-
-      if (isOn && userItem.item) {
-        const itemDetail = userItem.item;
-        const slotName = itemDetail.slot ? itemDetail.slot.toUpperCase() : null;
-
-        if (slotName) {
-            equipped.value[slotName] = {
-                id: itemDetail.itemId,
-                type: slotName,
-                name: itemDetail.name,
-                image: itemDetail.imageUrl
-            };
-        }
-      }
-    });
+        data.forEach(userItem => {
+          const isOn = userItem.equipped || userItem.isEquipped;
+    
+          if (isOn && userItem.item) {
+            const itemDetail = userItem.item;
+            const slotName = itemDetail.slot ? itemDetail.slot.toUpperCase() : null;
+    
+            if (slotName) {
+                equipped.value[slotName] = {
+                    id: itemDetail.itemId,
+                    type: slotName,
+                    name: itemDetail.name,
+                    image: itemDetail.imageUrl
+                };
+            }
+          }
+        });
+    } else {
+        console.error('Inventory data is not an array:', data);
+        allBackendItems.value = [];
+    }
 
   } catch (err) {
     error.value = err.message;
