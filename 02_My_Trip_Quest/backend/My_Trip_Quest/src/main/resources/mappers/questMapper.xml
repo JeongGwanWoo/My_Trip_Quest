@@ -163,6 +163,14 @@
         WHERE location_id = #{locationId}
     </update>
 
+    <update id="updateLocation">
+        UPDATE locations
+        SET latitude = #{latitude},
+            longitude = #{longitude},
+            gps_verify_radius = #{gpsVerifyRadius}
+        WHERE location_id = #{locationId}
+    </update>
+
     <delete id="deleteQuest">
         DELETE FROM quests
         WHERE quest_id = #{questId}
