@@ -49,6 +49,19 @@
               <i v-else class="fa-solid fa-spinner fa-spin"></i>
               {{ isCompleting ? '업로드 중...' : '사진으로 완료' }}
             </button>
+            
+            <div v-if="photoQuestError" class="error-message">
+              <i class="fa-solid fa-circle-exclamation"></i> {{ photoQuestError }}
+            </div>
+
+            <button 
+              v-if="showGeolocationButton" 
+              @click="handleGetLocationAndUpload" 
+              :disabled="isCompleting" 
+              class="btn-secondary"
+            >
+              <i class="fa-solid fa-location-dot"></i> 내 현재 위치로 인증하기
+            </button>
           </div>
         </div>
 
@@ -101,6 +114,7 @@ import { ref } from 'vue';
 import { completeArrivalQuest, completePhotoQuest, forfeitQuest } from '@/api/quest';
 import { useToast } from '@/utils/toast';
 import BaseModal from '@/components/ui/BaseModal.vue';
+import { compressImage } from '@/utils/imageCompression';
 
 const props = defineProps({
   quest: {
@@ -117,6 +131,8 @@ const completionStatus = ref('');
 const selectedFile = ref(null);
 const fileInputRef = ref(null);
 const filePreviewUrl = ref('');
+const photoQuestError = ref(null);
+const showGeolocationButton = ref(false);
 
 // Modal State
 const showCompleteArrivalModal = ref(false);
@@ -173,11 +189,21 @@ const triggerFileInput = () => {
   fileInputRef.value.click();
 };
 
-const handleFileSelect = (event) => {
+const handleFileSelect = async (event) => {
   const file = event.target.files[0];
   if (file) {
-    selectedFile.value = file;
-    filePreviewUrl.value = URL.createObjectURL(file);
+    try {
+      // Compress immediately upon selection
+      const compressedFile = await compressImage(file);
+      selectedFile.value = compressedFile;
+      filePreviewUrl.value = URL.createObjectURL(compressedFile);
+      photoQuestError.value = null;
+      showGeolocationButton.value = false;
+    } catch (error) {
+      console.error("Compression check failed, falling back to original:", error);
+      selectedFile.value = file;
+      filePreviewUrl.value = URL.createObjectURL(file);
+    }
   }
 };
 
@@ -191,17 +217,94 @@ const executeCompletePhoto = async () => {
 
   showCompletePhotoModal.value = false;
   isCompleting.value = true;
+  photoQuestError.value = null; // Reset error
+  
   try {
     await completePhotoQuest(props.quest.questId, selectedFile.value);
     showToast('사진 퀘스트를 성공적으로 완료했습니다!', 'success');
     emit('quest-updated');
     emit('close');
   } catch (error) {
-    const message = error.response?.data?.message || '사진 퀘스트 완료에 실패했습니다.';
-    showToast(message, 'error');
+    console.error('Photo upload error:', error);
+    if (error.response?.data?.code === 'PHOTO_METADATA_MISSING') {
+      photoQuestError.value = "사진에 위치 정보가 없습니다. 현재 위치로 인증해주세요.";
+      showGeolocationButton.value = true;
+    } else {
+      const message = error.response?.data?.message || '사진 퀘스트 완료에 실패했습니다.';
+      showToast(message, 'error');
+      photoQuestError.value = message;
+    }
   } finally {
     isCompleting.value = false;
   }
+};
+
+const handleGetLocationAndUpload = async () => {
+  if (!navigator.geolocation) {
+    photoQuestError.value = "이 브라우저에서는 위치 정보 서비스를 사용할 수 없습니다.";
+    return;
+  }
+  
+  isCompleting.value = true;
+  photoQuestError.value = null;
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+      
+      // 1. Validate Distance (Frontend Check)
+      if (props.quest.latitude && props.quest.longitude) {
+        const dist = calculateDistance(
+          latitude, 
+          longitude, 
+          props.quest.latitude, 
+          props.quest.longitude
+        );
+        const maxDist = props.quest.gpsVerifyRadius || 50; // Default 50m
+
+        if (dist > maxDist) {
+          photoQuestError.value = `위치가 너무 멉니다. (현재 거리: ${Math.round(dist)}m, 허용 반경: ${maxDist}m)`;
+          showToast(`위치가 너무 멉니다. (거리: ${Math.round(dist)}m)`, 'error');
+          isCompleting.value = false;
+          return;
+        }
+      }
+
+      try {
+        await completePhotoQuest(props.quest.questId, selectedFile.value, latitude.toString(), longitude.toString());
+        showToast('사진 퀘스트를 성공적으로 완료했습니다!', 'success');
+        emit('quest-updated');
+        emit('close');
+      } catch (error) {
+        const message = error.response?.data?.message || '인증에 실패했습니다.';
+        showToast(message, 'error');
+        photoQuestError.value = message;
+      } finally {
+        isCompleting.value = false;
+      }
+    },
+    (error) => {
+      console.error("Geolocation error:", error);
+      photoQuestError.value = `위치 정보를 가져오는데 실패했습니다: ${error.message}`;
+      isCompleting.value = false;
+    }
+  );
+};
+
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371e3; // metres
+  const rad = Math.PI / 180;
+  const φ1 = lat1 * rad;
+  const φ2 = lat2 * rad;
+  const Δφ = (lat2 - lat1) * rad;
+  const Δλ = (lon2 - lon1) * rad;
+
+  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  return R * c;
 };
 
 const handleForfeitQuest = () => {
@@ -453,5 +556,38 @@ const executeForfeitQuest = async () => {
 .btn-danger:hover {
   background: #fecaca;
   color: #b91c1c;
+}
+
+.error-message {
+  margin-top: 12px;
+  color: #ef4444;
+  font-size: 14px;
+  background-color: #fef2f2;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-secondary {
+  width: 100%;
+  margin-top: 12px;
+  background: #3b82f6; /* Blue to match primary action */
+  color: white;
+  border: none;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #2563eb;
+}
+.btn-secondary:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
 }
 </style>

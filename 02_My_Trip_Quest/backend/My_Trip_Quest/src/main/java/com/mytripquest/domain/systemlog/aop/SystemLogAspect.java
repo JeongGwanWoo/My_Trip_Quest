@@ -24,6 +24,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 public class SystemLogAspect {
 
     private final SystemLogService systemLogService;
+    private final com.mytripquest.domain.user.repository.UserMapper userMapper;
 
     // 모든 컨트롤러 패키지 내의 메서드를 대상으로 함
     @Pointcut("execution(* com.mytripquest.controller..*Controller.*(..))")
@@ -54,13 +55,14 @@ public class SystemLogAspect {
                 // 사용자 정보 추출 (SecurityContext)
                 Long userId = null;
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                if (authentication != null && authentication.isAuthenticated()
-                        && !"anonymousUser".equals(authentication.getPrincipal())) {
-                    // Principal이 String(email)인지, UserDetails인지 확인 필요.
-                    // 여기서는 단순히 name(email)을 가져오거나, 커스텀 UserDetails에서 ID를 꺼낼 수 있음.
-                    // 현재 프로젝트 구조상 userId를 직접 꺼내기 어려우면 null로 두거나,
-                    // CustomUserDetails를 캐스팅해서 가져와야 함.
-                    // 일단은 null로 두고, 필요 시 로직 추가.
+                if (authentication != null && authentication.isAuthenticated()) {
+                    Object principal = authentication.getPrincipal();
+
+                    if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                        String username = ((org.springframework.security.core.userdetails.UserDetails) principal)
+                                .getUsername();
+                        userId = userMapper.findIdByEmail(username).orElse(null);
+                    }
                 }
 
                 // IP 주소 추출
@@ -73,14 +75,19 @@ public class SystemLogAspect {
 
                 SystemLogDto logDto = new SystemLogDto();
 
-                // 인수에서 targetId (questId) 추출 (첫 번째 Long 인자가 questId라고 가정)
+                // 인수에서 targetId (questId) 추출 (Long 타입 인자 검색)
                 Object[] args = joinPoint.getArgs();
-                if (args != null && args.length > 0 && args[0] instanceof Long) {
-                    logDto.setTargetId((Long) args[0]);
+                if (args != null) {
+                    for (Object arg : args) {
+                        if (arg instanceof Long) {
+                            logDto.setTargetId((Long) arg);
+                            break; // 첫 번째 Long 인자를 ID로 가정
+                        }
+                    }
                 }
 
                 logDto.setFeatureName(featureName);
-                logDto.setUserId(userId); // TODO: SecurityContext에서 ID 추출 로직 보완 필요
+                logDto.setUserId(userId);
                 logDto.setUserIp(userIp);
                 logDto.setStatus(status);
                 logDto.setErrorCode(errorCode);

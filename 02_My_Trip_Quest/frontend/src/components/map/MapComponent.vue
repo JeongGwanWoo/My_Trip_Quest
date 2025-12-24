@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { onMounted, defineProps, watch, defineEmits } from "vue";
+import { onMounted, defineProps, watch, defineEmits, defineExpose } from "vue";
 
 // 줌 레벨 상수 정의
 const BASE_ZOOM_LEVEL = 13;
@@ -89,13 +89,17 @@ const displayAreaMarkers = (newAreas) => {
         let isLongPress = false;
         const tooltip = contentEl.querySelector('.pin-tooltip');
 
+        let customOverlay; // 오버레이 변수 미리 선언
+
         // 데스크톱: hover 이벤트
         contentEl.addEventListener('mouseenter', () => {
           tooltip.classList.add('visible');
+          if (customOverlay) customOverlay.setZIndex(100); // 호버 시 z-index 상승
         });
 
         contentEl.addEventListener('mouseleave', () => {
           tooltip.classList.remove('visible');
+          if (customOverlay) customOverlay.setZIndex(10); // 기본값으로 복귀
         });
 
         // 모바일: 롱프레스 이벤트 (500ms)
@@ -104,9 +108,12 @@ const displayAreaMarkers = (newAreas) => {
           longPressTimer = setTimeout(() => {
             isLongPress = true;
             tooltip.classList.add('visible');
+            if (customOverlay) customOverlay.setZIndex(100);
+            
             // 3초 후 자동으로 사라짐
             setTimeout(() => {
               tooltip.classList.remove('visible');
+              if (customOverlay) customOverlay.setZIndex(10);
             }, 3000);
           }, 500); // 500ms 길게 누르기
         });
@@ -131,11 +138,12 @@ const displayAreaMarkers = (newAreas) => {
           emit('area-clicked', area.areaCode);
         });
 
-        const customOverlay = new kakao.maps.CustomOverlay({
+        customOverlay = new kakao.maps.CustomOverlay({
           position: coords,
           content: contentEl,
           clickable: true,
           yAnchor: 1.3, 
+          zIndex: 10 // 기본 z-index
         });
 
         customOverlay.setMap(map);
@@ -211,13 +219,17 @@ const displayLocationMarkers = (locations) => {
       let isLongPress = false;
       const tooltip = contentEl.querySelector('.pin-tooltip');
 
+      let customOverlay; // 오버레이 변수 선언
+
       // 데스크톱: hover 이벤트
       contentEl.addEventListener('mouseenter', () => {
         tooltip.classList.add('visible');
+        if (customOverlay) customOverlay.setZIndex(9999); // 최상위로
       });
 
       contentEl.addEventListener('mouseleave', () => {
         tooltip.classList.remove('visible');
+        if (customOverlay) customOverlay.setZIndex(50); // 기본값 복귀
       });
 
       // 모바일: 롱프레스 이벤트 (500ms)
@@ -226,8 +238,11 @@ const displayLocationMarkers = (locations) => {
         longPressTimer = setTimeout(() => {
           isLongPress = true;
           tooltip.classList.add('visible');
+          if (customOverlay) customOverlay.setZIndex(9999);
+
           setTimeout(() => {
             tooltip.classList.remove('visible');
+            if (customOverlay) customOverlay.setZIndex(50);
           }, 3000);
         }, 500);
       });
@@ -240,26 +255,19 @@ const displayLocationMarkers = (locations) => {
           const now = Date.now();
           const timeSinceLastClick = now - lastClickTime;
           
-          // console.log('Marker clicked:', location.locationId, 'Selected:', selectedLocationId, 'Circle visible:', currentCircle?.getMap() ? 'yes' : 'no', 'Time since last click:', timeSinceLastClick);
-          
-          // 너무 빠른 연속 클릭 방지 (300ms 이내)
           if (timeSinceLastClick < 300) {
-            // console.log('Click ignored (too fast)');
             return;
           }
           
           lastClickTime = now;
           
-          // 2단계 클릭 로직
           if (selectedLocationId === location.locationId && currentCircle && currentCircle.getMap()) {
-            // console.log('Opening modal (2nd click)');
-            map.panTo(coords); // 부드럽게 이동 (확대 없음)
+            map.panTo(coords);
             emit('location-clicked', location);
           } else {
-            // console.log('Showing circle (1st click or circle hidden)');
-            map.panTo(coords); // 부드럽게 이동 (확대 없음)
+            map.panTo(coords);
             showVerificationCircle(location);
-            updateMarkerIcons(); // 마커 아이콘 업데이트
+            updateMarkerIcons();
           }
         }
       });
@@ -268,41 +276,32 @@ const displayLocationMarkers = (locations) => {
         clearTimeout(longPressTimer);
       });
 
-      // 데스크톱: 클릭 이벤트 - 관광지 퀘스트 모달 열기
+      // 데스크톱: 클릭 이벤트
       contentEl.addEventListener('click', (e) => {
         e.stopPropagation();
         
         const now = Date.now();
         const timeSinceLastClick = now - lastClickTime;
         
-        // console.log('Marker clicked:', location.locationId, 'Selected:', selectedLocationId, 'Circle visible:', currentCircle?.getMap() ? 'yes' : 'no', 'Time since last click:', timeSinceLastClick);
-        
-        // 너무 빠른 연속 클릭 방지 (300ms 이내)
-        if (timeSinceLastClick < 300) {
-          // console.log('Click ignored (too fast)');
-          return;
-        }
+        if (timeSinceLastClick < 300) return;
         
         lastClickTime = now;
         
-        // 2단계 클릭 로직
-        // 2단계 클릭 로직
         if (selectedLocationId === location.locationId && currentCircle && currentCircle.getMap()) {
-          // console.log('Opening modal (2nd click)');
-          map.panTo(coords); // 부드럽게 이동 (확대 없음)
+          map.panTo(coords);
           emit('location-clicked', location);
         } else {
-          // console.log('Showing circle (1st click or circle hidden)');
-          map.panTo(coords); // 부드럽게 이동 (확대 없음)
+          map.panTo(coords);
           showVerificationCircle(location);
         }
       });
 
-      const customOverlay = new kakao.maps.CustomOverlay({
+      customOverlay = new kakao.maps.CustomOverlay({
         position: coords,
         content: contentEl,
         clickable: true,
         yAnchor: 1.3,
+        zIndex: 50 // 기본값 50
       });
 
       customOverlay.setMap(map);
@@ -598,12 +597,43 @@ const initMap = () => {
     removeVerificationCircle();
   });
 
-  // *** FIX ***
-  // 지도가 초기화된 후, props.areas에 이미 데이터가 있다면 마커를 표시합니다.
   if (props.areas && props.areas.length > 0) {
     displayAreaMarkers(props.areas);
   }
 };
+
+// 외부에서 특정 위치로 이동 및 강조 표시를 하기 위한 함수
+const moveToLocation = (location) => {
+  const lat = parseFloat(location.latitude);
+  const lng = parseFloat(location.longitude);
+
+  if (!map || isNaN(lat) || isNaN(lng)) {
+    console.error('Invalid coordinates:', location);
+    return;
+  }
+
+  const coords = new kakao.maps.LatLng(lat, lng);
+  const targetLevel = MARKER_VISIBLE_LEVEL - 1; // 9
+  
+  // 현재 줌 레벨이 목표 레벨보다 크면(더 멀리 보면) 줌인 필요
+  if (map.getLevel() > MARKER_VISIBLE_LEVEL) {
+     // 1. 줌인이 필요한 경우: 먼저 중심을 잡고 줌인 (panTo 애니메이션과 setLevel 충돌 방지)
+     map.setCenter(coords);
+     map.setLevel(targetLevel, {animate: true});
+  } else {
+     // 2. 이미 줌 레벨이 적당한 경우: 부드럽게 이동
+     map.panTo(coords);
+  }
+
+  // 3. 인증 범위 원 표시 및 마커 아이콘 업데이트
+  showVerificationCircle(location);
+  updateMarkerIcons();
+};
+
+defineExpose({
+  moveToLocation
+});
+
 </script>
 
 <style>
@@ -675,7 +705,7 @@ const initMap = () => {
 /* 툴팁 스타일 */
 .pin-tooltip {
   position: absolute;
-  bottom: 45px; /* 핀 위에 표시 */
+  bottom: 28px; /* 핀 바로 위에 표시 (간격 추가 조정: 38px -> 34px) */
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(30, 41, 59, 0.95);

@@ -24,6 +24,9 @@
             <arg column="location_name" javaType="string"/>
             <arg column="reward_xp" javaType="java.lang.Integer"/>
             <arg column="reward_points" javaType="java.lang.Integer"/>
+            <arg column="latitude" javaType="java.math.BigDecimal"/>
+            <arg column="longitude" javaType="java.math.BigDecimal"/>
+            <arg column="gps_verify_radius" javaType="java.lang.Integer"/>
         </constructor>
     </resultMap>
 
@@ -81,7 +84,10 @@
             uq.accepted_at,
             l.title as location_name,
             q.reward_xp,
-            q.reward_points
+            q.reward_points,
+            l.latitude,
+            l.longitude,
+            l.gps_verify_radius
         FROM
             user_quests uq
         LEFT JOIN
