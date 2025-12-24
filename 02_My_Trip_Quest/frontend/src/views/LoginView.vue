@@ -44,7 +44,8 @@
         </button>
       </form>
 
-      <div class="social-login-section">
+      <!-- Social Login Section - Temporarily hidden until review completion -->
+      <!-- <div class="social-login-section">
         <div class="divider">
           <span>간편 로그인</span>
         </div>
@@ -75,7 +76,7 @@
           </a>
 
         </div>
-      </div>
+      </div> -->
       
       <div class="auth-footer">
         <p class="signup-text">
@@ -180,6 +181,7 @@ const handleLogin = async () => {
 /* 로고 영역 */
 .logo-area {
   margin-bottom: 40px;
+  text-align: center; /* Center inline content */
 }
 
 .sub-text {
