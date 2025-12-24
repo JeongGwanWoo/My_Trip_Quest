@@ -3,7 +3,17 @@
 body {
   margin: 0;
   min-height: 100vh;
+  /* 드래그 방지 (사용자 요청) */
+  user-select: none;
+  -webkit-user-select: none;
 }
+
+/* 모든 엘리먼트 드래그 방지 (이미지 포함) */
+* {
+  -webkit-user-drag: none;
+}
+
+/* 입력창 선택 금지 제거 (전부 불가능하게) */
 
 /* 이 부분이 중요!! */
 #app {

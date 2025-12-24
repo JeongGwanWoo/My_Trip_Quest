@@ -27,7 +27,7 @@ public class TourApiService {
     @Value("${tour.api.key}")
     private String ENCODED_KEY;
 
-    public JsonNode getAreaBasedList(String areaCode, String cat1, int pageNo) {
+    public JsonNode getAreaBasedList(String areaCode, String contentTypeId, int pageNo, int numOfRows) {
         try {
             StringBuilder sb = new StringBuilder();
 
@@ -36,7 +36,7 @@ public class TourApiService {
             sb.append(BASE_URL).append("/areaBasedList2");
 
             sb.append("?serviceKey=").append(ENCODED_KEY);
-            sb.append("&numOfRows=10");
+            sb.append("&numOfRows=").append(numOfRows);
             sb.append("&pageNo=").append(pageNo);
             sb.append("&MobileOS=WEB");
             sb.append("&MobileApp=MyTripQuest");
@@ -46,8 +46,8 @@ public class TourApiService {
                 sb.append("&areaCode=").append(areaCode);
             }
 
-            if (cat1 != null && !cat1.isEmpty()) {
-                sb.append("&cat1=").append(cat1);
+            if (contentTypeId != null && !contentTypeId.isEmpty()) {
+                sb.append("&contentTypeId=").append(contentTypeId);
             }
 
             URI uri = URI.create(sb.toString());

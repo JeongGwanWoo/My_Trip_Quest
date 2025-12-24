@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mytripquest.domain.item.repository.ItemMapper">
+<mapper namespace="com.mytripquest.domain.item.repository.ItemRepository">
 
     <resultMap id="UserItemWithItemMap" type="com.mytripquest.domain.item.entity.UserItem">
         <id property="itemId" column="item_id"/> 
@@ -17,10 +17,43 @@
             <result property="slot" column="slot"/>
             <result property="imageUrl" column="image_url"/>
             <result property="price" column="price"/>
-            <result property="isPurchasable" column="is_purchasable"/>
+            <result property="purchasable" column="is_purchasable"/>
         </association>
     </resultMap>
 
+    <insert id="insertItem" useGeneratedKeys="true" keyProperty="itemId">
+        INSERT INTO items (name, slot, image_url, is_purchasable, price, created_at)
+        VALUES (#{name}, #{slot}, #{imageUrl}, #{purchasable}, #{price}, NOW())
+    </insert>
+
+    <update id="updateItem">
+        UPDATE items
+        SET name = #{name},
+            slot = #{slot},
+            image_url = #{imageUrl},
+            is_purchasable = #{purchasable},
+            price = #{price}
+        WHERE item_id = #{itemId}
+    </update>
+
+    <delete id="deleteItem">
+        DELETE FROM items WHERE item_id = #{itemId}
+    </delete>
+
+    <select id="findById" resultType="com.mytripquest.domain.item.entity.Item">
+        SELECT 
+            item_id AS itemId, 
+            name, 
+            slot, 
+            image_url AS imageUrl, 
+            price,
+            is_purchasable AS purchasable,
+            created_at AS createdAt
+        FROM items
+        WHERE item_id = #{itemId}
+    </select>
+    
+    <!-- 기존 findItemById 유지 (findById와 동일 역할이지만 호환성 위해) -->
     <select id="findItemById" resultType="com.mytripquest.domain.item.entity.Item">
         SELECT 
             item_id AS itemId, 
@@ -28,8 +61,28 @@
             slot, 
             image_url AS imageUrl, 
             price,
-            is_purchasable AS isPurchasable  FROM items
+            is_purchasable AS purchasable,
+            created_at AS createdAt
+        FROM items
         WHERE item_id = #{itemId}
+    </select>
+
+    <select id="findAll" resultType="com.mytripquest.domain.item.entity.Item">
+        SELECT 
+            item_id AS itemId, 
+            name, 
+            slot, 
+            image_url AS imageUrl, 
+            price,
+            is_purchasable AS purchasable,
+            created_at AS createdAt
+        FROM items
+        ORDER BY item_id DESC
+        LIMIT #{pageable.pageSize} OFFSET #{pageable.offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM items
     </select>
 
     <select id="findItemByName" parameterType="string" resultType="com.mytripquest.domain.item.entity.Item">
@@ -39,7 +92,9 @@
             slot, 
             image_url AS imageUrl, 
             price,
-            is_purchasable AS isPurchasable FROM items
+            is_purchasable AS purchasable,
+            created_at AS createdAt
+        FROM items
         WHERE name = #{name}
     </select>
 
@@ -66,6 +121,19 @@
         FROM user_items ui
         JOIN items i ON ui.item_id = i.item_id
         WHERE ui.user_id = #{userId} AND ui.item_id = #{itemId}
+    </select>
+
+    <select id="findAllItems" resultType="com.mytripquest.domain.item.entity.Item">
+        SELECT 
+            item_id AS itemId, 
+            name, 
+            slot, 
+            image_url AS imageUrl, 
+            price,
+            is_purchasable AS purchasable,
+            created_at AS createdAt
+        FROM items
+        ORDER BY item_id DESC
     </select>
 
     <insert id="addUserItem">
@@ -106,7 +174,7 @@
     </update>
     
     <select id="findShopItemsWithPagination" resultType="com.mytripquest.domain.item.entity.Item">
-        SELECT item_id AS itemId, name, slot, image_url AS imageUrl, price, is_purchasable AS isPurchasable
+        SELECT item_id AS itemId, name, slot, image_url AS imageUrl, price, is_purchasable AS purchasable
         FROM items
         WHERE is_purchasable = TRUE
         <if test="category != null and category != ''">

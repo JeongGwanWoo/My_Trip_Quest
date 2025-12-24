@@ -44,7 +44,7 @@
           class="item-card"
           :class="{ 'is-owned': item.owned }"
         >
-          <div class="item-image-wrapper">
+          <div class="item-image-wrapper" @click="handleItemClick(item)">
             <img :src="item.imageUrl" :alt="item.name" class="item-img"/>
             <div v-if="item.owned" class="owned-overlay">
               <span class="check-icon">✓</span>
@@ -77,14 +77,11 @@
         <p>해당 카테고리에 아이템이 없습니다.</p>
       </div>
 
-      <!-- Pagination Controls -->
       <div v-if="!isLoading && totalPages > 1" class="pagination-container">
-        <!-- Mobile: Load More Button -->
         <button v-if="isMobile && currentPage < totalPages" @click="loadMore" class="load-more-btn" :disabled="isFetchingMore">
           <span v-if="!isFetchingMore">더보기</span>
           <div v-else class="spinner-small"></div>
         </button>
-        <!-- Desktop: Pagination Component -->
         <Pagination
           v-if="!isMobile"
           :current-page="currentPage"
@@ -95,7 +92,6 @@
 
     </div>
 
-    <!-- Login Confirmation Modal -->
     <BaseModal :show="showLoginModal" @close="closeLoginModal">
       <div class="modal-body">
         <h3 class="modal-title">로그인 필요</h3>
@@ -107,7 +103,6 @@
       </div>
     </BaseModal>
 
-    <!-- Purchase Confirmation Modal -->
     <BaseModal :show="showPurchaseConfirmModal" @close="closePurchaseConfirmModal">
       <div class="modal-body">
         <h3 class="modal-title">아이템 구매</h3>
@@ -121,7 +116,6 @@
       </div>
     </BaseModal>
 
-    <!-- Purchase Result Modal -->
     <BaseModal :show="showPurchaseResultModal" @close="closePurchaseResultModal">
       <div class="modal-body">
         <h3 class="modal-title" :class="{ 'text-green': purchaseResultType === 'success', 'text-red': purchaseResultType === 'error' }">
@@ -134,6 +128,29 @@
       </div>
     </BaseModal>
 
+    <BaseModal :show="showPreviewModal" @close="showPreviewModal = false">
+      <div class="modal-body preview-modal-body">
+        <h3 class="modal-title">아이템 미리보기</h3>
+        <div class="avatar-preview-container">
+          <div class="avatar-stage">
+            <div class="stage-bg"></div>
+            <div class="avatar-layers">
+              <img :src="previewEquipped.SKIN?.imageUrl || '/assets/avatar/skin-base.png'" alt="skin" class="layer skin"/>
+              <img v-if="previewEquipped.BOTTOM" :src="previewEquipped.BOTTOM.imageUrl" class="layer bottom"/>
+              <img v-if="previewEquipped.TOP" :src="previewEquipped.TOP.imageUrl" class="layer top"/>
+              <img v-if="previewEquipped.FACE" :src="previewEquipped.FACE.imageUrl" class="layer face"/>
+              <img v-if="previewEquipped.HAIR" :src="previewEquipped.HAIR.imageUrl" class="layer hair"/>
+              <img v-if="previewEquipped.HAT" :src="previewEquipped.HAT.imageUrl" class="layer hat"/>
+            </div>
+          </div>
+          <p class="preview-item-name">{{ currentPreviewItem?.name }}</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-confirm" @click="showPreviewModal = false">닫기</button>
+        </div>
+      </div>
+    </BaseModal>
+
   </div>
 </template>
 
@@ -142,7 +159,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { storeToRefs } from 'pinia';
-import { getShopItems, buyItem } from '@/api/items.js';
+import { getShopItems, buyItem, getMyInventory } from '@/api/items.js';
 import { getProfile } from '@/api/user.js';
 import BaseModal from '@/components/ui/BaseModal.vue';
 import Pagination from '@/components/ui/Pagination.vue';
@@ -159,6 +176,15 @@ const items = ref([]);
 const isLoading = ref(true);
 const isFetchingMore = ref(false);
 
+const previewEquipped = ref({
+  SKIN: null,
+  HAIR: null,
+  HAT: null,
+  TOP: null,
+  BOTTOM: null,
+  FACE: null,
+});
+
 // Pagination State
 const currentPage = ref(1);
 const totalPages = ref(1);
@@ -172,6 +198,8 @@ const showPurchaseResultModal = ref(false);
 const purchaseResultMessage = ref('');
 const purchaseResultType = ref('');
 const itemToPurchase = ref(null);
+const showPreviewModal = ref(false); 
+const currentPreviewItem = ref(null); 
 
 // Category State
 const currentCategory = ref('all');
@@ -192,10 +220,10 @@ const getCategoryLabel = (catId) => {
 }
 
 const fetchShopItemsData = async (page = 1, loadMore = false) => {
-      if (!loadMore) {
-        isLoading.value = true;
+    if (!loadMore) {
+      isLoading.value = true;
     } else {
-        isFetchingMore.value = true;
+      isFetchingMore.value = true;
     }
 
   try {
@@ -234,19 +262,44 @@ const fetchUserData = async () => {
 onMounted(async () => {
   await fetchShopItemsData(1);
   await fetchUserData();
+  if (isLoggedIn.value) {
+    try {
+      const inventoryData = await getMyInventory();
+      inventoryData.forEach(userItem => {
+        if (userItem.equipped && userItem.item) {
+          const { item } = userItem;
+          const slot = item.slot.toUpperCase();
+          if (previewEquipped.value.hasOwnProperty(slot)) {
+            previewEquipped.value[slot] = item;
+          }
+        }
+      });
+      if (!previewEquipped.value.SKIN) {
+        previewEquipped.value.SKIN = { imageUrl: '/assets/avatar/skin-base.png' };
+      }
+    } catch (error) {
+      console.error("Error fetching inventory for preview:", error);
+    }
+  }
 });
 
+const handleItemClick = (item) => {
+  if (!item || !item.category) return;
+  const slot = item.category.toUpperCase();
+  if (previewEquipped.value.hasOwnProperty(slot)) {
+    // Create a new object to ensure reactivity
+    previewEquipped.value[slot] = { ...item };
+    currentPreviewItem.value = item; 
+    showPreviewModal.value = true; 
+  }
+};
+
 const filteredItems = computed(() => {
-  // 백엔드에서 카테고리 필터링을 처리하므로, 클라이언트에서는 더 이상 필터링할 필요가 없습니다.
-  // 이 computed 속성은 이제 v-for 루프에서 일관성을 유지하기 위해 존재합니다.
   return items.value;
 });
 
 const changeCategory = (categoryId) => {
   currentCategory.value = categoryId;
-  // When category changes, we should ideally refetch from the server.
-  // For now, we reset to page 1 and filter the currently loaded items.
-  // A full implementation would require backend support for category filtering.
   items.value = [];
   fetchShopItemsData(1);
 };
@@ -283,7 +336,6 @@ const closePurchaseResultModal = async () => {
   purchaseResultMessage.value = '';
   purchaseResultType.value = '';
   if (isLoggedIn.value) {
-    // Re-fetch current page data to update owned status
     await fetchShopItemsData(currentPage.value);
     await fetchUserData();
   }
@@ -329,12 +381,10 @@ const handleBuy = async (item) => {
 .shop-page {
   font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
   width: 100%;
-  height: 100%; /* 부모 높이 상속 */
+  height: 100%; 
   display: flex;
   justify-content: center;
   background-color: #f5f7fb;
-  
-  /* 스크롤 설정 추가 (모바일 필수) */
   overflow-y: auto; 
   -webkit-overflow-scrolling: touch;
 }
@@ -357,7 +407,7 @@ const handleBuy = async (item) => {
   align-items: flex-end;
   flex-wrap: wrap;
   gap: 20px;
-  margin-bottom: 8px; /* 헤더 아래 여백 추가 */
+  margin-bottom: 8px; 
 }
 
 .header-left {
@@ -426,21 +476,15 @@ const handleBuy = async (item) => {
   color: #f59e0b;
 }
 
-/* --- Category Tabs (수정됨) --- */
+/* --- Category Tabs --- */
 .category-tabs {
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  
-  /* 패딩을 넉넉히 주어 잘림 방지 */
   padding: 4px 4px 16px 4px; 
   margin-bottom: 8px;
-  
-  /* 스크롤바 숨김 */
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; 
-  
-  /* 가려짐 방지를 위해 z-index와 relative 추가 */
   position: relative;
   z-index: 10;
 }
@@ -460,8 +504,6 @@ const handleBuy = async (item) => {
   white-space: nowrap;
   transition: all 0.2s;
   font-family: inherit;
-  
-  /* 버튼 형태 유지 */
   flex-shrink: 0;
 }
 
@@ -482,7 +524,7 @@ const handleBuy = async (item) => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 24px;
-  padding-bottom: 40px; /* 바닥 여백 추가 */
+  padding-bottom: 40px; 
 }
 
 .item-card {
@@ -659,58 +701,62 @@ const handleBuy = async (item) => {
 }
 
 
-/* ------------------------------------------- */
-/* ★ 반응형 미디어 쿼리 수정 ★ */
-/* ------------------------------------------- */
+/* Item Preview Modal Styles */
+.preview-modal-body {
+  padding: 20px;
+  max-width: 320px; 
+  margin: 0 auto;
+}
 
-/* 모바일 (640px 이하) */
-@media (max-width: 640px) {
-  .content-container {
-    padding: 24px 16px; /* 좌우 여백 축소 */
-  }
+.avatar-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
 
-  .shop-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  
-  .page-title {
-    font-size: 24px;
-  }
+/* Avatar Styles (Adjusted with padding) */
+.avatar-stage {
+  width: 280px; height: 280px; 
+  position: relative; display: block;
+  margin-bottom: 15px; 
+}
+.stage-bg {
+  position: absolute; top: 50%; left: 50%; 
+  transform: translate(-50%, -50%);
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, #eff6ff 0%, #fff 70%);
+  border-radius: 50%; 
+  z-index: 0;
+}
+.avatar-layers { 
+  position: absolute; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  z-index: 1; 
+  /* Added padding to prevent cutoff */
+  padding: 20px;
+}
+.layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.layer > img {
+  width: 100%; height: 100%; 
+  object-fit: contain; display: block;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+.skin { z-index: 10; }
+.bottom { z-index: 20; }
+.top { z-index: 30; }
+.face { z-index: 40; }
+.hair { z-index: 50; }
+.hat { z-index: 60; }
 
-  .coin-card {
-    width: 100%;
-  }
-  
-  /* 탭 영역 여백 확보 */
-  .category-tabs {
-    padding-bottom: 12px;
-    margin-bottom: 16px;
-  }
-
-  .item-grid {
-    grid-template-columns: repeat(2, 1fr); /* 2열 고정 */
-    gap: 12px;
-  }
-  
-  .item-image-wrapper {
-    height: 140px;
-    padding: 10px;
-  }
-  
-  .item-info {
-    padding: 16px;
-  }
-  
-  .item-name {
-    font-size: 14px;
-  }
-  
-  .action-btn {
-    padding: 10px;
-    font-size: 13px;
-  }
+.preview-item-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: center;
 }
 
 /* Modal Body Styles */
@@ -761,5 +807,54 @@ const handleBuy = async (item) => {
 }
 .btn-confirm:hover {
   background-color: #2563eb;
+}
+
+/* 모바일 (640px 이하) - Added missing @media block */
+@media (max-width: 640px) {
+  .content-container {
+    padding: 24px 16px;
+  }
+
+  .shop-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .page-title {
+    font-size: 24px;
+  }
+
+  .coin-card {
+    width: 100%;
+  }
+  
+  .category-tabs {
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+
+  .item-grid {
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 12px;
+  }
+  
+  .item-image-wrapper {
+    height: 140px;
+    padding: 10px;
+  }
+  
+  .item-info {
+    padding: 16px;
+  }
+  
+  .item-name {
+    font-size: 14px;
+  }
+  
+  .action-btn {
+    padding: 10px;
+    font-size: 13px;
+  }
 }
 </style>

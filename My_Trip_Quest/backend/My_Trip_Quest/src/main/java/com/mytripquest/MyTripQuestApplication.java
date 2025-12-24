@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
+@org.springframework.scheduling.annotation.EnableAsync
 @MapperScan(value = "com.mytripquest.domain", annotationClass = org.apache.ibatis.annotations.Mapper.class)
 public class MyTripQuestApplication {
 

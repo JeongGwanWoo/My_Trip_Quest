@@ -15,42 +15,37 @@
             <h3>CHARACTER PREVIEW</h3>
           </div>
           
-          <div class="preview-content-wrapper">
-            <div class="avatar-stage">
-              <div class="stage-bg"></div>
-              <div class="avatar-layers">
-                <div class="layer skin">
-                  <img :src="equipped.SKIN?.image || '/assets/avatar/skin-base.png'" alt="skin"/>
-                </div>
-                <div class="layer bottom" v-if="equipped.BOTTOM">
-                  <img :src="equipped.BOTTOM.image" alt="bottom"/>
-                </div>
-                <div class="layer top" v-if="equipped.TOP">
-                  <img :src="equipped.TOP.image" alt="top"/>
-                </div>
-                <div class="layer hair" v-if="equipped.HAIR">
-                  <img :src="equipped.HAIR.image" alt="hair"/>
-                </div>
-                <div class="layer face" v-if="equipped.FACE">
-                  <img :src="equipped.FACE.image" alt="face"/>
-                </div>
-                <div class="layer hat" v-if="equipped.HAT">
-                  <img :src="equipped.HAT.image" alt="hat"/>
-                </div>
+          <div class="avatar-stage">
+            <div class="stage-bg"></div>
+            <div class="avatar-layers">
+              <div class="layer skin">
+                <img :src="equipped.SKIN?.image || '/assets/avatar/skin-base.png'" alt="skin"/>
               </div>
-            </div>
-
-            <div class="preview-actions">
-              <div class="character-info">
-                <span class="role-badge">TRAVELER</span>
-                <span class="username">{{ authStore.userInfo?.nickname || 'TRAVELMASTER' }}</span>
+              <div class="layer bottom" v-if="equipped.BOTTOM">
+                <img :src="equipped.BOTTOM.image" alt="bottom"/>
               </div>
-
-              <button @click="saveCurrentAvatar" class="btn-save">
-                <span><i class="fa-solid fa-floppy-disk" style="margin-right: 8px;"></i> 스타일 저장하기</span>
-              </button>
+              <div class="layer top" v-if="equipped.TOP">
+                <img :src="equipped.TOP.image" alt="top"/>
+              </div>
+              <div class="layer hair" v-if="equipped.HAIR">
+                <img :src="equipped.HAIR.image" alt="hair"/>
+              </div>
+              <div class="layer face" v-if="equipped.FACE">
+                <img :src="equipped.FACE.image" alt="face"/>
+              </div>
+              <div class="layer hat" v-if="equipped.HAT">
+                <img :src="equipped.HAT.image" alt="hat"/>
+              </div>
             </div>
           </div>
+
+          <div class="character-info">
+            <span class="username">{{ authStore.userInfo?.nickname }}</span>
+          </div>
+
+          <button @click="saveCurrentAvatar" class="btn-save">
+            <span><i class="fa-solid fa-floppy-disk" style="margin-right: 8px;"></i> 스타일 저장하기</span>
+          </button>
         </section>
 
         <section class="inventory-card">
@@ -178,7 +173,8 @@ const categorizedInventory = computed(() => {
     SKIN: [], HAIR: [], HAT: [], TOP: [], BOTTOM: [], FACE: [],
   };
 
-  allBackendItems.value.forEach(userItem => {
+  if (Array.isArray(allBackendItems.value)) {
+    allBackendItems.value.forEach(userItem => {
     const itemDetail = userItem.item;
     if (itemDetail && itemDetail.slot) {
       const slotCategory = itemDetail.slot.toUpperCase();
@@ -192,6 +188,7 @@ const categorizedInventory = computed(() => {
       }
     }
   });
+  }
   return inventory;
 });
 
@@ -274,25 +271,31 @@ const closeSaveConfirmModal = () => {
 onMounted(async () => {
   try {
     const data = await getMyInventory();
-    allBackendItems.value = data;
+    
+    if (Array.isArray(data)) {
+        allBackendItems.value = data;
 
-    data.forEach(userItem => {
-      const isOn = userItem.equipped || userItem.isEquipped;
-
-      if (isOn && userItem.item) {
-        const itemDetail = userItem.item;
-        const slotName = itemDetail.slot ? itemDetail.slot.toUpperCase() : null;
-
-        if (slotName) {
-            equipped.value[slotName] = {
-                id: itemDetail.itemId,
-                type: slotName,
-                name: itemDetail.name,
-                image: itemDetail.imageUrl
-            };
-        }
-      }
-    });
+        data.forEach(userItem => {
+          const isOn = userItem.equipped || userItem.isEquipped;
+    
+          if (isOn && userItem.item) {
+            const itemDetail = userItem.item;
+            const slotName = itemDetail.slot ? itemDetail.slot.toUpperCase() : null;
+    
+            if (slotName) {
+                equipped.value[slotName] = {
+                    id: itemDetail.itemId,
+                    type: slotName,
+                    name: itemDetail.name,
+                    image: itemDetail.imageUrl
+                };
+            }
+          }
+        });
+    } else {
+        console.error('Inventory data is not an array:', data);
+        allBackendItems.value = [];
+    }
 
   } catch (err) {
     error.value = err.message;
@@ -363,15 +366,12 @@ onMounted(async () => {
   margin-bottom: 24px; width: 100%; text-align: center;
 }
 
-.preview-content-wrapper {
-  display: flex; flex-direction: column; align-items: center; width: 100%;
-}
 
 /* Avatar */
 .avatar-stage {
   width: 280px; height: 280px; 
   position: relative; display: block;
-  margin: 0 auto 24px;
+  margin-bottom: 24px;
 }
 .stage-bg {
   position: absolute; top: 50%; left: 50%; 
@@ -381,7 +381,7 @@ onMounted(async () => {
   border-radius: 50%; 
   z-index: 0;
 }
-.avatar-layers { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+.avatar-layers { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; padding: 20px; }
 .layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 .layer > img {
   width: 100%; height: 100%; 
@@ -395,13 +395,8 @@ onMounted(async () => {
 .layer.hair { z-index: 50; }
 .layer.hat { z-index: 60; }
 
-.preview-actions { width: 100%; text-align: center; }
 .character-info { margin-bottom: 32px; }
-.role-badge {
-  display: inline-block; background: #f1f5f9; color: #64748b;
-  font-size: 11px; font-weight: 700; padding: 4px 8px;
-  border-radius: 6px; margin-bottom: 8px;
-}
+
 .username { display: block; font-size: 20px; font-weight: 800; color: #1e293b; }
 
 .btn-save {
@@ -461,7 +456,7 @@ onMounted(async () => {
   display: flex; flex-direction: column; align-items: center;
 }
 .item-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06); }
-.item-card.selected { border: 2px solid #3b82f6; background: #eff6ff; }
+.item-card.selected { border: 2px solid #3b82f6; background: #eff6ff;  }
 
 .item-img-box {
   width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;
@@ -562,12 +557,7 @@ onMounted(async () => {
     flex-basis: auto; /* flex-basis 초기화 */
     width: 100%;
   }
-  .preview-content-wrapper { 
-    flex-direction: row; 
-    justify-content: center; 
-    gap: 32px; 
-    align-items: center;
-  }
+
   .avatar-stage { 
     margin: 0; 
     width: 220px; 
@@ -576,10 +566,6 @@ onMounted(async () => {
   .stage-bg { 
     width: 180px; 
     height: 180px; 
-  }
-  .preview-actions { 
-    width: auto; 
-    text-align: left; 
   }
   .character-info { 
     margin-bottom: 16px; 
@@ -639,9 +625,6 @@ onMounted(async () => {
     padding-top: 16px; padding-bottom: 16px;
   }
   .preview-header h3 { margin-bottom: 16px; }
-  .preview-content-wrapper {
-    gap: 16px; justify-content: space-around;
-  }
   .avatar-stage {
     width: 160px; height: 160px;
   }
@@ -650,8 +633,8 @@ onMounted(async () => {
   }
   .username { font-size: 18px; }
   .btn-save {
-    min-width: unset; width: 100%;
-    padding: 12px 16px; font-size: 14px;
+    min-width: unset; max-width: 80%; /* Adjusted width */
+    padding: 10px 14px; font-size: 13px; /* Slightly reduced */
   }
   .character-info { margin-bottom: 12px; }
 
@@ -662,7 +645,7 @@ onMounted(async () => {
     overflow-x: auto;
     gap: 12px;
     width: 100%; /* 너비 강제 */
-    padding: 0 16px 12px 16px; /* 좌우 패딩 + 스크롤바 공간 */
+    padding: 10px 16px 12px 16px; /* 좌우 패딩 + 스크롤바 공간 */
     
     /* grid 속성 초기화 */
     height: auto;

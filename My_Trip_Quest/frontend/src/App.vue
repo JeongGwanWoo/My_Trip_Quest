@@ -73,9 +73,9 @@ const checkAuthStatus = async () => {
     try {
       // Try to fetch user profile to validate the token
       await getProfile();
-      console.log("세션 유효성 검사 성공: 사용자가 로그인되어 있습니다.");
+      // console.log("세션 유효성 검사 성공: 사용자가 로그인되어 있습니다.");
     } catch (error) {
-      console.log("세션 유효성 검사 실패: 토큰이 만료되었거나 서버에 연결할 수 없습니다. 강제 로그아웃합니다.");
+      // console.log("세션 유효성 검사 실패: 토큰이 만료되었거나 서버에 연결할 수 없습니다. 강제 로그아웃합니다.");
       authStore.logout();
     }
   }

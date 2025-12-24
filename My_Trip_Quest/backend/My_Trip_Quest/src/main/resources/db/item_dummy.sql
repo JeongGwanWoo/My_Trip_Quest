@@ -10,7 +10,7 @@ INSERT INTO `items` (`name`, `slot`, `image_url`, `price`, `is_purchasable`) VAL
 ('밀짚 모자', 'HAT', '/assets/avatar/milzipmoza.png', 150, TRUE),
 ('갈색 머리', 'HAIR',   '/assets/avatar/brownhair.png', 100, TRUE),
 ('가죽 자켓', 'TOP',    '/assets/avatar/hiptop.png', 250, TRUE),
-('하와이안 셔츠', 'TOP',    '/assets/avatar/Hwaiianshirts.png', 200, TRUE),
+('하와이안 셔츠', 'TOP',    '/assets/avatar/Hawaiianshirts.png', 200, TRUE),
 ('산타 셔츠', 'TOP',    '/assets/avatar/santashirts.png', 200, TRUE),
 ('루돌프 셔츠', 'TOP',    '/assets/avatar/rudolphshirts.png', 200, TRUE),
 ('셔츠', 'TOP',    '/assets/avatar/neatshirts.png', 200, TRUE),

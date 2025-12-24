@@ -24,6 +24,9 @@
             <arg column="location_name" javaType="string"/>
             <arg column="reward_xp" javaType="java.lang.Integer"/>
             <arg column="reward_points" javaType="java.lang.Integer"/>
+            <arg column="latitude" javaType="java.math.BigDecimal"/>
+            <arg column="longitude" javaType="java.math.BigDecimal"/>
+            <arg column="gps_verify_radius" javaType="java.lang.Integer"/>
         </constructor>
     </resultMap>
 
@@ -81,7 +84,10 @@
             uq.accepted_at,
             l.title as location_name,
             q.reward_xp,
-            q.reward_points
+            q.reward_points,
+            l.latitude,
+            l.longitude,
+            l.gps_verify_radius
         FROM
             user_quests uq
         LEFT JOIN
@@ -92,6 +98,25 @@
             uq.user_id = #{userId} AND uq.status = #{status, typeHandler=org.apache.ibatis.type.EnumTypeHandler}
         ORDER BY
             uq.accepted_at DESC
+    </select>
+
+    <select id="findCompletedQuestsByUserId" resultType="com.mytripquest.domain.quest.dto.CompletedMissionResponse">
+        SELECT
+            uq.quest_id as questId,
+            q.title as questTitle,
+            q.description as questContent,
+            l.title as locationName,
+            uq.completed_at as completedAt
+        FROM
+            user_quests uq
+        JOIN
+            quests q ON uq.quest_id = q.quest_id
+        JOIN
+            locations l ON q.location_id = l.location_id
+        WHERE
+            uq.user_id = #{userId} AND uq.status = 'COMPLETED'
+        ORDER BY
+            uq.completed_at DESC
     </select>
 
     <delete id="delete" parameterType="com.mytripquest.domain.quest.entity.UserQuest">
@@ -124,6 +149,74 @@
         WHERE uq.user_id = #{userId}
           AND uq.status = 'COMPLETED'
           AND l.area_code = #{areaCode}
+    </select>
+
+    <select id="getQuestCompletionStats" resultType="com.mytripquest.domain.quest.dto.QuestStatDto">
+        SELECT
+            q.quest_id AS questId,
+            q.title AS questTitle,
+            -- 완료 수: user_quests에서 COMPLETED 상태인 것
+            COUNT(DISTINCT CASE WHEN uq.status = 'COMPLETED' THEN uq.user_id END) AS completionCount,
+            
+            -- 시도 수: system_logs에서 해당 퀘스트(target_id)에 대한 인증 시도 횟수
+            -- (주의: 아직 로그가 없는 퀘스트는 0이 될 수 있으므로, 최소한 완료 수보다는 크거나 같아야 함)
+            GREATEST(
+                COUNT(DISTINCT CASE WHEN uq.status = 'COMPLETED' THEN uq.user_id END), 
+                (SELECT COUNT(*) FROM system_logs sl 
+                 WHERE sl.target_id = q.quest_id 
+                   AND sl.feature_name LIKE '%complete%Quest%')
+            ) AS acceptanceCount,
+            
+            -- 완료율 계산
+            CASE
+                WHEN (SELECT COUNT(*) FROM system_logs sl 
+                      WHERE sl.target_id = q.quest_id 
+                        AND sl.feature_name LIKE '%complete%Quest%') = 0 THEN 0
+                ELSE 
+                    (COUNT(DISTINCT CASE WHEN uq.status = 'COMPLETED' THEN uq.user_id END) * 100.0 / 
+                     GREATEST(1, (SELECT COUNT(*) FROM system_logs sl 
+                                  WHERE sl.target_id = q.quest_id 
+                                    AND sl.feature_name LIKE '%complete%Quest%')))
+            END AS completionRate
+        FROM
+            quests q
+        LEFT JOIN
+            user_quests uq ON q.quest_id = uq.quest_id
+        GROUP BY
+            q.quest_id, q.title
+        ORDER BY
+            completionRate DESC
+    </select>
+
+    <select id="selectRegionalCompletionStats" resultType="com.mytripquest.domain.systemlog.dto.ContentStatDto$RegionalStat">
+        SELECT
+            CASE
+                WHEN l.area_code = 1 THEN '서울'
+                WHEN l.area_code = 2 THEN '인천'
+                WHEN l.area_code = 3 THEN '대전'
+                WHEN l.area_code = 4 THEN '대구'
+                WHEN l.area_code = 5 THEN '광주'
+                WHEN l.area_code = 6 THEN '부산'
+                WHEN l.area_code = 7 THEN '울산'
+                WHEN l.area_code = 8 THEN '세종'
+                WHEN l.area_code = 31 THEN '경기'
+                WHEN l.area_code = 32 THEN '강원'
+                WHEN l.area_code = 33 THEN '충북'
+                WHEN l.area_code = 34 THEN '충남'
+                WHEN l.area_code = 35 THEN '경북'
+                WHEN l.area_code = 36 THEN '경남'
+                WHEN l.area_code = 37 THEN '전북'
+                WHEN l.area_code = 38 THEN '전남'
+                WHEN l.area_code = 39 THEN '제주'
+                ELSE '기타'
+            END AS areaName,
+            COUNT(uq.user_quest_id) as completedCount
+        FROM user_quests uq
+        JOIN quests q ON uq.quest_id = q.quest_id
+        JOIN locations l ON q.location_id = l.location_id
+        WHERE uq.status = 'COMPLETED'
+        GROUP BY areaName
+        ORDER BY completedCount DESC
     </select>
 
 </mapper>

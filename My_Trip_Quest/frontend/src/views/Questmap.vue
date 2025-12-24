@@ -5,7 +5,15 @@
       <section class="map-card-wrapper">
         
         <div class="map-frame">
-          <MapComponent :areas="areas" @area-clicked="handleAreaClick" class="map-component" />
+          <MapComponent 
+            :areas="areas" 
+            :locations="allLocations"
+            @location-clicked="handleLocationClick"
+            @map-reset="handleMapReset"
+
+            class="map-component" 
+            ref="mapComponentRef"
+          />
         </div>
         
 
@@ -35,7 +43,7 @@
               <template v-for="quest in quests" :key="quest.id">
                 <div
                   class="quest-card"
-                  :class="[quest.colorClass, { 'is-active': selectedAreaCode === quest.id }]"
+                  :class="{ 'is-active': expandedAreaCodes.includes(quest.id) }"
                   @click="handleQuestCardClick(quest.id)"
                 >
                   <div class="card-left">
@@ -51,7 +59,7 @@
                     <div class="progress-circle" :style="`--progress: ${quest.percentage}%`">
                       <span>{{ quest.percentage }}%</span>
                     </div>
-                    <button class="arrow-btn" :class="{ 'expanded': selectedAreaCode === quest.id }">
+                    <button class="arrow-btn" :class="{ 'expanded': expandedAreaCodes.includes(quest.id) }">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
@@ -60,25 +68,30 @@
                 </div>
 
                 <Transition name="slide-fade">
-                  <div v-if="selectedAreaCode === quest.id" class="location-list-container">
+                  <div v-if="expandedAreaCodes.includes(quest.id)" class="location-list-container">
                     <div class="location-list-connector"></div>
                     <div class="location-list">
-                                            <div
-                                              v-for="(location) in areaLocations"
-                                              :key="location.locationId"
-                                              class="location-item"
-                                              @click.stop="fetchQuestsForModal(location)"
-                                            >
-                                              <div class="location-info">
-                                                <span class="bullet-point" :class="getLocationColorClass(location)"></span>
-                                                <span class="location-name">{{ location.title }}</span>
-                                              </div>
-                                            </div>
-                                            <div v-if="!isLastPage && areaLocations.length > 0" class="load-more-container">
-                                              <button @click="handleLoadMore" :disabled="isLoadingMore" class="btn-load-more">
-                                                {{ isLoadingMore ? '불러오는 중...' : '더 보기' }}
-                                              </button>
-                                            </div>
+                      <div
+                        v-for="(location) in (areaLocationsMap[quest.id]?.locations || [])"
+                        :key="location.locationId"
+                        class="location-item"
+                        @click.stop="handleLocationListClick(location)"
+                      >
+                        <div class="location-info">
+                          <span class="bullet-point" :class="getLocationColorClass(location)"></span>
+                          <span class="location-name">{{ location.title }}</span>
+                        </div>
+                      </div>
+                      
+                      <div v-if="!areaLocationsMap[quest.id]?.last && (areaLocationsMap[quest.id]?.locations?.length || 0) > 0" class="load-more-container">
+                        <button @click="handleLoadMore(quest.id)" :disabled="areaLocationsMap[quest.id]?.loading" class="btn-load-more">
+                          {{ areaLocationsMap[quest.id]?.loading ? '불러오는 중...' : '더 보기' }}
+                        </button>
+                      </div>
+                      
+                      <div v-if="(areaLocationsMap[quest.id]?.locations?.length || 0) === 0 && !areaLocationsMap[quest.id]?.loading" class="empty-state-sm">
+                        <span>관광지 정보가 없습니다.</span>
+                      </div>
                     </div>
                   </div>
                 </Transition>
@@ -103,42 +116,30 @@
               <span>📭</span>
               <p>현재 수행 가능한 퀘스트가 없습니다.</p>
             </div>
-            
             <div v-else v-for="quest in locationQuests" :key="quest.questId" class="nested-quest-item">
               <div class="quest-item-content">
                 <span class="quest-title-text">{{ quest.title }}</span>
               </div>
               <div class="quest-actions">
-                <button class="btn-text" @click.stop="showQuestDetails(quest)">상세보기</button>
+                <!-- 상세보기 버튼 (항상 표시) -->
+                <button class="btn-text" @click.stop="showQuestInfo(quest)">상세보기</button>
                 
                 <!-- 퀘스트 상태에 따른 동적 버튼 -->
-                <template v-if="quest.status === 'ACCEPTED' || quest.status === 'IN_PROGRESS'">
-                  <button v-if="quest.questTypeId === 1" class="btn-primary-sm" @click.stop="handleCompleteArrival(quest.questId)">
-                    완료하기
-                  </button>
-                  <button 
-                    v-else-if="quest.questTypeId === 2" 
-                    class="btn-primary-sm" 
-                    @click.stop="triggerFileInput(quest.questId)"
-                    :disabled="isUploading">
-                    {{ isUploading ? '업로드 중...' : '사진 업로드' }}
-                  </button>
-                </template>
-
-                <template v-else-if="quest.status === 'COMPLETED'">
+                <template v-if="quest.status === 'COMPLETED'">
                    <button class="btn-primary-sm" disabled>완료됨</button>
                 </template>
-
-                <template v-else-if="quest.status === 'FAILED'">
-                   <button class="btn-secondary-sm" disabled>실패</button>
+                <template v-else-if="quest.status === 'ACCEPTED' || quest.status === 'IN_PROGRESS'">
+                  <button 
+                    class="btn-primary-sm" 
+                    @click.stop="showQuestDetails(quest)">
+                    완료하기
+                  </button>
                 </template>
-
                 <template v-else>
                   <button 
                     class="btn-primary-sm" 
-                    @click.stop="acceptQuest(quest.questId)"
-                    :disabled="isUploading">
-                    수락
+                    @click.stop="acceptQuest(quest.questId)">
+                    수락하기
                   </button>
                 </template>
               </div>
@@ -269,21 +270,32 @@
         </div>
       </div>
     </BaseModal>
+
+    <!-- Quest Detail Modal (Using QuestDetailModal component) -->
+    <QuestDetailModal 
+      v-if="isQuestDetailModalVisible" 
+      :quest="selectedQuestForDetailModal" 
+      @close="closeQuestDetailModal"
+      @quest-updated="handleQuestUpdated"
+    />
+
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick } from "vue";
+import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { storeToRefs } from "pinia";
 import { useToast } from "@/utils/toast";
 import MapComponent from "@/components/map/MapComponent.vue";
 import BaseModal from "@/components/ui/BaseModal.vue";
+import QuestDetailModal from "@/components/quest/QuestDetailModal.vue";
 import BottomSheet from "@/components/ui/BottomSheet.vue";
 import api from "@/api";
 import { completeArrivalQuest, forfeitQuest } from "@/api/quest";
 import { completePhotoQuest } from "@/api/photoQuest";
+import { compressImage } from "@/utils/imageCompression";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -294,16 +306,20 @@ const { showToast } = useToast();
 const isSheetOpen = ref(false);
 const areas = ref([]);
 const quests = ref([]);
-const areaLocations = ref([]);
+
+// Refactor for multiple open areas
+const areaLocationsMap = reactive({});
+const expandedAreaCodes = ref([]); 
+
 const locationQuests = ref([]);
-const selectedAreaCode = ref(null);
+const allLocations = ref([]); // 지도에 표시할 모든 관광지 데이터
+
 const questIdToProcess = ref(null); // For modal actions
+const mapComponentRef = ref(null); // MapComponent 참조
 
 // Search & Pagination State
 const searchKeyword = ref('');
-const currentPage = ref(0);
-const isLastPage = ref(false);
-const isLoadingMore = ref(false);
+// Pagination state is now inside areaLocationsMap
 
 // Modal State
 const isModalVisible = ref(false);
@@ -317,6 +333,10 @@ const selectedLocationForModal = ref(null);
 const showAcceptModal = ref(false);
 const showCompleteArrivalModal = ref(false);
 const showForfeitModal = ref(false);
+
+// New state for QuestDetailModal
+const isQuestDetailModalVisible = ref(false);
+const selectedQuestForDetailModal = ref(null);
 
 // Photo Quest State
 const fileInputRef = ref(null);
@@ -332,15 +352,22 @@ const refreshQuestData = async () => {
   if (selectedLocationForModal.value) {
     await fetchQuestsForModal(selectedLocationForModal.value);
   }
-  if (selectedAreaCode.value) {
-    await fetchLocations(selectedAreaCode.value, { reset: true });
+  // 현재 열려있는 모든 지역 새로고침
+  for (const code of expandedAreaCodes.value) {
+    await fetchLocations(code, { reset: true });
   }
   await fetchAreas();
 };
 
-const handleAreaClick = (areaCode) => {
-  handleQuestCardClick(areaCode);
+const handleAreaClick = async (areaCode) => {
+  // 지도에서 지역 선택 시 해당 지역 펼치기 (없으면 추가)
+  if (!expandedAreaCodes.value.includes(areaCode)) {
+    expandedAreaCodes.value.push(areaCode);
+    fetchLocations(areaCode, { reset: true });
+  }
   isSheetOpen.value = true;
+  
+  // 해당 지역의 모든 관광지 데이터 (지도 표시용)는 이미 fetchAllLocations로 로드됨
 };
 
 const fetchAreas = async () => {
@@ -363,15 +390,41 @@ const fetchAreas = async () => {
   }
 };
 
+const fetchAllLocations = async () => {
+  try {
+    const response = await api.get('/api/v1/quest-map/locations');
+    allLocations.value = response.data.data || [];
+    // console.log(`Loaded ${allLocations.value.length} locations total.`);
+  } catch (error) {
+    console.error("Error fetching all locations:", error);
+  }
+};
+
 onMounted(async () => {
   await fetchAreas();
+  await fetchAllLocations(); // 모든 관광지 데이터 미리 로드
 });
 
 const getQuestStyle = (areaName) => {
   switch (areaName) {
-    case '서울특별시': return { colorClass: 'accent-red', icon: '🏙️' };
-    case '광주광역시': return { colorClass: 'accent-blue', icon: '🌊' };
-    default: return { colorClass: 'accent-gray', icon: '📍' };
+    case '서울특별시': return { icon: 'Q' };
+    case '부산광역시': return { icon: 'Q' };
+    case '인천광역시': return { icon: 'Q' };
+    case '대전광역시': return { icon: 'Q' };
+    case '대구광역시': return { icon: 'Q' };
+    case '광주광역시': return { icon: 'Q' };
+    case '울산광역시': return { icon: 'Q' };
+    case '세종특별자치시': return { icon: 'Q' };
+    case '제주특별자치도': return { icon: 'Q' };
+    case '강원특별자치도': return { icon: 'Q' };
+    case '경기도': return { icon: 'Q' };
+    case '경상북도': return { icon: 'Q' };
+    case '경상남도': return { icon: 'Q' };
+    case '전북특별자치도': return { icon: 'Q' };
+    case '전라남도': return { icon: 'Q' };
+    case '충청북도': return { icon: 'Q' };
+    case '충청남도': return { icon: 'Q' };
+    default: return { icon: 'Q' };
   }
 };
 
@@ -384,49 +437,88 @@ const getLocationColorClass = (location) => {
 };
 
 const fetchLocations = async (areaCode, { reset = false } = {}) => {
-  if (isLoadingMore.value && !reset) return;
-  if (reset) {
-    currentPage.value = 0;
-    areaLocations.value = [];
-    isLastPage.value = false;
+  // 초기화 (해당 지역 상태가 없으면 생성)
+  if (!areaLocationsMap[areaCode]) {
+    areaLocationsMap[areaCode] = { locations: [], page: 0, last: false, loading: false };
   }
-  isLoadingMore.value = true;
+  
+  const state = areaLocationsMap[areaCode];
+
+  if (state.loading && !reset) return;
+
+  if (reset) {
+    state.page = 0;
+    state.locations = [];
+    state.last = false;
+  }
+
+  state.loading = true;
   try {
     const response = await api.get(`/api/v1/quest-map/areas/${areaCode}`, {
-      params: { page: currentPage.value, size: 10, keyword: searchKeyword.value },
+      params: { page: state.page, size: 10, keyword: searchKeyword.value },
     });
     const data = response.data.data;
-    areaLocations.value.push(...data.content);
-    isLastPage.value = data.last;
-    currentPage.value++;
+    if (reset) {
+       state.locations = data.content;
+    } else {
+       state.locations.push(...data.content);
+    }
+    state.last = data.last;
+    state.page++;
   } catch (error) {
     console.error(`Error fetching locations for area ${areaCode}:`, error);
   } finally {
-    isLoadingMore.value = false;
+    state.loading = false;
   }
 };
 
 const handleQuestCardClick = (areaCode) => {
-  if (selectedAreaCode.value === areaCode) {
-    selectedAreaCode.value = null;
-    areaLocations.value = [];
-    searchKeyword.value = '';
+  const index = expandedAreaCodes.value.indexOf(areaCode);
+  if (index > -1) {
+    // 이미 열려있으면 닫기
+    expandedAreaCodes.value.splice(index, 1);
   } else {
-    selectedAreaCode.value = areaCode;
-    searchKeyword.value = '';
+    // 닫혀있으면 열기
+    expandedAreaCodes.value.push(areaCode);
+    // 데이터 로드
     fetchLocations(areaCode, { reset: true });
   }
 };
 
-const handleSearch = () => {
-  if (selectedAreaCode.value) {
-    fetchLocations(selectedAreaCode.value, { reset: true });
+const handleSearch = async () => {
+  const keyword = searchKeyword.value ? searchKeyword.value.trim() : '';
+  
+  if (!keyword) {
+    expandedAreaCodes.value.forEach(code => fetchLocations(code, { reset: true }));
+    return;
+  }
+
+  // 1. 키워드가 포함된 모든 지역 찾기 (지역명 검색)
+  const matchedAreasByName = areas.value.filter(area => 
+    area.areaName.includes(keyword) || keyword.includes(area.areaName)
+  ).map(a => a.areaCode);
+
+  // 2. 키워드가 포함된 관광지가 있는 지역 찾기 (관광지명 검색)
+  const matchedAreasByLocation = allLocations.value
+    .filter(loc => loc.title.includes(keyword))
+    .map(loc => loc.areaCode);
+
+  // set으로 중복 제거 및 합치기
+  const targetAreaCodes = new Set([...matchedAreasByName, ...matchedAreasByLocation]);
+
+  // 해당 지역들 모두 확장
+  expandedAreaCodes.value = Array.from(targetAreaCodes);
+  
+  // 각 지역 데이터 로드
+  for (const code of expandedAreaCodes.value) {
+    await fetchLocations(code, { reset: true });
   }
 };
 
-const handleLoadMore = () => {
-  if (selectedAreaCode.value && !isLastPage.value) {
-    fetchLocations(selectedAreaCode.value);
+const handleLoadMore = (areaCode) => {
+  const state = areaLocationsMap[areaCode];
+  if (state && !state.last) {
+    fetchLocations(areaCode);
   }
 };
 
@@ -437,6 +529,17 @@ const closeLoginModal = () => {
 const goToLogin = () => {
   router.push('/login');
   closeLoginModal();
+};
+
+// 지도 초기화 시 바텀시트 닫기
+// 지도 초기화 시 바텀시트 닫기
+const handleMapReset = () => {
+  isSheetOpen.value = false;
+  expandedAreaCodes.value = [];
+  // 관광지 마커 제거X (항상 보이게 변경됨) -> 아니면 사용자가 원하면 제거? 
+  // allLocations.value = []; // 기존에는 제거했으나 이제는 항상 로드됨.
+  // 필터링 해제?
+  searchKeyword.value = '';
 };
 
 const fetchQuestsForModal = async (location) => {
@@ -452,6 +555,21 @@ const fetchQuestsForModal = async (location) => {
     isModalVisible.value = true;
   } catch (error) {
     console.error(`Error fetching quests:`, error);
+  }
+};
+
+// 지도에서 관광지 마커 클릭 시 호출되는 핸들러
+const handleLocationClick = (location) => {
+  fetchQuestsForModal(location);
+};
+
+// 미션 리스트(바텀시트)에서 관광지 클릭 시 호출되는 핸들러
+const handleLocationListClick = (location) => {
+  isSheetOpen.value = false; // 바텀시트 닫기
+
+  // 1. 지도로 위치 이동 (MapComponent 메서드 호출)
+  if (mapComponentRef.value) {
+    mapComponentRef.value.moveToLocation(location);
   }
 };
 
@@ -573,10 +691,18 @@ const uploadPhotoForQuest = async (questId, imageFile, latitude = null, longitud
 const handleFileSelect = async (event) => {
   const file = event.target.files[0];
   if (file) {
-    if (activePhotoQuestId.value) {
-      await uploadPhotoForQuest(activePhotoQuestId.value, file);
-    } else {
-      photoQuestError.value = "퀘스트 정보가 없습니다. 다시 시도해주세요.";
+    try {
+      const compressedFile = await compressImage(file);
+      if (activePhotoQuestId.value) {
+        await uploadPhotoForQuest(activePhotoQuestId.value, compressedFile);
+      } else {
+        photoQuestError.value = "퀘스트 정보가 없습니다. 다시 시도해주세요.";
+      }
+    } catch (error) {
+      console.error("Image compression failed, trying original:", error);
+      if (activePhotoQuestId.value) {
+        await uploadPhotoForQuest(activePhotoQuestId.value, file);
+      }
     }
   }
   event.target.value = null;
@@ -596,6 +722,22 @@ const handleGetLocationAndUpload = async () => {
   navigator.geolocation.getCurrentPosition(
     async (position) => {
       const { latitude, longitude } = position.coords;
+
+      // 1. Frontend Range Check
+      if (selectedLocationForModal.value && selectedLocationForModal.value.latitude && selectedLocationForModal.value.longitude) {
+         const targetLat = selectedLocationForModal.value.latitude;
+         const targetLng = selectedLocationForModal.value.longitude;
+         const radius = selectedLocationForModal.value.gpsVerifyRadius || 50;
+         
+         const dist = calculateDistance(latitude, longitude, targetLat, targetLng);
+         if (dist > radius) {
+            photoQuestError.value = `위치가 너무 멉니다. (현재 거리: ${Math.round(dist)}m, 허용 반경: ${radius}m)`;
+            showToast(`위치가 너무 멉니다. (거리: ${Math.round(dist)}m)`, 'error');
+            isUploading.value = false;
+            return;
+         }
+      }
+
       if (selectedImageFile.value) {
         await uploadPhotoForQuest(activePhotoQuestId.value, selectedImageFile.value, latitude.toString(), longitude.toString());
       } else {
@@ -611,13 +753,56 @@ const handleGetLocationAndUpload = async () => {
   );
 };
 
-const showQuestDetails = (quest) => {
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371e3; // metres
+  const rad = Math.PI / 180;
+  const φ1 = lat1 * rad;
+  const φ2 = lat2 * rad;
+  const Δφ = (lat2 - lat1) * rad;
+  const Δλ = (lon2 - lon1) * rad;
+
+  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  return R * c;
+};
+
+const showQuestInfo = (quest) => {
+  // Show quest info in the existing simple modal (no action buttons)
   isModalVisible.value = false;
   nextTick(() => {
     selectedQuestForModal.value = quest;
     modalContentType.value = 'questDetails';
     isModalVisible.value = true;
   });
+};
+
+const showQuestDetails = (quest) => {
+  // Close the location list modal
+  isModalVisible.value = false;
+  
+  // Open QuestDetailModal with the selected quest
+  nextTick(() => {
+    selectedQuestForDetailModal.value = quest;
+    isQuestDetailModalVisible.value = true;
+  });
+};
+
+const closeQuestDetailModal = () => {
+  isQuestDetailModalVisible.value = false;
+  selectedQuestForDetailModal.value = null;
+};
+
+const handleQuestUpdated = async () => {
+  // Refresh the area data when quest is completed
+  await fetchAreas();
+  // Refresh the location quests if a location is selected
+  if (selectedLocationForModal.value) {
+    await fetchQuestsForModal(selectedLocationForModal.value);
+  }
+  closeQuestDetailModal();
 };
 
 
@@ -918,6 +1103,8 @@ onBeforeUnmount(() => {
       border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
+      white-space: nowrap; /* 줄바꿈 방지 */
+      flex-shrink: 0; /* 공간 부족해도 줄어들지 않음 */
     }
 
     /* 더 보기 버튼 스타일 */

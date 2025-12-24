@@ -10,6 +10,7 @@ import TermsOfService from '@/views/TermsOfService.vue'
 import PrivacyPolicy from '@/views/PrivacyPolicy.vue'
 import NotFound from '@/views/NotFound.vue'
 import SocialLoginRedirect from '@/views/SocialLoginRedirect.vue'
+import Admin from '@/views/Admin.vue' // Import Admin component
 
 const routes = [
   {
@@ -52,6 +53,18 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/profile/coin-history',
+    name: 'CoinHistory',
+    component: () => import('@/views/CoinHistory.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile/completed-missions',
+    name: 'CompletedMissions',
+    component: () => import('@/views/CompletedMissions.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/shop',
     name: 'Shop',
     component: Shop
@@ -91,6 +104,12 @@ const routes = [
     name: 'SocialSignup',
     component: () => import('@/views/SocialSignup.vue'),
   },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: Admin,
+    meta: { requiresAuth: true, requiresAdmin: true } // Admin route requires authentication and admin role
+  },
   // Catch-all route for 404
   {
     path: '/:pathMatch(.*)*',
@@ -108,9 +127,12 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin) // Check for admin requirement
 
   if (requiresAuth && !authStore.isLoggedIn) {
     next('/login')
+  } else if (requiresAdmin && !authStore.isAdmin) { // New admin check
+    next('/home') // Redirect to home or an unauthorized page
   } else {
     next()
   }

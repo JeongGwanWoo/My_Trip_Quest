@@ -40,6 +40,7 @@ const darkAccentColor = computed(() => '#2563EB');
 <style scoped>
 .logo-svg {
   display: block;
+  margin: 0 auto; /* Center block element */
 }
 text {
   font-family: "Pretendard", sans-serif; /* 폰트 강제 적용 */

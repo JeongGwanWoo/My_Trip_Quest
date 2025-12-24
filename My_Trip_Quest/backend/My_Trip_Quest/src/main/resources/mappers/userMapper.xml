@@ -46,7 +46,9 @@
         <set>
             <if test="nickname != null">nickname = #{nickname},</if>
             <if test="passwordHash != null">password_hash = #{passwordHash},</if>
-            <if test="provider != null">provider = #{provider},</if> <if test="totalXp != null">total_xp = #{totalXp},</if>
+            <if test="provider != null">provider = #{provider},</if>
+            <if test="role != null">role = #{role},</if>
+            <if test="totalXp != null">total_xp = #{totalXp},</if>
             <if test="points != null">points = #{points},</if>
             updated_at = NOW() 
         </set>
@@ -56,13 +58,14 @@
     <select id="findTopUsersByPoints" parameterType="int" resultMap="userResultMap">
         SELECT <include refid="userColumns"/>
         FROM users
+        WHERE role != 'ADMIN'
         ORDER BY points DESC
         LIMIT #{limit}
     </select>
 
     <select id="findUserRankById" parameterType="long" resultType="com.mytripquest.domain.ranking.dto.UserRankDto">
         SELECT
-            (SELECT COUNT(*) + 1 FROM users u2 WHERE u2.points > u1.points) as `rank`,
+            (SELECT COUNT(*) + 1 FROM users u2 WHERE u2.points > u1.points AND u2.role != 'ADMIN') as `rank`,
             u1.nickname,
             u1.points,
             u1.total_xp as totalXp
@@ -87,5 +90,15 @@
     <delete id="deleteById" parameterType="long">
         DELETE FROM users WHERE user_id = #{userId}
     </delete>
+
+    <select id="findAll" resultMap="userResultMap">
+        SELECT <include refid="userColumns"/>
+        FROM users
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findAllUserXp" resultType="int">
+        SELECT COALESCE(total_xp, 0) FROM users
+    </select>
 
 </mapper>

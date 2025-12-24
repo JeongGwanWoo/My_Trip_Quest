@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class ApiResponse<T> {
-	private final boolean success;
+    private final boolean success;
     private final String message;
     private final T data; // 실제 응답 데이터 (유저, 퀘스트 목록 등)
 
@@ -23,12 +23,20 @@ public class ApiResponse<T> {
      * data는 null이며, 실패 메시지를 받아 처리합니다.
      */
     public static <T> ApiResponse<T> failure(String message) {
-        // 실패 시 data는 null을 반환합니다. 
+        // 실패 시 data는 null을 반환합니다.
         return new ApiResponse<>(false, message, null);
     }
-    
+
     // 필요하다면, data 없이 성공 메시지만 보낼 때 사용 (HTTP 204 No Content 등에 활용)
-    public static ApiResponse<?> successWithoutData() {
+    public static <T> ApiResponse<T> successWithoutData() {
         return new ApiResponse<>(true, "요청 성공", null);
+    }
+
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return new ApiResponse<>(true, message, data);
+    }
+
+    public static <T> ApiResponse<T> success(String message) {
+        return new ApiResponse<>(true, message, null);
     }
 }

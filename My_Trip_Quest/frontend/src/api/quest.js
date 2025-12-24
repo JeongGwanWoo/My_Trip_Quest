@@ -5,7 +5,7 @@ import api from './index';
  * @returns {Promise<any>}
  */
 export const getAreaQuestStatus = () => {
-    return api.get('/api/v1/quest-map/areas');
+  return api.get('/api/v1/quest-map/areas');
 };
 
 /**
@@ -17,11 +17,11 @@ export const getAreaQuestStatus = () => {
  * @returns {Promise<any>}
  */
 export const getLocationsByArea = (areaCode, page = 0, size = 10, keyword = null) => {
-    const params = { page, size };
-    if (keyword) {
-        params.keyword = keyword;
-    }
-    return api.get(`/api/v1/quest-map/areas/${areaCode}`, { params });
+  const params = { page, size };
+  if (keyword) {
+    params.keyword = keyword;
+  }
+  return api.get(`/api/v1/quest-map/areas/${areaCode}`, { params });
 };
 
 /**
@@ -30,7 +30,7 @@ export const getLocationsByArea = (areaCode, page = 0, size = 10, keyword = null
  * @returns {Promise<any>}
  */
 export const getQuestsByLocation = (locationId) => {
-    return api.get(`/api/v1/quest-map/locations/${locationId}`);
+  return api.get(`/api/v1/quest-map/locations/${locationId}`);
 };
 
 /**
@@ -39,7 +39,7 @@ export const getQuestsByLocation = (locationId) => {
  * @returns {Promise<any>}
  */
 export const acceptQuest = (questId) => {
-    return api.post(`/api/v1/quest-map/quests/${questId}/accept`);
+  return api.post(`/api/v1/quest-map/quests/${questId}/accept`);
 };
 
 
@@ -72,9 +72,15 @@ export const forfeitQuest = (questId) => {
  * @param {File} imageFile - 사용자가 업로드한 이미지 파일
  * @returns {Promise<any>} API 응답 객체
  */
-export const completePhotoQuest = (questId, imageFile) => {
+export const completePhotoQuest = (questId, imageFile, latitude = null, longitude = null) => {
   const formData = new FormData();
   formData.append('image', imageFile);
+  if (latitude !== null && latitude !== undefined) {
+    formData.append('latitude', latitude);
+  }
+  if (longitude !== null && longitude !== undefined) {
+    formData.append('longitude', longitude);
+  }
 
   return api.post(`/api/v1/quest-map/quests/${questId}/complete/photo`, formData, {
     headers: {
@@ -88,5 +94,5 @@ export const completePhotoQuest = (questId, imageFile) => {
  * @returns {Promise<any>}
  */
 export const getOngoingQuests = () => {
-    return api.get('/api/v1/quest-map/quests/in-progress');
+  return api.get('/api/v1/quest-map/quests/in-progress');
 };

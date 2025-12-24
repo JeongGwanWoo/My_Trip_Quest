@@ -124,7 +124,7 @@
           </section>
 
           <section class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card" @click="goToCoinHistory" style="cursor: pointer">
               <div class="stat-icon-box yellow">
                 <span class="icon"><i class="fa-solid fa-coins"></i></span>
               </div>
@@ -135,7 +135,7 @@
                 >
               </div>
             </div>
-            <div class="stat-card green">
+            <div class="stat-card green" @click="goToCompletedMissions" style="cursor: pointer">
               <div class="stat-icon-box green">
                 <span class="icon"><i class="fa-solid fa-trophy"></i></span>
               </div>
@@ -149,7 +149,7 @@
                 >
               </div>
             </div>
-            <div class="stat-card blue">
+            <div class="stat-card blue" @click="goToRankings" style="cursor: pointer">
               <div class="stat-icon-box blue">
                 <span class="icon"
                   ><i class="fa-solid fa-ranking-star"></i
@@ -184,46 +184,52 @@
 
           <section class="city-section">
             <h3 class="section-title">도시별 진행 현황</h3>
-            <div class="city-list">
-              <div
-                v-for="city in userProfile?.cityProgress || []"
-                :key="city.areaCode"
-                class="city-item"
-              >
-                <div class="city-icon">
-                  <i :class="getCityStyle(city.cityName).icon"></i>
+                <div class="city-list">
+                  <div
+                    v-for="city in displayedCities"
+                    :key="city.areaCode"
+                    class="city-item"
+                  >
+                    <div class="city-icon">
+                      <i :class="getCityStyle(city.cityName).icon"></i>
+                    </div>
+                    <div class="city-info">
+                      <div class="city-header">
+                        <span class="city-name">{{ city.cityName }}</span>
+                        <span class="city-percent"
+                          >{{
+                            Math.round(
+                              (city.completedQuests / city.totalQuests) * 100
+                            ) || 0
+                          }}%</span
+                        >
+                      </div>
+                      <div class="city-progress-bg">
+                        <div
+                          class="city-progress-fill"
+                          :class="getCityStyle(city.cityName).colorClass"
+                          :style="{
+                            width: `${
+                              Math.round(
+                                (city.completedQuests / city.totalQuests) * 100
+                              ) || 0
+                            }%`,
+                          }"
+                        ></div>
+                      </div>
+                      <div class="city-sub-text">
+                        <span v-if="city.totalQuests > 0">{{ city.completedQuests }} / {{ city.totalQuests }} 미션 완료</span>
+                        <span v-else class="text-gray-400">오픈 준비 중</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="city-info">
-                  <div class="city-header">
-                    <span class="city-name">{{ city.cityName }}</span>
-                    <span class="city-percent"
-                      >{{
-                        Math.round(
-                          (city.completedQuests / city.totalQuests) * 100
-                        ) || 0
-                      }}%</span
-                    >
-                  </div>
-                  <div class="city-progress-bg">
-                    <div
-                      class="city-progress-fill"
-                      :class="getCityStyle(city.cityName).colorClass"
-                      :style="{
-                        width: `${
-                          Math.round(
-                            (city.completedQuests / city.totalQuests) * 100
-                          ) || 0
-                        }%`,
-                      }"
-                    ></div>
-                  </div>
-                  <div class="city-sub-text">
-                    {{ city.completedQuests }} / {{ city.totalQuests }} 미션
-                    완료
-                  </div>
+
+                <div v-if="hasMoreCities" class="more-cities-btn-wrapper">
+                  <button @click="openAllCitiesModal" class="btn-more-cities">
+                    더 보기 <i class="fa-solid fa-chevron-right"></i>
+                  </button>
                 </div>
-              </div>
-            </div>
           </section>
         </main>
       </div>
@@ -237,6 +243,7 @@
           <div class="form-group">
             <label>닉네임</label>
             <input type="text" v-model="editForm.nickname" class="form-input" />
+            <p class="help-text">닉네임은 한글 1~6자, 영문/숫자 1~12자 이내로 입력해주세요.</p>
             <div v-if="nicknameMessage" 
                  class="validation-message"
                  :class="{ 'msg-valid': nicknameStatus === 'valid', 'msg-invalid': nicknameStatus === 'invalid' || nicknameStatus === 'checking' }">
@@ -308,6 +315,56 @@
         </div>
       </div>
     </BaseModal>
+
+    <!-- All Cities Modal -->
+    <BaseModal :show="isAllCitiesModalOpen" @close="isAllCitiesModalOpen = false">
+      <div class="modal-body city-modal-body">
+        <h3 class="modal-title">전체 도시 현황</h3>
+        <div class="city-list-scrollable">
+          <div
+            v-for="city in sortedCityProgress"
+            :key="city.areaCode"
+            class="city-item"
+          >
+            <div class="city-icon">
+              <i :class="getCityStyle(city.cityName).icon"></i>
+            </div>
+            <div class="city-info">
+              <div class="city-header">
+                <span class="city-name">{{ city.cityName }}</span>
+                <span class="city-percent"
+                  >{{
+                    Math.round(
+                      (city.completedQuests / city.totalQuests) * 100
+                    ) || 0
+                  }}%</span
+                >
+              </div>
+              <div class="city-progress-bg">
+                <div
+                  class="city-progress-fill"
+                  :class="getCityStyle(city.cityName).colorClass"
+                  :style="{
+                    width: `${
+                      Math.round(
+                        (city.completedQuests / city.totalQuests) * 100
+                      ) || 0
+                    }%`,
+                  }"
+                ></div>
+              </div>
+              <div class="city-sub-text">
+                <span v-if="city.totalQuests > 0">{{ city.completedQuests }} / {{ city.totalQuests }} 미션 완료</span>
+                <span v-else class="text-gray-400">오픈 준비 중</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-confirm" @click="isAllCitiesModalOpen = false">닫기</button>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -328,6 +385,18 @@ const goToOngoingQuests = () => {
   router.push("/profile/ongoing-quests");
 };
 
+const goToRankings = () => {
+  router.push("/rankings");
+};
+
+const goToCoinHistory = () => {
+  router.push("/profile/coin-history");
+};
+
+const goToCompletedMissions = () => {
+  router.push("/profile/completed-missions");
+};
+
 const userProfile = ref(null);
 const equippedItemsList = ref([]);
 const formattedJoinedDate = computed(() => {
@@ -343,6 +412,7 @@ const formattedJoinedDate = computed(() => {
 const isEditModalOpen = ref(false);
 const showUpdateConfirmModal = ref(false);
 const showDeleteConfirmModal = ref(false);
+const isAllCitiesModalOpen = ref(false);
 
 const editForm = ref({
   nickname: "",
@@ -357,6 +427,16 @@ const nicknameMessage = ref('');
 let debounceTimer = null;
 
 watch(() => editForm.value.nickname, (newNickname) => {
+  const containsKorean = /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(newNickname);
+  const maxLength = containsKorean ? 6 : 12;
+
+  if (newNickname.length > maxLength) {
+    editForm.value.nickname = newNickname.slice(0, maxLength);
+    nicknameMessage.value = `닉네임은 ${containsKorean ? '한글 6자,' : ''} 영문 12자 이내로 입력해주세요.`;
+    nicknameStatus.value = 'invalid';
+    return;
+  }
+
   clearTimeout(debounceTimer);
   if (!newNickname || newNickname === userProfile.value?.nickname) {
     nicknameStatus.value = 'idle';
@@ -396,6 +476,10 @@ const openEditModal = () => {
 
 const closeEditModal = () => {
   isEditModalOpen.value = false;
+};
+
+const openAllCitiesModal = () => {
+  isAllCitiesModalOpen.value = true;
 };
 
 // --- Profile Update Logic ---
@@ -477,16 +561,32 @@ const executeDeleteAccount = async () => {
 
 
 const getCityStyle = (cityName) => {
-  switch (cityName) {
-    case "서울특별시":
-      return { icon: "fa-solid fa-city", colorClass: "bg-green" };
-    case "광주광역시":
-      return { icon: "fa-solid fa-water", colorClass: "bg-blue" };
-    default:
-      return { icon: "fa-solid fa-map-marker-alt", colorClass: "bg-gray" };
-  }
+  // Return generic style for all cities
+  return { icon: "fa-solid fa-map-marker-alt", colorClass: "bg-blue" };
 };
 // -----------------------
+
+
+const sortedCityProgress = computed(() => {
+  if (!userProfile.value?.cityProgress) return [];
+  // Sort by completed quests (desc), then total quests (desc)
+  return [...userProfile.value.cityProgress].sort((a, b) => {
+    if (b.completedQuests !== a.completedQuests) {
+      return b.completedQuests - a.completedQuests;
+    }
+    return b.totalQuests - a.totalQuests;
+  });
+});
+
+const DISPLAY_LIMIT = 4;
+
+const displayedCities = computed(() => {
+  return sortedCityProgress.value.slice(0, DISPLAY_LIMIT);
+});
+
+const hasMoreCities = computed(() => {
+  return sortedCityProgress.value.length > DISPLAY_LIMIT;
+});
 
 const equippedItemsBySlot = computed(() => {
   const slots = {
@@ -508,10 +608,10 @@ const equippedItemsBySlot = computed(() => {
 const fetchUserProfileData = async () => {
   try {
     const response = await getProfile();
-    console.log("API Response:", response);
+    // console.log("API Response:", response);
     if (response.success) {
       userProfile.value = response.data;
-      console.log("Updated userProfile.value:", userProfile.value);
+      // console.log("Updated userProfile.value:", userProfile.value);
     }
   } catch (error) {
     console.error("Failed to fetch user profile data:", error);
@@ -989,6 +1089,45 @@ const earnedBadges = ref([
   gap: 16px;
 }
 
+.city-list-scrollable {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.more-cities-btn-wrapper {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-more-cities {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btn-more-cities:hover {
+  background: #f8fafc;
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.city-modal-body {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -1010,6 +1149,13 @@ const earnedBadges = ref([
 }
 .form-input:focus {
   border-color: #3b82f6;
+}
+
+.help-text {
+  font-size: 12px;
+  color: #64748b; /* A standard secondary text color */
+  margin-top: 6px;
+  padding-left: 4px;
 }
 
 .validation-message {
@@ -1064,6 +1210,12 @@ const earnedBadges = ref([
 
 /* Responsive */
 @media (max-width: 900px) {
+  .content-container {
+    padding: 20px 15px;
+  }
+  .page-title {
+    font-size: 28px;
+  }
   .dashboard-layout {
     grid-template-columns: 1fr;
   }
@@ -1072,6 +1224,7 @@ const earnedBadges = ref([
     gap: 32px;
     align-items: center;
     justify-content: center;
+    position: static;
   }
   .avatar-area {
     margin-bottom: 0;
@@ -1082,6 +1235,12 @@ const earnedBadges = ref([
 }
 
 @media (max-width: 600px) {
+  .content-container {
+    padding: 20px 10px;
+  }
+  .page-title {
+    font-size: 24px;
+  }
   .profile-card {
     flex-direction: column;
     text-align: center;
@@ -1091,6 +1250,12 @@ const earnedBadges = ref([
   }
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+  .stat-card {
+    padding: 16px;
+  }
+  .stat-info .value {
+    font-size: 18px;
   }
   .city-list {
     grid-template-columns: 1fr;

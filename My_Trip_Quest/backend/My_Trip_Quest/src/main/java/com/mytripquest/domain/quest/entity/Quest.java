@@ -2,11 +2,15 @@ package com.mytripquest.domain.quest.entity;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Quest {
     private long questId;
     private Long locationId;

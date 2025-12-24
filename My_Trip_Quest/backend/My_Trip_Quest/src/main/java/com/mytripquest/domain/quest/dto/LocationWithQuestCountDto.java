@@ -12,6 +12,8 @@ public class LocationWithQuestCountDto {
     private String title;
     private BigDecimal latitude;
     private BigDecimal longitude;
+    private String areaCode;
+    private String addr1; // 주소 정보 추가 (AI 반경 산정에 사용)
     private Integer gpsVerifyRadius;
     private int questCount;
 }

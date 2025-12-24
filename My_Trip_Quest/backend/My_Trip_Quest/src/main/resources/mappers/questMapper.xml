@@ -25,6 +25,8 @@
         <result property="title" column="title"/>
         <result property="latitude" column="latitude"/>
         <result property="longitude" column="longitude"/>
+        <result property="areaCode" column="area_code"/>
+        <result property="addr1" column="addr1"/>
         <result property="gpsVerifyRadius" column="gps_verify_radius"/>
         <result property="questCount" column="quest_count"/>
     </resultMap>
@@ -37,21 +39,54 @@
             l.latitude,
             l.longitude,
             l.gps_verify_radius,
+            l.area_code,
+            l.addr1,
             COUNT(q.quest_id) AS quest_count
         FROM
             locations l
         JOIN
             quests q ON l.location_id = q.location_id
-        WHERE
-            l.area_code = #{areaCode}
+        <where>
+            <if test="areaCode != null and areaCode != 'ALL'">
+                l.area_code = #{areaCode}
+            </if>
             <if test="keyword != null and keyword != ''">
                 AND l.title LIKE CONCAT('%', #{keyword}, '%')
             </if>
+        </where>
         GROUP BY
-            l.location_id, l.title, l.latitude, l.longitude, l.gps_verify_radius
+            l.location_id, l.title, l.latitude, l.longitude, l.gps_verify_radius, l.area_code, l.addr1
         ORDER BY
             l.title ASC
         LIMIT #{pageable.pageSize} OFFSET #{pageable.offset}
+    </select>
+
+    <!-- 퀘스트가 있는 모든 관광지 목록을 조회합니다. -->
+    <select id="findAllLocations" resultMap="locationWithQuestCountMap">
+        SELECT
+            l.location_id,
+            l.title,
+            l.latitude,
+            l.longitude,
+            l.gps_verify_radius,
+            l.area_code,
+            l.addr1,
+            COUNT(q.quest_id) AS quest_count
+        FROM
+            locations l
+        JOIN
+            quests q ON l.location_id = q.location_id
+        GROUP BY
+            l.location_id, l.title, l.latitude, l.longitude, l.gps_verify_radius, l.area_code, l.addr1
+        ORDER BY
+            l.title ASC
+    </select>
+
+    <select id="findDistinctAreaCodes" resultType="string">
+        SELECT DISTINCT l.area_code
+        FROM locations l
+        JOIN quests q ON l.location_id = q.location_id
+        ORDER BY l.area_code ASC
     </select>
 
     <!-- 지역 코드를 기준으로, 해당 지역에 속한 모든 퀘스트 목록을 조회합니다. -->
@@ -104,6 +139,7 @@
             latitude,
             longitude,
             gps_verify_radius,
+            addr1,
             0 AS quest_count
         FROM
             locations
@@ -118,5 +154,54 @@
         ORDER BY quest_id ASC
         LIMIT 1
     </select>
+
+    <select id="findMaxLocationIdByRange" resultType="long">
+        SELECT COALESCE(MAX(location_id), 0)
+        FROM locations
+        WHERE location_id BETWEEN #{startId} AND #{endId}
+    </select>
+
+    <select id="findMaxQuestIdByRange" resultType="long">
+        SELECT COALESCE(MAX(quest_id), 0)
+        FROM quests
+        WHERE quest_id BETWEEN #{startId} AND #{endId}
+    </select>
+
+    <insert id="saveLocation" parameterType="com.mytripquest.domain.quest.dto.LocationWithQuestCountDto">
+        INSERT INTO locations (location_id, title, latitude, longitude, area_code, addr1, gps_verify_radius)
+        VALUES (#{locationId}, #{title}, #{latitude}, #{longitude}, #{areaCode}, #{addr1}, #{gpsVerifyRadius})
+    </insert>
+
+    <insert id="saveQuest" parameterType="com.mytripquest.domain.quest.entity.Quest">
+        INSERT INTO quests (
+            quest_id, location_id, quest_type_id, previous_quest_id, 
+            difficulty, title, description, reward_xp, reward_points, 
+            require_gps_verify, is_active, created_at, updated_at
+        )
+        VALUES (
+            #{questId}, #{locationId}, #{questTypeId}, #{previousQuestId},
+            #{difficulty}, #{title}, #{description}, #{rewardXp}, #{rewardPoints},
+            #{requireGpsVerify}, true, NOW(), NOW()
+        )
+    </insert>
+
+    <update id="updateLocationRadius">
+        UPDATE locations
+        SET gps_verify_radius = #{radius}
+        WHERE location_id = #{locationId}
+    </update>
+
+    <update id="updateLocation">
+        UPDATE locations
+        SET latitude = #{latitude},
+            longitude = #{longitude},
+            gps_verify_radius = #{gpsVerifyRadius}
+        WHERE location_id = #{locationId}
+    </update>
+
+    <delete id="deleteQuest">
+        DELETE FROM quests
+        WHERE quest_id = #{questId}
+    </delete>
 
 </mapper>

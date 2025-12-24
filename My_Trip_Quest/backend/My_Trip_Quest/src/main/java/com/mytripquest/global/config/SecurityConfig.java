@@ -40,27 +40,27 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        
-                        // 👇 [수정됨] 여기에 비밀번호 찾기 관련 주소 3개를 추가했습니다!
                         .requestMatchers(
-                                "/api/v1/users/register", 
-                                "/api/v1/users/login", 
-                                "/api/v1/users/social-signup", 
+                                // Auth
+                                "/api/v1/users/register",
+                                "/api/v1/users/login",
+                                "/api/v1/users/social-signup",
                                 "/api/v1/users/check-nickname",
-                                "/api/v1/users/send-verification-code", // 회원가입용
-                                
-                                // [추가] 비밀번호 찾기 관련 3인방
-                                "/api/v1/users/send-reset-code", 
+                                "/api/v1/users/send-verification-code",
+                                "/api/v1/users/send-reset-code",
                                 "/api/v1/users/verify-code",
                                 "/api/v1/users/reset-password",
-                                
-                                "/login/oauth2/**", 
-                                "/oauth2/**"
+                                "/login/oauth2/**",
+                                "/oauth2/**",
+                                // Public GET requests
+                                "/api/v1/quest-map/**",
+                                "/api/v1/rankings",
+                                "/api/v1/items/shop",
+                                "/api/v1/tour/**"
                         ).permitAll()
-                        
-                        .requestMatchers(HttpMethod.GET, "/api/v1/quest-map/**", "/api/v1/rankings", "/api/v1/items/shop").permitAll()
-                        .requestMatchers("/api/v1/users/register", "/api/v1/users/login", "/api/v1/users/social-signup", "/api/v1/users/check-nickname", "/login/oauth2/**", "/oauth2/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/quest-map/**", "/api/v1/rankings", "/api/v1/items/shop", "/api/v1/tour/**").permitAll()
+                        // Admin endpoints
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        // All other requests must be authenticated
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)

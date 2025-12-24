@@ -28,7 +28,7 @@ public class TourApiController {
     ) {
         log.info("Controller 요청 진입 - areaCode: {}, cat1: {}, pageNo: {}", areaCode, cat1, pageNo);
 
-        JsonNode result = tourApiService.getAreaBasedList(areaCode, cat1, pageNo);
+        JsonNode result = tourApiService.getAreaBasedList(areaCode, cat1, pageNo, 10); // 기본값 10
 
         return ResponseEntity.ok(result);
     }

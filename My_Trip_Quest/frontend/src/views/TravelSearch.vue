@@ -12,7 +12,11 @@
               class="btn-search-this-area" 
               @click="handleLocationSearch"
             >
-              🔄 이 지역에서 재검색
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-refresh">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              이 지역에서 검색
             </button>
           </transition>
           
@@ -31,7 +35,9 @@
                   placeholder="관광지 검색 (예: 박물관)"
                   class="compact-input"
                 />
-                <button @click="searchAttractions" class="icon-search-btn">🔍</button>
+                <button @click="searchAttractions" class="icon-search-btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
               </div>
               <button 
                 class="btn-filter-toggle" 
@@ -39,9 +45,14 @@
                 @click="isFilterVisible = !isFilterVisible"
               >
                 옵션
-                <span class="toggle-icon">{{ isFilterVisible ? '▲' : '▼' }}</span>
+                <span class="toggle-icon">
+                  <svg v-if="isFilterVisible" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                  <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </span>
               </button>
-              <button class="btn-close-sheet" @click="isSheetOpen = false" title="닫기">✕</button>
+              <button class="btn-close-sheet" @click="isSheetOpen = false" title="닫기">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
             </div>
 
             <!-- 2. 상세 필터 영역 (토글) -->
@@ -103,12 +114,14 @@
                       :src="attraction.firstimage"
                       :alt="attraction.title"
                     />
-                    <div v-else class="no-image">📷</div>
+                    <div v-else class="no-image">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
                   </div>
                   <div class="attraction-info">
                     <h3>{{ attraction.title }}</h3>
-                    <p class="address">{{ attraction.addr1 }}</p>
-                    <span class="category">{{ attraction.cat3 || attraction.cat2 || attraction.cat1 }}</span>
+                    <p class="address">{{ getCat1Name(attraction.cat1) }}</p>
+                    
                   </div>
                 </div>
 
@@ -140,7 +153,7 @@ const selectedSigungu = ref('');
 const selectedCat1 = ref('');
 const selectedCat2 = ref('');
 const isFilterVisible = ref(false); // 필터 토글 상태
-const showSearchInThisArea = ref(false); // '이 지역에서 검색' 버튼 표시 여부
+const showSearchInThisArea = ref(true); // 기본적으로 표시 (사용자 요청)
 const searchMode = ref('filter'); // 'filter' (키워드/지역) or 'location' (지도 중심)
 
 const areas = ref([
@@ -229,6 +242,12 @@ const loadCategories = async () => {
 
 const handleCat1Change = () => {
   // 중분류 로직은 일단 생략 (필요 시 추가)
+};
+
+const getCat1Name = (code) => {
+  if (!code) return '';
+  const found = cat1List.value.find(c => c.code === code);
+  return found ? found.name : code;
 };
 
 // 관광지 검색
@@ -393,14 +412,16 @@ const addMarker = (attraction) => {
         <div class="pc-overlay-card">
           <div class="pc-overlay-content-row">
             <div class="pc-overlay-image-wrapper">
-              ${hasImage ? `<img src="${imgUrl}" alt="${attraction.title}" />` : '<div class="pc-no-image">📷</div>'}
+              ${hasImage ? `<img src="${imgUrl}" alt="${attraction.title}" />` : '<div class="pc-no-image"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>'}
             </div>
             <div class="pc-overlay-info-wrapper">
                <div class="pc-overlay-header">
                  <h4 class="pc-overlay-title">${attraction.title}</h4>
-                 <button class="pc-overlay-close" onclick="window.closeCustomOverlay()">×</button>
+                 <button class="pc-overlay-close" onclick="window.closeCustomOverlay()">
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                 </button>
                </div>
-               <p class="pc-overlay-addr">${attraction.addr1 || ''}</p>
+               <p class="pc-overlay-addr">${getCat1Name(attraction.cat1) || ''}</p>
             </div>
           </div>
           <div class="pc-overlay-arrow"></div>
