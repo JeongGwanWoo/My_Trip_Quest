@@ -31,6 +31,13 @@ public interface QuestRepository {
         List<LocationWithQuestCountDto> findAllLocations();
 
         /**
+         * 퀘스트가 존재하는 모든 지역 코드를 중복 없이 조회합니다.
+         * 
+         * @return 지역 코드 리스트
+         */
+        List<String> findDistinctAreaCodes();
+
+        /**
          * 지역 코드를 기준으로, 해당 지역에 속한 모든 퀘스트 목록을 조회합니다.
          * 
          * @param areaCode

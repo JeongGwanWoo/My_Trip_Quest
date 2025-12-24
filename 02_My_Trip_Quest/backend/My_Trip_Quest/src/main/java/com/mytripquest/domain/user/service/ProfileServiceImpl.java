@@ -32,7 +32,8 @@ public class ProfileServiceImpl implements ProfileService {
     private final QuestRepository questRepository;
     private final UserQuestRepository userQuestRepository;
 
-    // This is duplicated from QuestServiceImpl, consider moving to a shared config/util class
+    // This is duplicated from QuestServiceImpl, consider moving to a shared
+    // config/util class
     private static final Map<String, String> AREA_CODES;
 
     static {
@@ -64,10 +65,12 @@ public class ProfileServiceImpl implements ProfileService {
         LevelProgressDto levelProgress = LevelUtil.getLevelProgress(user.getTotalXp());
 
         // 5. Get city progress
+        // 5. Get city progress (Only for areas appearing in Quests)
+        List<String> activeAreaCodes = questRepository.findDistinctAreaCodes();
         List<CityProgressDto> cityProgress = new ArrayList<>();
-        for (Map.Entry<String, String> entry : AREA_CODES.entrySet()) {
-            String cityName = entry.getKey();
-            String areaCode = entry.getValue();
+
+        for (String areaCode : activeAreaCodes) {
+            String cityName = getAreaName(areaCode);
 
             int totalQuestsInArea = questRepository.countQuestsByArea(areaCode);
             int completedQuestsInArea = userQuestRepository.countCompletedQuestsByArea(userId, areaCode);
@@ -92,5 +95,46 @@ public class ProfileServiceImpl implements ProfileService {
                 .rank(rank != null ? rank : 0)
                 .cityProgress(cityProgress)
                 .build();
+    }
+
+    private String getAreaName(String areaCode) {
+        switch (areaCode) {
+            case "1":
+                return "서울특별시";
+            case "2":
+                return "인천광역시";
+            case "3":
+                return "대전광역시";
+            case "4":
+                return "대구광역시";
+            case "5":
+                return "광주광역시";
+            case "6":
+                return "부산광역시";
+            case "7":
+                return "울산광역시";
+            case "8":
+                return "세종특별자치시";
+            case "31":
+                return "경기도";
+            case "32":
+                return "강원특별자치도";
+            case "33":
+                return "충청북도";
+            case "34":
+                return "충청남도";
+            case "35":
+                return "경상북도";
+            case "36":
+                return "경상남도";
+            case "37":
+                return "전북특별자치도";
+            case "38":
+                return "전라남도";
+            case "39":
+                return "제주특별자치도";
+            default:
+                return "알 수 없는 지역 (" + areaCode + ")";
+        }
     }
 }

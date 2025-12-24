@@ -244,7 +244,7 @@ const handleGenerate = async () => {
           address: item.addr1 || ""
         }));
         
-        console.log('배치 AI 요청:', batchRequest);
+        // console.log('배치 AI 요청:', batchRequest);
         
         // 한 번에 전체 배치 호출 (토큰 75% 절감!)
         const res = await estimateLocationRadiusBatch(batchRequest);
@@ -256,11 +256,11 @@ const handleGenerate = async () => {
           results.forEach((result, index) => {
             if (index < itemsToGenerate.length) {
               itemsToGenerate[index].aiRadius = result.radius;
-              console.log(`AI 반경 산출: ${result.name} -> ${result.radius}m`);
+              // console.log(`AI 반경 산출: ${result.name} -> ${result.radius}m`);
             }
           });
           
-          console.log('배치 AI 처리 완료!');
+          // console.log('배치 AI 처리 완료!');
         } else {
           console.warn('배치 AI 요청 실패, 기본값 150m 사용');
           itemsToGenerate.forEach(item => {
@@ -275,7 +275,7 @@ const handleGenerate = async () => {
         });
       }
       
-      console.log('최종 전송 데이터:', itemsToGenerate.map(i => ({title: i.title, aiRadius: i.aiRadius})));
+      // console.log('최종 전송 데이터:', itemsToGenerate.map(i => ({title: i.title, aiRadius: i.aiRadius})));
     }
     
     generationProgress.value = '퀘스트 생성 중...';
@@ -287,7 +287,7 @@ const handleGenerate = async () => {
       useAiRadius: useAiRadius.value
     };
     
-    console.log('백엔드로 전송하는 전체 payload:', {
+    /* console.log('백엔드로 전송하는 전체 payload:', {
       itemCount: payload.items.length,
       items: payload.items.map(i => ({
         title: i.title,
@@ -297,7 +297,7 @@ const handleGenerate = async () => {
       types: payload.types,
       areaCode: payload.areaCode,
       useAiRadius: payload.useAiRadius
-    });
+    }); */
 
     const response = await generateQuests(payload);
     if (response.data && response.data.success) {

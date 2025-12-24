@@ -82,6 +82,13 @@
             l.title ASC
     </select>
 
+    <select id="findDistinctAreaCodes" resultType="string">
+        SELECT DISTINCT l.area_code
+        FROM locations l
+        JOIN quests q ON l.location_id = q.location_id
+        ORDER BY l.area_code ASC
+    </select>
+
     <!-- 지역 코드를 기준으로, 해당 지역에 속한 모든 퀘스트 목록을 조회합니다. -->
     <select id="findQuestsByAreaCode" resultMap="questMap">
         SELECT

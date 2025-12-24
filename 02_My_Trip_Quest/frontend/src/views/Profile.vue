@@ -184,46 +184,52 @@
 
           <section class="city-section">
             <h3 class="section-title">도시별 진행 현황</h3>
-            <div class="city-list">
-              <div
-                v-for="city in filteredCityProgress"
-                :key="city.areaCode"
-                class="city-item"
-              >
-                <div class="city-icon">
-                  <i :class="getCityStyle(city.cityName).icon"></i>
+                <div class="city-list">
+                  <div
+                    v-for="city in displayedCities"
+                    :key="city.areaCode"
+                    class="city-item"
+                  >
+                    <div class="city-icon">
+                      <i :class="getCityStyle(city.cityName).icon"></i>
+                    </div>
+                    <div class="city-info">
+                      <div class="city-header">
+                        <span class="city-name">{{ city.cityName }}</span>
+                        <span class="city-percent"
+                          >{{
+                            Math.round(
+                              (city.completedQuests / city.totalQuests) * 100
+                            ) || 0
+                          }}%</span
+                        >
+                      </div>
+                      <div class="city-progress-bg">
+                        <div
+                          class="city-progress-fill"
+                          :class="getCityStyle(city.cityName).colorClass"
+                          :style="{
+                            width: `${
+                              Math.round(
+                                (city.completedQuests / city.totalQuests) * 100
+                              ) || 0
+                            }%`,
+                          }"
+                        ></div>
+                      </div>
+                      <div class="city-sub-text">
+                        <span v-if="city.totalQuests > 0">{{ city.completedQuests }} / {{ city.totalQuests }} 미션 완료</span>
+                        <span v-else class="text-gray-400">오픈 준비 중</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="city-info">
-                  <div class="city-header">
-                    <span class="city-name">{{ city.cityName }}</span>
-                    <span class="city-percent"
-                      >{{
-                        Math.round(
-                          (city.completedQuests / city.totalQuests) * 100
-                        ) || 0
-                      }}%</span
-                    >
-                  </div>
-                  <div class="city-progress-bg">
-                    <div
-                      class="city-progress-fill"
-                      :class="getCityStyle(city.cityName).colorClass"
-                      :style="{
-                        width: `${
-                          Math.round(
-                            (city.completedQuests / city.totalQuests) * 100
-                          ) || 0
-                        }%`,
-                      }"
-                    ></div>
-                  </div>
-                  <div class="city-sub-text">
-                    {{ city.completedQuests }} / {{ city.totalQuests }} 미션
-                    완료
-                  </div>
+
+                <div v-if="hasMoreCities" class="more-cities-btn-wrapper">
+                  <button @click="openAllCitiesModal" class="btn-more-cities">
+                    더 보기 <i class="fa-solid fa-chevron-right"></i>
+                  </button>
                 </div>
-              </div>
-            </div>
           </section>
         </main>
       </div>
@@ -309,6 +315,56 @@
         </div>
       </div>
     </BaseModal>
+
+    <!-- All Cities Modal -->
+    <BaseModal :show="isAllCitiesModalOpen" @close="isAllCitiesModalOpen = false">
+      <div class="modal-body city-modal-body">
+        <h3 class="modal-title">전체 도시 현황</h3>
+        <div class="city-list-scrollable">
+          <div
+            v-for="city in sortedCityProgress"
+            :key="city.areaCode"
+            class="city-item"
+          >
+            <div class="city-icon">
+              <i :class="getCityStyle(city.cityName).icon"></i>
+            </div>
+            <div class="city-info">
+              <div class="city-header">
+                <span class="city-name">{{ city.cityName }}</span>
+                <span class="city-percent"
+                  >{{
+                    Math.round(
+                      (city.completedQuests / city.totalQuests) * 100
+                    ) || 0
+                  }}%</span
+                >
+              </div>
+              <div class="city-progress-bg">
+                <div
+                  class="city-progress-fill"
+                  :class="getCityStyle(city.cityName).colorClass"
+                  :style="{
+                    width: `${
+                      Math.round(
+                        (city.completedQuests / city.totalQuests) * 100
+                      ) || 0
+                    }%`,
+                  }"
+                ></div>
+              </div>
+              <div class="city-sub-text">
+                <span v-if="city.totalQuests > 0">{{ city.completedQuests }} / {{ city.totalQuests }} 미션 완료</span>
+                <span v-else class="text-gray-400">오픈 준비 중</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-confirm" @click="isAllCitiesModalOpen = false">닫기</button>
+        </div>
+      </div>
+    </BaseModal>
   </div>
 </template>
 
@@ -356,6 +412,7 @@ const formattedJoinedDate = computed(() => {
 const isEditModalOpen = ref(false);
 const showUpdateConfirmModal = ref(false);
 const showDeleteConfirmModal = ref(false);
+const isAllCitiesModalOpen = ref(false);
 
 const editForm = ref({
   nickname: "",
@@ -419,6 +476,10 @@ const openEditModal = () => {
 
 const closeEditModal = () => {
   isEditModalOpen.value = false;
+};
+
+const openAllCitiesModal = () => {
+  isAllCitiesModalOpen.value = true;
 };
 
 // --- Profile Update Logic ---
@@ -505,9 +566,26 @@ const getCityStyle = (cityName) => {
 };
 // -----------------------
 
-const filteredCityProgress = computed(() => {
+
+const sortedCityProgress = computed(() => {
   if (!userProfile.value?.cityProgress) return [];
-  return userProfile.value.cityProgress.filter(city => city.totalQuests > 0);
+  // Sort by completed quests (desc), then total quests (desc)
+  return [...userProfile.value.cityProgress].sort((a, b) => {
+    if (b.completedQuests !== a.completedQuests) {
+      return b.completedQuests - a.completedQuests;
+    }
+    return b.totalQuests - a.totalQuests;
+  });
+});
+
+const DISPLAY_LIMIT = 4;
+
+const displayedCities = computed(() => {
+  return sortedCityProgress.value.slice(0, DISPLAY_LIMIT);
+});
+
+const hasMoreCities = computed(() => {
+  return sortedCityProgress.value.length > DISPLAY_LIMIT;
 });
 
 const equippedItemsBySlot = computed(() => {
@@ -530,10 +608,10 @@ const equippedItemsBySlot = computed(() => {
 const fetchUserProfileData = async () => {
   try {
     const response = await getProfile();
-    console.log("API Response:", response);
+    // console.log("API Response:", response);
     if (response.success) {
       userProfile.value = response.data;
-      console.log("Updated userProfile.value:", userProfile.value);
+      // console.log("Updated userProfile.value:", userProfile.value);
     }
   } catch (error) {
     console.error("Failed to fetch user profile data:", error);
@@ -1010,6 +1088,45 @@ const earnedBadges = ref([
   flex-direction: column;
   gap: 16px;
 }
+
+.city-list-scrollable {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.more-cities-btn-wrapper {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-more-cities {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.btn-more-cities:hover {
+  background: #f8fafc;
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.city-modal-body {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
 
 .form-group {
   display: flex;

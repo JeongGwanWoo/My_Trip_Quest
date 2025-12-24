@@ -253,7 +253,7 @@ const initMap = () => {
   // Initialize Geocoder
   geocoder = new kakao.maps.services.Geocoder();
   
-  console.log('Admin map initialized successfully');
+  // console.log('Admin map initialized successfully');
 };
 
 // Fetch locations for selected area
@@ -271,7 +271,7 @@ const fetchLocations = async () => {
       size: 100
     });
     locations.value = response.data.data.content || [];
-    console.log('Fetched locations:', locations.value.length);
+    // console.log('Fetched locations:', locations.value.length);
   } catch (error) {
     console.error('Failed to fetch locations:', error);
     alert('관광지 목록을 불러오는데 실패했습니다.');
