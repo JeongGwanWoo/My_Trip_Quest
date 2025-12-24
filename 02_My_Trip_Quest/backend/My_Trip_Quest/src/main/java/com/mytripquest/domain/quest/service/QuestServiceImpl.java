@@ -504,6 +504,12 @@ public class QuestServiceImpl implements QuestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<com.mytripquest.domain.quest.dto.CompletedMissionResponse> getCompletedMissions(Long userId) {
+        return userQuestRepository.findCompletedQuestsByUserId(userId);
+    }
+
+    @Override
     public int estimateLocationRadius(String locationName, String address) {
         return aiService.estimateLocationRadius(locationName, address);
     }

@@ -43,7 +43,27 @@ export const checkNickname = async (nickname) => {
   }
 };
 
-    export const socialSignup = async (signupData) => {
+    export const getCoinHistory = async () => {
+  try {
+    const response = await api.get('/api/v1/users/me/point-history');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching coin history:', error);
+    throw error;
+  }
+};
+
+export const getCompletedMissions = async () => {
+  try {
+    const response = await api.get('/api/v1/users/me/completed-missions');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching completed missions:', error);
+    throw error;
+  }
+};
+
+export const socialSignup = async (signupData) => {
       try {
         const response = await api.post('/api/v1/users/social-signup', signupData);
         return response.data;

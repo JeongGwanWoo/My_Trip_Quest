@@ -1,5 +1,6 @@
 package com.mytripquest.domain.quest.repository;
 
+import com.mytripquest.domain.quest.dto.CompletedMissionResponse;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.entity.QuestStatus;
 import com.mytripquest.domain.quest.entity.UserQuest;
@@ -25,6 +26,8 @@ public interface UserQuestRepository {
     void delete(UserQuest userQuest);
 
     List<InProgressQuestDto> findUserQuestsByStatus(@Param("userId") Long userId, @Param("status") QuestStatus status);
+
+    List<CompletedMissionResponse> findCompletedQuestsByUserId(@Param("userId") long userId);
 
     List<UserQuest> findByUserIdAndQuestIds(@Param("userId") long userId, @Param("questIds") List<Long> questIds);
 

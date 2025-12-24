@@ -94,6 +94,25 @@
             uq.accepted_at DESC
     </select>
 
+    <select id="findCompletedQuestsByUserId" resultType="com.mytripquest.domain.quest.dto.CompletedMissionResponse">
+        SELECT
+            uq.quest_id as questId,
+            q.title as questTitle,
+            q.description as questContent,
+            l.title as locationName,
+            uq.completed_at as completedAt
+        FROM
+            user_quests uq
+        JOIN
+            quests q ON uq.quest_id = q.quest_id
+        JOIN
+            locations l ON q.location_id = l.location_id
+        WHERE
+            uq.user_id = #{userId} AND uq.status = 'COMPLETED'
+        ORDER BY
+            uq.completed_at DESC
+    </select>
+
     <delete id="delete" parameterType="com.mytripquest.domain.quest.entity.UserQuest">
         DELETE FROM user_quests
         WHERE user_quest_id = #{userQuestId}

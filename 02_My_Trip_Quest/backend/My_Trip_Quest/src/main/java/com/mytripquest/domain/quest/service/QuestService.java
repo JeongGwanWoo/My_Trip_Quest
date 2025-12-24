@@ -1,5 +1,6 @@
 package com.mytripquest.domain.quest.service;
 
+import com.mytripquest.domain.quest.dto.CompletedMissionResponse;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
@@ -33,6 +34,8 @@ public interface QuestService {
             BigDecimal longitude) throws IOException;
 
     List<InProgressQuestDto> getInProgressQuests(Long userId);
+
+    List<CompletedMissionResponse> getCompletedMissions(Long userId);
 
     int generateQuestsFromTourApi(List<java.util.Map<String, Object>> items, List<String> types, String areaCode);
 
