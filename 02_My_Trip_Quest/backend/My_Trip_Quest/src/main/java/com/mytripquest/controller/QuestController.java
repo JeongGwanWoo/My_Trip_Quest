@@ -3,6 +3,7 @@ package com.mytripquest.controller;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
+import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 
 import com.mytripquest.domain.quest.dto.QuestInfoWithStatusDto;
 import com.mytripquest.domain.quest.dto.QuestLocationSliceDto;
@@ -155,5 +156,17 @@ public class QuestController {
         Long userId = getCurrentUserId();
         List<InProgressQuestDto> inProgressQuests = questService.getInProgressQuests(userId);
         return ResponseEntity.ok(ApiResponse.success(inProgressQuests));
+    }
+
+    /**
+     * 지도에 표시할 모든 관광지 목록을 조회합니다.
+     * 
+     * @return 모든 관광지 리스트
+     */
+    @GetMapping("/locations")
+    public ResponseEntity<ApiResponse<List<LocationWithQuestCountDto>>> getAllLocations() {
+        Long userId = getCurrentUserId();
+        List<LocationWithQuestCountDto> locations = questService.getAllLocations(userId);
+        return ResponseEntity.ok(ApiResponse.success(locations));
     }
 }
