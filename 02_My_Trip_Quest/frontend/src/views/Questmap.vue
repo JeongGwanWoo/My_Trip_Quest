@@ -386,7 +386,7 @@ const fetchAllLocations = async () => {
   try {
     const response = await api.get('/api/v1/quest-map/locations');
     allLocations.value = response.data.data || [];
-    console.log(`Loaded ${allLocations.value.length} locations total.`);
+    // console.log(`Loaded ${allLocations.value.length} locations total.`);
   } catch (error) {
     console.error("Error fetching all locations:", error);
   }

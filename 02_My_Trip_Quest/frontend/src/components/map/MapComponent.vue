@@ -240,11 +240,11 @@ const displayLocationMarkers = (locations) => {
           const now = Date.now();
           const timeSinceLastClick = now - lastClickTime;
           
-          console.log('Marker clicked:', location.locationId, 'Selected:', selectedLocationId, 'Circle visible:', currentCircle?.getMap() ? 'yes' : 'no', 'Time since last click:', timeSinceLastClick);
+          // console.log('Marker clicked:', location.locationId, 'Selected:', selectedLocationId, 'Circle visible:', currentCircle?.getMap() ? 'yes' : 'no', 'Time since last click:', timeSinceLastClick);
           
           // 너무 빠른 연속 클릭 방지 (300ms 이내)
           if (timeSinceLastClick < 300) {
-            console.log('Click ignored (too fast)');
+            // console.log('Click ignored (too fast)');
             return;
           }
           
@@ -252,11 +252,11 @@ const displayLocationMarkers = (locations) => {
           
           // 2단계 클릭 로직
           if (selectedLocationId === location.locationId && currentCircle && currentCircle.getMap()) {
-            console.log('Opening modal (2nd click)');
+            // console.log('Opening modal (2nd click)');
             map.panTo(coords); // 부드럽게 이동 (확대 없음)
             emit('location-clicked', location);
           } else {
-            console.log('Showing circle (1st click or circle hidden)');
+            // console.log('Showing circle (1st click or circle hidden)');
             map.panTo(coords); // 부드럽게 이동 (확대 없음)
             showVerificationCircle(location);
             updateMarkerIcons(); // 마커 아이콘 업데이트
@@ -275,11 +275,11 @@ const displayLocationMarkers = (locations) => {
         const now = Date.now();
         const timeSinceLastClick = now - lastClickTime;
         
-        console.log('Marker clicked:', location.locationId, 'Selected:', selectedLocationId, 'Circle visible:', currentCircle?.getMap() ? 'yes' : 'no', 'Time since last click:', timeSinceLastClick);
+        // console.log('Marker clicked:', location.locationId, 'Selected:', selectedLocationId, 'Circle visible:', currentCircle?.getMap() ? 'yes' : 'no', 'Time since last click:', timeSinceLastClick);
         
         // 너무 빠른 연속 클릭 방지 (300ms 이내)
         if (timeSinceLastClick < 300) {
-          console.log('Click ignored (too fast)');
+          // console.log('Click ignored (too fast)');
           return;
         }
         
@@ -288,11 +288,11 @@ const displayLocationMarkers = (locations) => {
         // 2단계 클릭 로직
         // 2단계 클릭 로직
         if (selectedLocationId === location.locationId && currentCircle && currentCircle.getMap()) {
-          console.log('Opening modal (2nd click)');
+          // console.log('Opening modal (2nd click)');
           map.panTo(coords); // 부드럽게 이동 (확대 없음)
           emit('location-clicked', location);
         } else {
-          console.log('Showing circle (1st click or circle hidden)');
+          // console.log('Showing circle (1st click or circle hidden)');
           map.panTo(coords); // 부드럽게 이동 (확대 없음)
           showVerificationCircle(location);
         }
@@ -340,29 +340,29 @@ const showVerificationCircle = (location) => {
 
 // 인증 범위 원을 제거하는 함수
 const removeVerificationCircle = () => {
-  console.log('Removing circle, selectedLocationId:', selectedLocationId);
+  // console.log('Removing circle, selectedLocationId:', selectedLocationId);
   if (currentCircle) {
     currentCircle.setMap(null);
     currentCircle = null;
   }
   selectedLocationId = null;
-  console.log('Circle removed, selectedLocationId now:', selectedLocationId);
+  // console.log('Circle removed, selectedLocationId now:', selectedLocationId);
   updateMarkerIcons(); // 마커 아이콘 업데이트
 };
 
 // 마커 아이콘을 업데이트하는 함수
 const updateMarkerIcons = () => {
-  console.log('updateMarkerIcons called, selectedLocationId:', selectedLocationId, 'circle visible:', currentCircle?.getMap() ? 'yes' : 'no');
-  console.log('locationMarkers count:', locationMarkers.length);
+  // console.log('updateMarkerIcons called, selectedLocationId:', selectedLocationId, 'circle visible:', currentCircle?.getMap() ? 'yes' : 'no');
+  // console.log('locationMarkers count:', locationMarkers.length);
   
   locationMarkers.forEach(marker => {
     const contentEl = marker.getContent();
-    console.log('Checking marker, has _pinTextEl:', !!contentEl?._pinTextEl, '_locationId:', contentEl?._locationId);
+    // console.log('Checking marker, has _pinTextEl:', !!contentEl?._pinTextEl, '_locationId:', contentEl?._locationId);
     
     if (contentEl && contentEl._pinTextEl && contentEl._locationId) {
       if (contentEl._locationId === selectedLocationId && currentCircle && currentCircle.getMap()) {
         // 선택된 마커: Q 아이콘 (모달 열기 가능 상태)
-        console.log('Setting Q icon for location:', contentEl._locationId);
+        // console.log('Setting Q icon for location:', contentEl._locationId);
         contentEl._pinTextEl.textContent = 'Q';
       } else {
         // 선택되지 않은 마커: ● 아이콘
