@@ -4,11 +4,19 @@
     <button @click="resetMap" class="map-reset-btn" title="초기 위치로">
       ↻
     </button>
+    <button @click="findMyLocation" class="map-locate-btn" title="내 위치 찾기">
+      <i class="fa-solid fa-location-crosshairs"></i>
+    </button>
   </div>
 </template>
 
 <script setup>
 import { onMounted, defineProps, watch, defineEmits } from "vue";
+
+// 줌 레벨 상수 정의
+const BASE_ZOOM_LEVEL = 13;
+const MARKER_VISIBLE_LEVEL = 10; // 기본(13) - 3
+const CIRCLE_VISIBLE_LEVEL = 8;  // 기본(13) - 5
 
 // 부모 컴포넌트로부터 areas 데이터를 받기 위한 props 정의
 const props = defineProps({
@@ -29,6 +37,7 @@ let currentZoomLevel = 13; // 현재 줌 레벨
 let currentCircle = null; // 현재 표시된 범위 원
 let selectedLocationId = null; // 선택된 관광지 ID
 let lastClickTime = 0; // 마지막 클릭 시간
+let userLocationMarker = null; // 사용자 위치 마커
 
 // 부모 컴포넌트로 이벤트를 보내기 위한 emit 함수 정의
 const emit = defineEmits(['area-clicked', 'location-clicked', 'map-reset']);
@@ -118,7 +127,7 @@ const displayAreaMarkers = (newAreas) => {
         contentEl.addEventListener('click', () => {
           // 해당 지역 중심으로 지도 이동 및 줌인
           map.setCenter(coords);
-          map.setLevel(11); // 줌인 (레벨이 낮을수록 확대)
+          map.setLevel(MARKER_VISIBLE_LEVEL - 1); // 관광지가 보이는 레벨(9)로 확대
           emit('area-clicked', area.areaCode);
         });
 
@@ -244,25 +253,11 @@ const displayLocationMarkers = (locations) => {
           // 2단계 클릭 로직
           if (selectedLocationId === location.locationId && currentCircle && currentCircle.getMap()) {
             console.log('Opening modal (2nd click)');
-            const currentLevel = map.getLevel();
-            if (currentLevel > 3) {
-              map.setLevel(3);
-            }
-            setTimeout(() => {
-              map.setCenter(coords);
-              map.relayout();
-            }, 50);
+            map.panTo(coords); // 부드럽게 이동 (확대 없음)
             emit('location-clicked', location);
           } else {
             console.log('Showing circle (1st click or circle hidden)');
-            const currentLevel = map.getLevel();
-            if (currentLevel > 3) {
-              map.setLevel(3);
-            }
-            setTimeout(() => {
-              map.setCenter(coords);
-              map.relayout();
-            }, 50);
+            map.panTo(coords); // 부드럽게 이동 (확대 없음)
             showVerificationCircle(location);
             updateMarkerIcons(); // 마커 아이콘 업데이트
           }
@@ -291,27 +286,14 @@ const displayLocationMarkers = (locations) => {
         lastClickTime = now;
         
         // 2단계 클릭 로직
+        // 2단계 클릭 로직
         if (selectedLocationId === location.locationId && currentCircle && currentCircle.getMap()) {
           console.log('Opening modal (2nd click)');
-          const currentLevel = map.getLevel();
-          if (currentLevel > 3) {
-            map.setLevel(3);
-          }
-          setTimeout(() => {
-            map.setCenter(coords);
-            map.relayout();
-          }, 50);
+          map.panTo(coords); // 부드럽게 이동 (확대 없음)
           emit('location-clicked', location);
         } else {
           console.log('Showing circle (1st click or circle hidden)');
-          const currentLevel = map.getLevel();
-          if (currentLevel > 3) {
-            map.setLevel(3);
-          }
-          setTimeout(() => {
-            map.setCenter(coords);
-            map.relayout();
-          }, 50);
+          map.panTo(coords); // 부드럽게 이동 (확대 없음)
           showVerificationCircle(location);
         }
       });
@@ -420,6 +402,83 @@ const resetMap = () => {
   emit('map-reset');
 };
 
+const findMyLocation = () => {
+  if (!navigator.geolocation) {
+    alert("현재 브라우저에서는 위치 정보를 사용할 수 없습니다.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const locPosition = new kakao.maps.LatLng(lat, lng);
+
+      // 1. 줌 레벨 변경 (먼저 상세 레벨로 변경하여 좌표 계산 정확도 확보)
+      map.setLevel(4, { animate: false }); 
+      
+      // 2. 중심 이동 (즉시 이동하여 깜빡임 최소화)
+      map.setCenter(locPosition);
+
+      // 기존 사용자 위치 마커가 있다면 제거
+      if (userLocationMarker) {
+        userLocationMarker.setMap(null);
+      }
+
+      // 사용자 위치 마커 생성 (DOM 요소 직접 생성 및 인라인 스타일 적용)
+      const markerRoot = document.createElement('div');
+      markerRoot.className = 'user-location-marker'; // 애니메이션용 클래스 유지
+      markerRoot.style.position = 'relative';
+      markerRoot.style.width = '40px';
+      markerRoot.style.height = '40px';
+      markerRoot.style.display = 'flex';
+      markerRoot.style.justifyContent = 'center';
+      markerRoot.style.alignItems = 'center';
+
+      const dot = document.createElement('div');
+      dot.style.width = '16px';
+      dot.style.height = '16px';
+      dot.style.backgroundColor = '#3b82f6';
+      dot.style.border = '3px solid white';
+      dot.style.borderRadius = '50%';
+      dot.style.boxShadow = '0 0 6px rgba(0,0,0,0.4)';
+      dot.style.zIndex = '2';
+
+      const pulse = document.createElement('div');
+      pulse.className = 'user-pulse'; // 애니메이션용 클래스 유지
+      pulse.style.position = 'absolute';
+      pulse.style.width = '100%';
+      pulse.style.height = '100%';
+      pulse.style.backgroundColor = 'rgba(59, 130, 246, 0.4)';
+      pulse.style.borderRadius = '50%';
+      pulse.style.zIndex = '1';
+
+      markerRoot.appendChild(dot);
+      markerRoot.appendChild(pulse);
+
+      userLocationMarker = new kakao.maps.CustomOverlay({
+        position: locPosition,
+        content: markerRoot,
+        map: map,
+        zIndex: 9999, // 최상위 표시
+        xAnchor: 0.5,
+        yAnchor: 0.5
+      });
+    },
+    (error) => {
+      console.error("Geolocation error:", error);
+      let msg = "위치 정보를 가져올 수 없습니다.";
+      if (error.code === 1) msg = "위치 정보 접근 권한이 거부되었습니다.";
+      alert(msg);
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 10000
+    }
+  );
+};
+
 // props.areas가 변경될 때 마커를 업데이트합니다.
 // 지도가 초기화된 후에만 마커를 표시하도록 `map` 변수를 확인합니다.
 watch(
@@ -436,7 +495,7 @@ watch(
 watch(
   () => props.locations,
   (newLocations) => {
-    if (map && currentZoomLevel < 12) {
+    if (map && currentZoomLevel < MARKER_VISIBLE_LEVEL) {
       displayLocationMarkers(newLocations);
     }
   },
@@ -504,7 +563,9 @@ const initMap = () => {
     currentZoomLevel = level;
     
     // 줌 레벨에 따라 마커 표시 전환
-    if (level < 12) {
+    // 줌 레벨에 따라 마커 표시 전환
+    // 레벨 10 미만(더 확대된 상태)일 때 관광지 마커 표시
+    if (level < MARKER_VISIBLE_LEVEL) {
       // 줌인 상태: 지역 마커 숨기고 관광지 마커 표시
       markers.forEach(marker => marker.setMap(null));
       if (props.locations && props.locations.length > 0) {
@@ -518,13 +579,14 @@ const initMap = () => {
     }
 
     // 줌 레벨에 따라 범위 원 표시/숨김
-    if (level > 5) {
-      // 줌아웃 (레벨 6 이상): 범위 원 숨김
+    // 레벨 8 이하일 때만 원 표시 (8 초과면 숨김)
+    if (level > CIRCLE_VISIBLE_LEVEL) {
+      // 줌아웃 상태: 범위 원 숨김
       if (currentCircle) {
         currentCircle.setMap(null);
       }
     } else {
-      // 줌인 (레벨 5 이하): 선택된 관광지가 있으면 범위 원 다시 표시
+      // 줌인 상태: 선택된 관광지가 있으면 범위 원 다시 표시
       if (currentCircle && selectedLocationId) {
         currentCircle.setMap(map);
       }
@@ -691,5 +753,71 @@ const initMap = () => {
   width: 100%;
   height: 600px;
   background-color: #a2d1ff; /* 지도 타일 로딩 중 보이는 배경색을 바다색과 유사하게 변경 */
+}
+
+/* 사용자 위치 마커 스타일 */
+.user-location-marker {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.user-dot {
+  width: 16px;
+  height: 16px;
+  background-color: #3b82f6;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0,0,0,0.4);
+  z-index: 2;
+}
+
+.user-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(59, 130, 246, 0.4);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  z-index: 1;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+/* 내 위치 찾기 버튼 - 초기화 버튼 아래 배치 (정렬 및 스타일 통일) */
+.map-locate-btn {
+  position: absolute;
+  top: 74px; /* 20(top) + 44(height) + 10(gap) */
+  right: 20px; /* 초기화 버튼과 정렬 */
+  width: 44px; /* 크기 통일 */
+  height: 44px; /* 크기 통일 */
+  background: white;
+  border: 2px solid #e5e7eb; /* 스타일 통일 */
+  border-radius: 8px; /* 스타일 통일 */
+  font-size: 20px; /* 아이콘 크기 조정 */
+  color: #374151;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-locate-btn:hover {
+  background-color: #f8f9fa;
+  color: #333;
 }
 </style>

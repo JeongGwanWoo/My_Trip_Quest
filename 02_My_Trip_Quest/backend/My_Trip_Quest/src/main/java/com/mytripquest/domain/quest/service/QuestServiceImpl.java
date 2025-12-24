@@ -229,6 +229,12 @@ public class QuestServiceImpl implements QuestService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<LocationWithQuestCountDto> getAllLocations(Long userId) {
+        return questRepository.findAllLocations();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<QuestInfoWithStatusDto> getQuestsByLocationId(Long locationId, Long userId) {
         List<Quest> quests = questRepository.findQuestsByLocationId(locationId);
         if (quests.isEmpty()) {

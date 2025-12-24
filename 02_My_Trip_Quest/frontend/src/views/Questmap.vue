@@ -382,8 +382,19 @@ const fetchAreas = async () => {
   }
 };
 
+const fetchAllLocations = async () => {
+  try {
+    const response = await api.get('/api/v1/quest-map/locations');
+    allLocations.value = response.data.data || [];
+    console.log(`Loaded ${allLocations.value.length} locations total.`);
+  } catch (error) {
+    console.error("Error fetching all locations:", error);
+  }
+};
+
 onMounted(async () => {
   await fetchAreas();
+  await fetchAllLocations(); // 모든 관광지 데이터 미리 로드
 });
 
 const getQuestStyle = (areaName) => {

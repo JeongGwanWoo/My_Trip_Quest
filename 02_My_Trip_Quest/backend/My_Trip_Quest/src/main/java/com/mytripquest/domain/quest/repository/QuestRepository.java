@@ -24,6 +24,13 @@ public interface QuestRepository {
                         @Param("keyword") String keyword, @Param("pageable") Pageable pageable);
 
         /**
+         * 퀘스트가 있는 모든 관광지 목록을 조회합니다.
+         * 
+         * @return 관광지 정보와 퀘스트 개수를 담은 DTO 리스트
+         */
+        List<LocationWithQuestCountDto> findAllLocations();
+
+        /**
          * 지역 코드를 기준으로, 해당 지역에 속한 모든 퀘스트 목록을 조회합니다.
          * 
          * @param areaCode
