@@ -53,6 +53,18 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/profile/coin-history',
+    name: 'CoinHistory',
+    component: () => import('@/views/CoinHistory.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile/completed-missions',
+    name: 'CompletedMissions',
+    component: () => import('@/views/CompletedMissions.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/shop',
     name: 'Shop',
     component: Shop

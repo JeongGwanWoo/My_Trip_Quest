@@ -124,7 +124,7 @@
           </section>
 
           <section class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card" @click="goToCoinHistory" style="cursor: pointer">
               <div class="stat-icon-box yellow">
                 <span class="icon"><i class="fa-solid fa-coins"></i></span>
               </div>
@@ -135,7 +135,7 @@
                 >
               </div>
             </div>
-            <div class="stat-card green">
+            <div class="stat-card green" @click="goToCompletedMissions" style="cursor: pointer">
               <div class="stat-icon-box green">
                 <span class="icon"><i class="fa-solid fa-trophy"></i></span>
               </div>
@@ -149,7 +149,7 @@
                 >
               </div>
             </div>
-            <div class="stat-card blue">
+            <div class="stat-card blue" @click="goToRankings" style="cursor: pointer">
               <div class="stat-icon-box blue">
                 <span class="icon"
                   ><i class="fa-solid fa-ranking-star"></i
@@ -327,6 +327,18 @@ const { showToast } = useToast();
 
 const goToOngoingQuests = () => {
   router.push("/profile/ongoing-quests");
+};
+
+const goToRankings = () => {
+  router.push("/rankings");
+};
+
+const goToCoinHistory = () => {
+  router.push("/profile/coin-history");
+};
+
+const goToCompletedMissions = () => {
+  router.push("/profile/completed-missions");
 };
 
 const userProfile = ref(null);
@@ -1082,6 +1094,12 @@ const earnedBadges = ref([
 
 /* Responsive */
 @media (max-width: 900px) {
+  .content-container {
+    padding: 20px 15px;
+  }
+  .page-title {
+    font-size: 28px;
+  }
   .dashboard-layout {
     grid-template-columns: 1fr;
   }
@@ -1090,6 +1108,7 @@ const earnedBadges = ref([
     gap: 32px;
     align-items: center;
     justify-content: center;
+    position: static;
   }
   .avatar-area {
     margin-bottom: 0;
@@ -1100,6 +1119,12 @@ const earnedBadges = ref([
 }
 
 @media (max-width: 600px) {
+  .content-container {
+    padding: 20px 10px;
+  }
+  .page-title {
+    font-size: 24px;
+  }
   .profile-card {
     flex-direction: column;
     text-align: center;
@@ -1109,6 +1134,12 @@ const earnedBadges = ref([
   }
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+  .stat-card {
+    padding: 16px;
+  }
+  .stat-info .value {
+    font-size: 18px;
   }
   .city-list {
     grid-template-columns: 1fr;

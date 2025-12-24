@@ -1,5 +1,9 @@
 package com.mytripquest.controller;
 
+import com.mytripquest.domain.pointhistory.dto.PointHistoryResponse;
+import com.mytripquest.domain.pointhistory.service.PointHistoryService;
+import com.mytripquest.domain.quest.dto.CompletedMissionResponse;
+import com.mytripquest.domain.quest.service.QuestService;
 import com.mytripquest.domain.user.dto.UserRequestDto;
 import com.mytripquest.domain.user.dto.UserProfileResponseDto;
 import com.mytripquest.domain.user.repository.UserMapper;
@@ -25,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
+import java.util.List;
 
 
 @RestController
@@ -35,6 +40,8 @@ public class UserController {
 
     private final UserService userService;
     private final ProfileService profileService;
+    private final PointHistoryService pointHistoryService;
+    private final QuestService questService;
     private final UserMapper userMapper;
 
     @PostMapping("/register")
@@ -99,6 +106,32 @@ public class UserController {
                 .getUserId();
         UserProfileResponseDto profile = profileService.getProfileData(userId);
         return ResponseEntity.ok(ApiResponse.success(profile));
+    }
+
+    @GetMapping("/me/point-history")
+    public ResponseEntity<ApiResponse<List<PointHistoryResponse>>> getPointHistory(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(ApiResponse.failure("인증되지 않은 사용자입니다."));
+        }
+        Long userId = userMapper.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND))
+                .getUserId();
+        List<PointHistoryResponse> history = pointHistoryService.getPointHistory(userId);
+        return ResponseEntity.ok(ApiResponse.success(history));
+    }
+
+    @GetMapping("/me/completed-missions")
+    public ResponseEntity<ApiResponse<List<CompletedMissionResponse>>> getCompletedMissions(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(ApiResponse.failure("인증되지 않은 사용자입니다."));
+        }
+        Long userId = userMapper.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND))
+                .getUserId();
+        List<CompletedMissionResponse> missions = questService.getCompletedMissions(userId);
+        return ResponseEntity.ok(ApiResponse.success(missions));
     }
 
     @GetMapping("/check-nickname")
