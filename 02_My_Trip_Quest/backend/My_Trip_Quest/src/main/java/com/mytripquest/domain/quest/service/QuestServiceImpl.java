@@ -575,6 +575,93 @@ public class QuestServiceImpl implements QuestService {
 
     @Override
     @Transactional
+    public void createLocationWithQuests(com.mytripquest.domain.quest.dto.LocationCreateRequest request) {
+        // 1. Calculate location ID based on area code
+        String areaCode = request.getAreaCode();
+        long locationIdStart = calculateLocationIdStart(areaCode);
+        long locationIdEnd = locationIdStart + 999;
+
+        Long maxLocId = questRepository.findMaxLocationIdByRange(locationIdStart, locationIdEnd);
+        long nextLocId = (maxLocId < locationIdStart) ? locationIdStart : maxLocId + 1;
+
+        if (nextLocId > locationIdEnd) {
+            log.error("Location ID range exceeded for area {}: max ID {}", areaCode, locationIdEnd);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+
+        // 2. Create location
+        LocationWithQuestCountDto location = new LocationWithQuestCountDto();
+        location.setLocationId(nextLocId);
+        location.setTitle(request.getTitle());
+        location.setLatitude(BigDecimal.valueOf(request.getLatitude()));
+        location.setLongitude(BigDecimal.valueOf(request.getLongitude()));
+        location.setAreaCode(request.getAreaCode());
+        location.setAddr1(request.getAddress());
+        location.setGpsVerifyRadius(request.getGpsVerifyRadius() != null ? request.getGpsVerifyRadius() : 150);
+
+        questRepository.saveLocation(location);
+        log.info("Created location: {} (ID: {})", request.getTitle(), nextLocId);
+
+        // 3. Generate quests based on selected types
+        long questIdBase = nextLocId * 10;
+        long nextQuestId = questIdBase;
+
+        if (request.getQuestTypes() != null && request.getQuestTypes().contains("ARRIVAL")) {
+            Quest arrivalQuest = new Quest();
+            arrivalQuest.setQuestId(nextQuestId++);
+            arrivalQuest.setLocationId(nextLocId);
+            arrivalQuest.setQuestTypeId(1);
+            arrivalQuest.setTitle(request.getTitle() + " 도착");
+            arrivalQuest.setDescription(request.getTitle() + "에 도착하여 인증하세요.");
+            arrivalQuest.setDifficulty(Difficulty.EASY);
+            arrivalQuest.setRewardXp(50);
+            arrivalQuest.setRewardPoints(5);
+            arrivalQuest.setRequireGpsVerify(true);
+            questRepository.saveQuest(arrivalQuest);
+            log.info("Created ARRIVAL quest for location {}", nextLocId);
+        }
+
+        if (request.getQuestTypes() != null && request.getQuestTypes().contains("PHOTO")) {
+            Quest photoQuest = new Quest();
+            photoQuest.setQuestId(nextQuestId++);
+            photoQuest.setLocationId(nextLocId);
+            photoQuest.setQuestTypeId(2);
+            photoQuest.setTitle(request.getTitle() + " 사진 찍기");
+            photoQuest.setDescription(request.getTitle() + "의 멋진 사진을 찍어보세요!");
+            photoQuest.setDifficulty(Difficulty.NORMAL);
+            photoQuest.setRewardXp(150);
+            photoQuest.setRewardPoints(15);
+            photoQuest.setRequireGpsVerify(false);
+
+            // Set previous quest if ARRIVAL was also created
+            if (request.getQuestTypes().contains("ARRIVAL")) {
+                photoQuest.setPreviousQuestId(nextQuestId - 2);
+            }
+
+            questRepository.saveQuest(photoQuest);
+            log.info("Created PHOTO quest for location {}", nextLocId);
+        }
+    }
+
+    private long calculateLocationIdStart(String areaCode) {
+        try {
+            int code = Integer.parseInt(areaCode);
+            if (code == 1) {
+                return 10000; // Seoul special case
+            } else if (code >= 1 && code <= 8) {
+                return code * 1000L; // Metro cities
+            } else if (code >= 31 && code <= 39) {
+                return code * 1000L; // Provinces
+            } else {
+                return 90000; // Fallback
+            }
+        } catch (NumberFormatException e) {
+            return 90000;
+        }
+    }
+
+    @Override
+    @Transactional
     public int generateQuestsFromTourApi(List<Map<String, Object>> items, List<String> types, String areaCode) {
         if (types == null) {
             types = new java.util.ArrayList<>();

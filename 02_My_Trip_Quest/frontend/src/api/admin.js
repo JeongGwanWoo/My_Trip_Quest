@@ -58,6 +58,11 @@ export function updateLocation(locationId, data) {
     return api.put(`/api/v1/admin/locations/${locationId}`, data);
 }
 
+// 관광지 생성 (수동)
+export function createLocation(data) {
+    return api.post('/api/v1/admin/locations', data);
+}
+
 // 퀘스트 추가
 export function addQuest(locationId, questData) {
     return api.post(`/api/v1/admin/quests/locations/${locationId}/quests`, questData);

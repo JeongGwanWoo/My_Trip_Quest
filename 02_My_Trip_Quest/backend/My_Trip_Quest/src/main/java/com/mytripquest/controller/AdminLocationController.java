@@ -15,6 +15,14 @@ public class AdminLocationController {
 
     private final QuestService questService;
 
+    // 관광지 생성 (수동)
+    @PostMapping("")
+    public ApiResponse<Void> createLocation(
+            @RequestBody com.mytripquest.domain.quest.dto.LocationCreateRequest request) {
+        questService.createLocationWithQuests(request);
+        return ApiResponse.successWithoutData();
+    }
+
     // 관광지 위치 및 반경 수정
     @PutMapping("/{locationId}")
     public ApiResponse<Void> updateLocation(@PathVariable Long locationId,

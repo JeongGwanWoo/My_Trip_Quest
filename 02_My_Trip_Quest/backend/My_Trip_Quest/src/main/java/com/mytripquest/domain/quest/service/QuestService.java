@@ -46,6 +46,8 @@ public interface QuestService {
 
     void updateLocation(Long locationId, Double latitude, Double longitude, Integer gpsVerifyRadius);
 
+    void createLocationWithQuests(com.mytripquest.domain.quest.dto.LocationCreateRequest request);
+
     void deleteQuest(Long questId);
 
     void createQuest(Quest quest);
