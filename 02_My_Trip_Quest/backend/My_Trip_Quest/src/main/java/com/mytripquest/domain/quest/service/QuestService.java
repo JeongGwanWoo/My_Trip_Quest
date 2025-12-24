@@ -44,6 +44,8 @@ public interface QuestService {
 
     void updateLocationRadius(Long locationId, int radius);
 
+    void updateLocation(Long locationId, Double latitude, Double longitude, Integer gpsVerifyRadius);
+
     void deleteQuest(Long questId);
 
     void createQuest(Quest quest);

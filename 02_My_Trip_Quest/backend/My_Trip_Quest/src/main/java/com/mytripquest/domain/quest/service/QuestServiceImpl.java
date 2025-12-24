@@ -559,6 +559,11 @@ public class QuestServiceImpl implements QuestService {
     }
 
     @Override
+    public void updateLocation(Long locationId, Double latitude, Double longitude, Integer gpsVerifyRadius) {
+        questRepository.updateLocation(locationId, latitude, longitude, gpsVerifyRadius);
+    }
+
+    @Override
     public void deleteQuest(Long questId) {
         questRepository.deleteQuest(questId);
     }

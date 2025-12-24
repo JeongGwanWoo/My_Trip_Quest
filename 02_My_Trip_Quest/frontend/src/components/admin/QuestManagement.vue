@@ -15,11 +15,18 @@
       >
         퀘스트 목록 및 관리
       </button>
+      <button 
+        :class="['tab-btn', { active: currentTab === 'editor' }]" 
+        @click="currentTab = 'editor'"
+      >
+        위치 편집 (지도)
+      </button>
     </div>
 
     <div class="tab-content">
       <QuestGenerator v-if="currentTab === 'generator'" />
       <QuestList v-if="currentTab === 'list'" />
+      <AdminLocationEditor v-if="currentTab === 'editor'" />
     </div>
   </div>
 </template>
@@ -28,6 +35,7 @@
 import { ref } from 'vue';
 import QuestGenerator from './QuestGenerator.vue';
 import QuestList from './QuestList.vue';
+import AdminLocationEditor from './AdminLocationEditor.vue';
 
 const currentTab = ref('generator');
 </script>

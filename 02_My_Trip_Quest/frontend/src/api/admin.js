@@ -53,6 +53,11 @@ export function updateLocationRadius(locationId, radius) {
     return api.put(`/api/v1/admin/quests/locations/${locationId}`, { radius });
 }
 
+// 관광지 위치 및 반경 수정
+export function updateLocation(locationId, data) {
+    return api.put(`/api/v1/admin/locations/${locationId}`, data);
+}
+
 // 퀘스트 추가
 export function addQuest(locationId, questData) {
     return api.post(`/api/v1/admin/quests/locations/${locationId}/quests`, questData);

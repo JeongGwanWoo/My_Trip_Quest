@@ -85,5 +85,8 @@ public interface QuestRepository {
 
         void updateLocationRadius(@Param("locationId") Long locationId, @Param("radius") int radius);
 
+        void updateLocation(@Param("locationId") Long locationId, @Param("latitude") Double latitude,
+                        @Param("longitude") Double longitude, @Param("gpsVerifyRadius") Integer gpsVerifyRadius);
+
         void deleteQuest(@Param("questId") Long questId);
 }
