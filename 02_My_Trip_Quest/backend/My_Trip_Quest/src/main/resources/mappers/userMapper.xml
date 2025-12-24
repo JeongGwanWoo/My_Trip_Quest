@@ -58,13 +58,14 @@
     <select id="findTopUsersByPoints" parameterType="int" resultMap="userResultMap">
         SELECT <include refid="userColumns"/>
         FROM users
+        WHERE role != 'ADMIN'
         ORDER BY points DESC
         LIMIT #{limit}
     </select>
 
     <select id="findUserRankById" parameterType="long" resultType="com.mytripquest.domain.ranking.dto.UserRankDto">
         SELECT
-            (SELECT COUNT(*) + 1 FROM users u2 WHERE u2.points > u1.points) as `rank`,
+            (SELECT COUNT(*) + 1 FROM users u2 WHERE u2.points > u1.points AND u2.role != 'ADMIN') as `rank`,
             u1.nickname,
             u1.points,
             u1.total_xp as totalXp

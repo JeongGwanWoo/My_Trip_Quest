@@ -69,7 +69,7 @@
 
             <div class="col player">
               <div class="player-info">
-                <div class="player-avatar-sm">{{ user.nickname.charAt(0) }}</div>
+
                 <span class="player-name">{{ user.nickname }}</span>
                 <i v-if="user.rank <= 3" class="fa-solid fa-crown crown-icon"></i>
               </div>
@@ -407,18 +407,7 @@ onMounted(async () => {
   align-items: center;
   gap: 12px;
 }
-.player-avatar-sm {
-  width: 32px;
-  height: 32px;
-  background: #f1f5f9;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: #64748b;
-}
+
 .player-name {
   font-weight: 600;
   color: #334155;

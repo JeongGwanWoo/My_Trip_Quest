@@ -1,6 +1,10 @@
 package com.mytripquest.domain.user.dto;
 
+import com.mytripquest.global.validation.Nickname;
+
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
 
 public class UserRequestDto {
 
@@ -8,6 +12,8 @@ public class UserRequestDto {
     public static class Register {
         private String email;
         private String password;
+        @NotBlank(message = "닉네임을 입력해주세요.")
+        @Nickname
         private String nickname;
         private String verificationCode;
     }
@@ -25,6 +31,7 @@ public class UserRequestDto {
 
     @Data
     public static class Update {
+        @Nickname
         private String nickname;
         private String currentPassword;
         private String newPassword;
@@ -33,6 +40,8 @@ public class UserRequestDto {
     @Data
     public static class SocialSignup {
         private String registrationToken;
+        @NotBlank(message = "닉네임을 입력해주세요.")
+        @Nickname
         private String nickname;
     }
 

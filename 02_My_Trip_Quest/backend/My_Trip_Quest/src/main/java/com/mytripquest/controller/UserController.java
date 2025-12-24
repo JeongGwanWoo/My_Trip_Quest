@@ -8,6 +8,8 @@ import com.mytripquest.domain.user.service.UserService;
 import com.mytripquest.global.ApiResponse;
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
 
+
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
@@ -35,7 +38,7 @@ public class UserController {
     private final UserMapper userMapper;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Void>> register(@RequestBody UserRequestDto.Register request) {
+    public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody UserRequestDto.Register request) {
         userService.register(request);
         return ResponseEntity.ok(ApiResponse.success("회원가입이 성공적으로 완료되었습니다."));
     }
@@ -73,7 +76,7 @@ public class UserController {
     }
 
     @PostMapping("/social-signup")
-    public ResponseEntity<ApiResponse<Object>> socialSignup(@RequestBody UserRequestDto.SocialSignup request) {
+    public ResponseEntity<ApiResponse<Object>> socialSignup(@Valid @RequestBody UserRequestDto.SocialSignup request) {
         String token = userService.socialSignup(request);
         return ResponseEntity
                 .ok(ApiResponse.success("소셜 회원가입이 성공적으로 완료되었습니다.", Collections.singletonMap("token", token)));
@@ -106,7 +109,7 @@ public class UserController {
 
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<String>> updateProfile(@AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody UserRequestDto.Update request) {
+            @Valid @RequestBody UserRequestDto.Update request) {
         if (userDetails == null) {
             return ResponseEntity.status(401).body(ApiResponse.failure("인증되지 않은 사용자입니다."));
         }

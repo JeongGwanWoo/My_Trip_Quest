@@ -23,6 +23,7 @@
               required
             >
           </div>
+          <p class="help-text">닉네임은 한글 1~6자, 영문/숫자 1~12자 이내로 입력해주세요.</p>
           <Transition name="fade-slide">
             <p v-if="nicknameError" class="error-message">{{ nicknameError }}</p>
           </Transition>
@@ -45,7 +46,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'; // ⭐ onMounted 추가
+import { ref, onMounted, watch } from 'vue'; // ⭐ onMounted 추가
 import { useRouter, useRoute } from 'vue-router'; // ⭐ useRoute 추가
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/utils/toast';
@@ -59,6 +60,18 @@ const { showToast } = useToast();
 const nickname = ref('');
 const isLoading = ref(false);
 const nicknameError = ref('');
+
+watch(nickname, (newNickname) => {
+  const containsKorean = /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(newNickname);
+  const maxLength = containsKorean ? 6 : 12;
+
+  if (newNickname.length > maxLength) {
+    nickname.value = newNickname.slice(0, maxLength);
+    nicknameError.value = `닉네임은 ${containsKorean ? '한글 6자,' : ''} 영문 12자 이내로 입력해주세요.`;
+  } else {
+    nicknameError.value = '';
+  }
+});
 
 /**
  * [해결 포인트 1] 페이지가 마운트되자마자 URL에서 토큰을 추출합니다.
@@ -173,6 +186,14 @@ const completeSignup = async () => {
 .input-icon { position: absolute; left: 14px; font-size: 16px; color: #94a3b8; }
 .form-input { width: 100%; padding: 14px 14px 14px 44px; font-size: 15px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #f8fafc; color: #1e293b; outline: none; transition: all 0.2s; }
 .form-input:focus { background-color: #fff; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+.help-text {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 6px;
+  text-align: left;
+  padding-left: 4px;
+}
+
 .form-input.input-error { border-color: #ef4444; background-color: #fffafb; }
 .form-input.input-error:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1); }
 .error-message { color: #ef4444; font-size: 13px; margin-top: 8px; font-weight: 500; }

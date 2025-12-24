@@ -237,6 +237,7 @@
           <div class="form-group">
             <label>닉네임</label>
             <input type="text" v-model="editForm.nickname" class="form-input" />
+            <p class="help-text">닉네임은 한글 1~6자, 영문/숫자 1~12자 이내로 입력해주세요.</p>
             <div v-if="nicknameMessage" 
                  class="validation-message"
                  :class="{ 'msg-valid': nicknameStatus === 'valid', 'msg-invalid': nicknameStatus === 'invalid' || nicknameStatus === 'checking' }">
@@ -357,6 +358,16 @@ const nicknameMessage = ref('');
 let debounceTimer = null;
 
 watch(() => editForm.value.nickname, (newNickname) => {
+  const containsKorean = /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(newNickname);
+  const maxLength = containsKorean ? 6 : 12;
+
+  if (newNickname.length > maxLength) {
+    editForm.value.nickname = newNickname.slice(0, maxLength);
+    nicknameMessage.value = `닉네임은 ${containsKorean ? '한글 6자,' : ''} 영문 12자 이내로 입력해주세요.`;
+    nicknameStatus.value = 'invalid';
+    return;
+  }
+
   clearTimeout(debounceTimer);
   if (!newNickname || newNickname === userProfile.value?.nickname) {
     nicknameStatus.value = 'idle';
@@ -1010,6 +1021,13 @@ const earnedBadges = ref([
 }
 .form-input:focus {
   border-color: #3b82f6;
+}
+
+.help-text {
+  font-size: 12px;
+  color: #64748b; /* A standard secondary text color */
+  margin-top: 6px;
+  padding-left: 4px;
 }
 
 .validation-message {

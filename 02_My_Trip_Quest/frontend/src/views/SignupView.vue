@@ -12,22 +12,23 @@
         
         <div class="form-group">
           <label for="nickname" class="form-label">닉네임</label>
-          <div class="input-group">
-            <div class="input-wrapper">
-              <span class="input-icon"><i class="fa-solid fa-user"></i></span>
-              <input 
-                type="text" 
-                id="nickname" 
-                v-model="nickname" 
-                @input="onNicknameInput"
-                class="form-input" 
-                placeholder="사용할 닉네임을 입력하세요"
-                required
-              >
-            </div>
-            <button type="button" @click="checkNickname" :disabled="!nickname" class="btn-check">중복 확인</button>
+          <div class="input-wrapper">
+            <span class="input-icon"><i class="fa-solid fa-user"></i></span>
+            <input 
+              type="text" 
+              id="nickname" 
+              v-model="nickname"
+              class="form-input" 
+              placeholder="사용할 닉네임을 입력하세요"
+              required
+            >
           </div>
-          <p v-if="nicknameMessage" :class="nicknameMessageClass" class="nickname-status">{{ nicknameMessage }}</p>
+          <p class="help-text">닉네임은 한글 1~6자, 영문/숫자 1~12자 이내로 입력해주세요.</p>
+          <p v-if="nicknameMessage" 
+             class="validation-message"
+             :class="{ 'msg-valid': nicknameCheckStatus === 'available', 'msg-invalid': nicknameCheckStatus === 'invalid' }">
+            {{ nicknameMessage }}
+          </p>
         </div>
 
         <div class="form-group">
@@ -125,7 +126,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/api';
 import { useToast } from '@/utils/toast';
@@ -148,45 +149,51 @@ const isCodeSent = ref(false);
 const isCodeVerified = ref(false); // [추가] 인증 코드 검증 완료 여부
 const verificationMessage = ref('');
 
+let debounceTimer = null;
 
-const nicknameMessageClass = computed(() => {
-  return {
-    'available': nicknameCheckStatus.value === 'available',
-    'taken': nicknameCheckStatus.value === 'taken',
-  };
-});
-
-const onNicknameInput = () => {
+watch(nickname, (newNickname) => {
+  clearTimeout(debounceTimer);
   nicknameCheckStatus.value = 'idle';
   nicknameMessage.value = '';
-};
 
-const checkNickname = async () => {
-  if (!nickname.value) {
-    showToast('닉네임을 입력해주세요.', 'warning');
+  // 1. 글자 수 제한
+  const containsKorean = /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(newNickname);
+  const maxLength = containsKorean ? 6 : 12;
+  if (newNickname.length > maxLength) {
+    nickname.value = newNickname.slice(0, maxLength);
+    nicknameMessage.value = `닉네임은 ${containsKorean ? '한글 6자,' : ''} 영문 12자 이내로 입력해주세요.`;
+    nicknameCheckStatus.value = 'invalid'; // <--- HERE: setting to 'invalid' for length violation
     return;
   }
-  nicknameCheckStatus.value = 'checking';
-  nicknameMessage.value = '닉네임 중복을 확인 중입니다...';
 
-  try {
-    const response = await api.get(`/api/v1/users/check-nickname`, {
-      params: { nickname: nickname.value }
-    });
-    // 서버 응답 구조에 따라 수정 필요 (response.data.data.isAvailable 등)
-    if (response.data.data.isAvailable) {
-      nicknameCheckStatus.value = 'available';
-      nicknameMessage.value = '사용 가능한 닉네임입니다.';
-    } else {
-      nicknameCheckStatus.value = 'taken';
-      nicknameMessage.value = '이미 사용 중인 닉네임입니다.';
-    } 
-  } catch (error) {
-    console.error('닉네임 중복 확인 오류:', error);
-    nicknameCheckStatus.value = 'idle';
-    nicknameMessage.value = '확인 중 오류가 발생했습니다.';
+  if (!newNickname) {
+    nicknameMessage.value = '';
+    return;
   }
-};
+  
+  // 2. 디바운싱을 이용한 중복 확인
+  nicknameCheckStatus.value = 'checking';
+  nicknameMessage.value = '닉네임을 확인하는 중...';
+
+  debounceTimer = setTimeout(async () => {
+    try {
+      const response = await api.get(`/api/v1/users/check-nickname`, {
+        params: { nickname: newNickname }
+      });
+      if (response.data.data.isAvailable) {
+        nicknameCheckStatus.value = 'available'; // <--- HERE: setting to 'available'
+        nicknameMessage.value = '사용 가능한 닉네임입니다.';
+      } else {
+        nicknameCheckStatus.value = 'invalid'; // <--- HERE: setting to 'invalid'
+        nicknameMessage.value = '이미 사용 중인 닉네임입니다.';
+      }
+    } catch (error) {
+      console.error('닉네임 중복 확인 오류:', error);
+      nicknameCheckStatus.value = 'idle';
+      nicknameMessage.value = '확인 중 오류가 발생했습니다.';
+    }
+  }, 500); // 500ms 디바운스
+});
 
 const sendVerificationCode = async () => {
   if (!email.value) {
@@ -313,7 +320,7 @@ const handleSignup = async () => {
 .form-group { text-align: left; }
 .form-label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 8px; }
 .input-group { display: flex; gap: 8px; }
-.input-wrapper { position: relative; display: flex; align-items: center; flex-grow: 1; }
+.input-wrapper { position: relative; display: flex; align-items: center; flex-grow: 1; min-width: 0; }
 .input-icon { position: absolute; left: 14px; font-size: 16px; color: #94a3b8; pointer-events: none; z-index: 2; }
 
 .form-input {
@@ -356,9 +363,16 @@ const handleSignup = async () => {
   border-color: #86efac !important;
 }
 
-.nickname-status, .verification-status { font-size: 13px; margin-top: 8px; font-weight: 500; color: #64748b; }
-.nickname-status.available { color: #22c55e; }
-.nickname-status.taken { color: #ef4444; }
+.help-text {
+  font-size: 12px;
+  color: #64748b; /* A standard secondary text color */
+  margin-top: 6px;
+  padding-left: 4px;
+}
+
+.validation-message, .verification-status { font-size: 13px; margin-top: 8px; font-weight: 500; color: #64748b; }
+.validation-message.msg-valid { color: #22c55e; }
+.validation-message.msg-invalid { color: #ef4444; }
 
 /* [추가] 인증 상태 메시지 색상 */
 .verification-success { color: #22c55e; }
@@ -401,8 +415,33 @@ const handleSignup = async () => {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* 기존 코드의 맨 아래 @media 부분을 아래 내용으로 교체하세요 */
 @media (max-width: 480px) {
-  .auth-card { padding: 32px 24px; box-shadow: none; background: transparent; }
-  .auth-page { background-color: #fff; }
+  .auth-card { 
+    padding: 32px 24px; 
+    box-shadow: none; 
+    background: transparent; 
+  }
+  .auth-page { 
+    background-color: #fff; 
+  }
+
+  /* [추가된 부분] 모바일에서 입력 그룹을 세로로 변경 */
+  .input-group {
+    flex-direction: column; /* 가로 배치 -> 세로 배치 */
+    gap: 12px; /* 간격 조금 더 넓힘 */
+  }
+
+  /* [추가된 부분] 모바일에서 버튼을 가로 꽉 차게 변경 */
+  .btn-check {
+    width: 100%;
+    margin-left: 0;
+    justify-content: center;
+  }
+  
+  /* [선택 사항] 입력창 아이콘 위치 미세 조정 */
+  .input-wrapper {
+    width: 100%;
+  }
 }
 </style>
