@@ -5,7 +5,14 @@
       <section class="map-card-wrapper">
         
         <div class="map-frame">
-          <MapComponent :areas="areas" @area-clicked="handleAreaClick" class="map-component" />
+          <MapComponent 
+            :areas="areas" 
+            :locations="allLocations"
+            @area-clicked="handleAreaClick" 
+            @location-clicked="handleLocationClick"
+            @map-reset="handleMapReset"
+            class="map-component" 
+          />
         </div>
         
 
@@ -35,7 +42,7 @@
               <template v-for="quest in quests" :key="quest.id">
                 <div
                   class="quest-card"
-                  :class="[quest.colorClass, { 'is-active': selectedAreaCode === quest.id }]"
+                  :class="{ 'is-active': selectedAreaCode === quest.id }"
                   @click="handleQuestCardClick(quest.id)"
                 >
                   <div class="card-left">
@@ -63,22 +70,22 @@
                   <div v-if="selectedAreaCode === quest.id" class="location-list-container">
                     <div class="location-list-connector"></div>
                     <div class="location-list">
-                                            <div
-                                              v-for="(location) in areaLocations"
-                                              :key="location.locationId"
-                                              class="location-item"
-                                              @click.stop="fetchQuestsForModal(location)"
-                                            >
-                                              <div class="location-info">
-                                                <span class="bullet-point" :class="getLocationColorClass(location)"></span>
-                                                <span class="location-name">{{ location.title }}</span>
-                                              </div>
-                                            </div>
-                                            <div v-if="!isLastPage && areaLocations.length > 0" class="load-more-container">
-                                              <button @click="handleLoadMore" :disabled="isLoadingMore" class="btn-load-more">
-                                                {{ isLoadingMore ? '불러오는 중...' : '더 보기' }}
-                                              </button>
-                                            </div>
+                      <div
+                        v-for="(location) in areaLocations"
+                        :key="location.locationId"
+                        class="location-item"
+                        @click.stop="fetchQuestsForModal(location)"
+                      >
+                        <div class="location-info">
+                          <span class="bullet-point" :class="getLocationColorClass(location)"></span>
+                          <span class="location-name">{{ location.title }}</span>
+                        </div>
+                      </div>
+                      <div v-if="!isLastPage && areaLocations.length > 0" class="load-more-container">
+                        <button @click="handleLoadMore" :disabled="isLoadingMore" class="btn-load-more">
+                          {{ isLoadingMore ? '불러오는 중...' : '더 보기' }}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </Transition>
@@ -297,6 +304,7 @@ const quests = ref([]);
 const areaLocations = ref([]);
 const locationQuests = ref([]);
 const selectedAreaCode = ref(null);
+const allLocations = ref([]); // 지도에 표시할 모든 관광지 데이터
 const questIdToProcess = ref(null); // For modal actions
 
 // Search & Pagination State
@@ -338,9 +346,20 @@ const refreshQuestData = async () => {
   await fetchAreas();
 };
 
-const handleAreaClick = (areaCode) => {
+const handleAreaClick = async (areaCode) => {
   handleQuestCardClick(areaCode);
-  isSheetOpen.value = true;
+  // 바텀시트는 열지 않음 - 지도만 줌인
+  
+  // 해당 지역의 모든 관광지 데이터를 가져와서 지도에 표시
+  try {
+    const response = await api.get(`/api/v1/quest-map/areas/${areaCode}`, {
+      params: { page: 0, size: 1000 }, // 충분히 큰 사이즈로 모든 데이터 가져오기
+    });
+    allLocations.value = response.data.data.content || [];
+  } catch (error) {
+    console.error(`Error fetching all locations for area ${areaCode}:`, error);
+    allLocations.value = [];
+  }
 };
 
 const fetchAreas = async () => {
@@ -369,24 +388,24 @@ onMounted(async () => {
 
 const getQuestStyle = (areaName) => {
   switch (areaName) {
-    case '서울특별시': return { colorClass: 'accent-red', icon: '🏙️' };
-    case '부산광역시': return { colorClass: 'accent-blue', icon: '🌊' };
-    case '인천광역시': return { colorClass: 'accent-sky', icon: '✈️' }; // accent-sky는 CSS 추가 필요 또는 기존 blue 사용
-    case '대전광역시': return { colorClass: 'accent-green', icon: '🧬' };
-    case '대구광역시': return { colorClass: 'accent-red', icon: '🍎' };
-    case '광주광역시': return { colorClass: 'accent-orange', icon: '🍱' };
-    case '울산광역시': return { colorClass: 'accent-blue', icon: '🏭' };
-    case '세종특별자치시': return { colorClass: 'accent-gray', icon: '🏛️' };
-    case '제주특별자치도': return { colorClass: 'accent-orange', icon: '🍊' };
-    case '강원특별자치도': return { colorClass: 'accent-green', icon: '⛰️' };
-    case '경기도': return { colorClass: 'accent-blue', icon: '🚌' };
-    case '경상북도': return { colorClass: 'accent-green', icon: '🗿' }; // 경주 등
-    case '경상남도': return { colorClass: 'accent-blue', icon: '🚢' };
-    case '전북특별자치도': return { colorClass: 'accent-orange', icon: '🍚' };
-    case '전라남도': return { colorClass: 'accent-green', icon: '🌾' };
-    case '충청북도': return { colorClass: 'accent-green', icon: '🏞️' };
-    case '충청남도': return { colorClass: 'accent-gray', icon: '🏺' };
-    default: return { colorClass: 'accent-gray', icon: '📍' };
+    case '서울특별시': return { icon: 'Q' };
+    case '부산광역시': return { icon: 'Q' };
+    case '인천광역시': return { icon: 'Q' };
+    case '대전광역시': return { icon: 'Q' };
+    case '대구광역시': return { icon: 'Q' };
+    case '광주광역시': return { icon: 'Q' };
+    case '울산광역시': return { icon: 'Q' };
+    case '세종특별자치시': return { icon: 'Q' };
+    case '제주특별자치도': return { icon: 'Q' };
+    case '강원특별자치도': return { icon: 'Q' };
+    case '경기도': return { icon: 'Q' };
+    case '경상북도': return { icon: 'Q' };
+    case '경상남도': return { icon: 'Q' };
+    case '전북특별자치도': return { icon: 'Q' };
+    case '전라남도': return { icon: 'Q' };
+    case '충청북도': return { icon: 'Q' };
+    case '충청남도': return { icon: 'Q' };
+    default: return { icon: 'Q' };
   }
 };
 
@@ -474,6 +493,13 @@ const goToLogin = () => {
   closeLoginModal();
 };
 
+// 지도 초기화 시 바텀시트 닫기
+const handleMapReset = () => {
+  isSheetOpen.value = false;
+  selectedAreaCode.value = null;
+  allLocations.value = []; // 관광지 마커 제거
+};
+
 const fetchQuestsForModal = async (location) => {
   if (!isLoggedIn.value) {
     showLoginModal.value = true;
@@ -488,6 +514,11 @@ const fetchQuestsForModal = async (location) => {
   } catch (error) {
     console.error(`Error fetching quests:`, error);
   }
+};
+
+// 지도에서 관광지 마커 클릭 시 호출되는 핸들러
+const handleLocationClick = (location) => {
+  fetchQuestsForModal(location);
 };
 
 const acceptQuest = (questId) => {
