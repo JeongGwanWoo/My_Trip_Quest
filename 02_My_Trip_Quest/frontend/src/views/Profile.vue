@@ -186,7 +186,7 @@
             <h3 class="section-title">도시별 진행 현황</h3>
             <div class="city-list">
               <div
-                v-for="city in userProfile?.cityProgress || []"
+                v-for="city in filteredCityProgress"
                 :key="city.areaCode"
                 class="city-item"
               >
@@ -500,16 +500,15 @@ const executeDeleteAccount = async () => {
 
 
 const getCityStyle = (cityName) => {
-  switch (cityName) {
-    case "서울특별시":
-      return { icon: "fa-solid fa-city", colorClass: "bg-green" };
-    case "광주광역시":
-      return { icon: "fa-solid fa-water", colorClass: "bg-blue" };
-    default:
-      return { icon: "fa-solid fa-map-marker-alt", colorClass: "bg-gray" };
-  }
+  // Return generic style for all cities
+  return { icon: "fa-solid fa-map-marker-alt", colorClass: "bg-blue" };
 };
 // -----------------------
+
+const filteredCityProgress = computed(() => {
+  if (!userProfile.value?.cityProgress) return [];
+  return userProfile.value.cityProgress.filter(city => city.totalQuests > 0);
+});
 
 const equippedItemsBySlot = computed(() => {
   const slots = {
