@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j; // 로깅을 위해 추가
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl; // Added
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.Paths;
 import java.util.UUID;
+import java.util.stream.Collectors; // Added
 
 @Slf4j // System.err 대신 로그를 남기기 위해 사용
 @Service
@@ -34,14 +37,17 @@ public class AdminItemServiceImpl implements AdminItemService {
 
     @Value("${file.upload-dir.backend}")
     private String backendUploadDir;
-    
+
     @Value("${file.upload-dir.frontend}")
     private String frontendUploadDir;
 
     @Override
     @Transactional(readOnly = true)
     public Page<ItemDto> getAllItems(Pageable pageable) {
-        return itemRepository.findAll(pageable).map(this::convertToDto);
+        // MyBatis: List 조회 후 PageImpl로 변환
+        java.util.List<Item> items = itemRepository.findAll(pageable);
+        long total = itemRepository.count();
+        return new PageImpl<>(items.stream().map(this::convertToDto).collect(Collectors.toList()), pageable, total);
     }
 
     @Override
@@ -52,10 +58,10 @@ public class AdminItemServiceImpl implements AdminItemService {
 
         // 파일명 중복 방지를 위한 UUID 생성
         String uniqueFileName = UUID.randomUUID().toString() + "_" + imageFile.getOriginalFilename();
-        
+
         // 백엔드 서버에 실제 저장될 경로
         Path backendPath = Paths.get(backendUploadDir + File.separator + uniqueFileName);
-        
+
         // DB에 저장하고 프론트엔드에서 접근할 경로
         String frontendPath = frontendUploadDir + "/" + uniqueFileName;
 
@@ -78,8 +84,9 @@ public class AdminItemServiceImpl implements AdminItemService {
         item.setPurchasable(request.purchasable());
         item.setImageUrl(frontendPath);
 
-        // DB 저장
-        Item savedItem = itemRepository.save(item);
+        // DB 저장 (MyBatis insert)
+        itemRepository.insertItem(item);
+        Item savedItem = item; // insertItem은 void지만 item 객체에 ID가 채워짐 (useGeneratedKeys)
 
         // 엔티티(Item)를 DTO(ItemDto)로 변환해서 반환
         return convertToDto(savedItem);
@@ -132,10 +139,11 @@ public class AdminItemServiceImpl implements AdminItemService {
                 log.info("Image cleared for item {}", itemId);
             }
         }
-        
-        return convertToDto(itemRepository.save(item));
-    }
 
+        // DB 수정 (MyBatis update)
+        itemRepository.updateItem(item);
+        return convertToDto(item); // 수정된 item 객체 반환
+    }
 
     @Override
     public void deleteItem(Long itemId) {
@@ -148,7 +156,7 @@ public class AdminItemServiceImpl implements AdminItemService {
                 // DB에 저장된 경로에서 파일명만 추출
                 String fileName = item.getImageUrl().substring(item.getImageUrl().lastIndexOf('/') + 1);
                 Path filePath = Paths.get(backendUploadDir + File.separator + fileName);
-                
+
                 // 파일이 존재하면 삭제
                 Files.deleteIfExists(filePath);
             } catch (IOException e) {
@@ -156,22 +164,22 @@ public class AdminItemServiceImpl implements AdminItemService {
                 log.error("아이템 이미지 삭제 실패 - itemId: {}, path: {}", itemId, item.getImageUrl(), e);
             }
         }
-        
+
         // TODO: user_items 테이블 등 외래 키 제약 조건이 있다면 여기서 먼저 처리해야 함
         // 예: userItemRepository.deleteByItemId(itemId);
-        
-        itemRepository.delete(item);
+
+        // MyBatis delete
+        itemRepository.deleteItem(itemId);
     }
 
     private ItemDto convertToDto(Item item) {
         return new ItemDto(
-            item.getItemId(),
-            item.getName(),
-            item.getSlot() != null ? item.getSlot().name() : null,
-            item.getImageUrl(),
-            item.isPurchasable(),
-            item.getPrice(),
-            item.getCreatedAt()
-        );
+                item.getItemId(),
+                item.getName(),
+                item.getSlot() != null ? item.getSlot().name() : null,
+                item.getImageUrl(),
+                item.isPurchasable(),
+                item.getPrice(),
+                item.getCreatedAt());
     }
 }
