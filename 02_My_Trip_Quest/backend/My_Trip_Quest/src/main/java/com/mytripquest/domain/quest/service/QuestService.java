@@ -4,6 +4,7 @@ import com.mytripquest.domain.quest.dto.CompletedMissionResponse;
 import com.mytripquest.domain.quest.dto.InProgressQuestDto;
 import com.mytripquest.domain.quest.dto.QuestCompleteRequestDto;
 import com.mytripquest.domain.quest.dto.UserAreaQuestStatusDto;
+import com.mytripquest.domain.quest.dto.LocationWithQuestCountDto;
 import com.mytripquest.domain.quest.dto.QuestLocationSliceDto;
 import com.mytripquest.domain.quest.dto.QuestInfoWithStatusDto;
 import com.mytripquest.domain.quest.entity.Quest;
@@ -21,6 +22,8 @@ public interface QuestService {
     List<UserAreaQuestStatusDto> getUserAreaQuestCounts(Long userId);
 
     QuestLocationSliceDto getLocationsByAreaCode(String areaCode, Long userId, String keyword, Pageable pageable);
+
+    List<LocationWithQuestCountDto> getAllLocations(Long userId);
 
     List<QuestInfoWithStatusDto> getQuestsByLocationId(Long locationId, Long userId);
 
