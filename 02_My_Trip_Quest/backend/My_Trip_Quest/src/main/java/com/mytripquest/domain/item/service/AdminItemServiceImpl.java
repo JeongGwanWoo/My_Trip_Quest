@@ -4,7 +4,7 @@ import com.mytripquest.domain.item.dto.CreateItemRequest;
 import com.mytripquest.domain.item.dto.ItemDto;
 import com.mytripquest.domain.item.dto.UpdateItemRequest; // Added import
 import com.mytripquest.domain.item.entity.Item;
-import com.mytripquest.domain.item.repository.ItemRepository;
+import com.mytripquest.domain.item.repository.ItemMapper;
 import com.mytripquest.global.error.exception.BusinessException;
 import com.mytripquest.global.error.exception.ErrorCode;
 
@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.stream.Collectors; // Added
 
@@ -33,7 +32,7 @@ import java.util.stream.Collectors; // Added
 @Transactional
 public class AdminItemServiceImpl implements AdminItemService {
 
-    private final ItemRepository itemRepository;
+    private final ItemMapper itemMapper;
 
     @Value("${file.upload-dir.backend}")
     private String backendUploadDir;
@@ -45,8 +44,8 @@ public class AdminItemServiceImpl implements AdminItemService {
     @Transactional(readOnly = true)
     public Page<ItemDto> getAllItems(Pageable pageable) {
         // MyBatis: List 조회 후 PageImpl로 변환
-        java.util.List<Item> items = itemRepository.findAll(pageable);
-        long total = itemRepository.count();
+        java.util.List<Item> items = itemMapper.findAll(pageable);
+        long total = itemMapper.count();
         return new PageImpl<>(items.stream().map(this::convertToDto).collect(Collectors.toList()), pageable, total);
     }
 
@@ -85,7 +84,7 @@ public class AdminItemServiceImpl implements AdminItemService {
         item.setImageUrl(frontendPath);
 
         // DB 저장 (MyBatis insert)
-        itemRepository.insertItem(item);
+        itemMapper.insertItem(item);
         Item savedItem = item; // insertItem은 void지만 item 객체에 ID가 채워짐 (useGeneratedKeys)
 
         // 엔티티(Item)를 DTO(ItemDto)로 변환해서 반환
@@ -94,7 +93,7 @@ public class AdminItemServiceImpl implements AdminItemService {
 
     @Override
     public ItemDto updateItem(Long itemId, UpdateItemRequest request, MultipartFile imageFile) {
-        Item item = itemRepository.findById(itemId)
+        Item item = itemMapper.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
 
         // Update basic item details
@@ -141,13 +140,13 @@ public class AdminItemServiceImpl implements AdminItemService {
         }
 
         // DB 수정 (MyBatis update)
-        itemRepository.updateItem(item);
+        itemMapper.updateItem(item);
         return convertToDto(item); // 수정된 item 객체 반환
     }
 
     @Override
     public void deleteItem(Long itemId) {
-        Item item = itemRepository.findById(itemId)
+        Item item = itemMapper.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
 
         // 이미지 파일 삭제 시도
@@ -169,7 +168,7 @@ public class AdminItemServiceImpl implements AdminItemService {
         // 예: userItemRepository.deleteByItemId(itemId);
 
         // MyBatis delete
-        itemRepository.deleteItem(itemId);
+        itemMapper.deleteItem(itemId);
     }
 
     private ItemDto convertToDto(Item item) {
