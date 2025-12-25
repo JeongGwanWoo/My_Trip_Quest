@@ -231,6 +231,8 @@ const formatDate = (dateString) => {
   font-weight: 700;
   color: #1e293b;
   margin: 0 0 16px 0;
+  word-break: keep-all; /* 한글 단어 중간에 잘리는 현상 방지 */
+  overflow-wrap: break-word; /* 긴 영단어 등 비정상적인 오버플로우 방지 */
 }
 
 .quest-footer {

@@ -5,7 +5,7 @@ import com.mytripquest.domain.avatar.dto.EquipRequest;
 import com.mytripquest.domain.avatar.dto.EquippedItemDto;
 import com.mytripquest.domain.item.entity.Item;
 import com.mytripquest.domain.item.entity.UserItem;
-import com.mytripquest.domain.item.repository.ItemRepository;
+import com.mytripquest.domain.item.repository.ItemMapper;
 import com.mytripquest.domain.user.entity.User;
 import com.mytripquest.domain.user.repository.UserMapper;
 import com.mytripquest.global.error.exception.BusinessException;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AvatarServiceImpl implements AvatarService {
 
-    private final ItemRepository itemRepository;
+    private final ItemMapper itemMapper;
     private final UserMapper userMapper;
 
     @Override
@@ -32,7 +32,7 @@ public class AvatarServiceImpl implements AvatarService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 1. 유저가 소유한 아이템 목록 조회
-        List<UserItem> userItems = itemRepository.findUserItemsByUserId(userId);
+        List<UserItem> userItems = itemMapper.findUserItemsByUserId(userId);
 
         // 2. 착용중인(isEquipped = true) 아이템만 필터링하여 DTO로 변환
         List<EquippedItemDto> equippedItems = userItems.stream()
@@ -60,10 +60,10 @@ public class AvatarServiceImpl implements AvatarService {
     public void equipItem(Long userId, EquipRequest equipRequest) {
         Long itemIdToEquip = equipRequest.getItemId();
 
-        itemRepository.findUserItem(userId, itemIdToEquip)
+        itemMapper.findUserItem(userId, itemIdToEquip)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
 
-        itemRepository.equipItemAndUnequipOthers(userId, itemIdToEquip);
+        itemMapper.equipItemAndUnequipOthers(userId, itemIdToEquip);
     }
 
     @Override
@@ -73,6 +73,6 @@ public class AvatarServiceImpl implements AvatarService {
         if ("SKIN".equalsIgnoreCase(slot)) {
             throw new BusinessException(ErrorCode.CANNOT_UNEQUIP_SKIN);
         }
-        itemRepository.unequipSlot(userId, Item.ItemSlot.valueOf(slot.toUpperCase()));
+        itemMapper.unequipSlot(userId, Item.ItemSlot.valueOf(slot.toUpperCase()));
     }
 }

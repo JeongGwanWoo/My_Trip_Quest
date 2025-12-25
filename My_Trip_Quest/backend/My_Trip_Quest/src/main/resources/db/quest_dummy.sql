@@ -1,9 +1,3 @@
-SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE quests;
-TRUNCATE TABLE locations;
-TRUNCATE TABLE quest_types;
-SET FOREIGN_KEY_CHECKS = 1;
-
 -- Dummy data for MyTripQuest
 
 -- QUEST_TYPES
@@ -12,248 +6,263 @@ VALUES
 (1, '도착'),
 (2, '사진');
 
--- =======================================================================
--- 관광지: 경복궁
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(1, '경복궁', 37.579617, 126.977041, '1', 500);
+/*
+-- Query: SELECT * FROM mytripquest.quests
+LIMIT 0, 1000
 
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`, `require_gps_verify`)
-VALUES
-(10, 1, 1, NULL, 'EASY', '경복궁 도착', '경복궁에 도착하여 GPS를 인증하세요.', 50, 5, TRUE),
-(11, 1, 2, 10, 'EASY', '경복궁 근정전 사진 찍기', '경복궁의 중심, 근정전의 위엄을 배경으로 멋진 사진을 남겨보세요.', 100, 10, TRUE);
+-- Date: 2025-12-25 22:41
+*/
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20000,2000,1,NULL,'EASY','갈현체육공원 도착','갈현체육공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20001,2000,2,20000,'NORMAL','갈현체육공원 사진 찍기','갈현체육공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20010,2001,1,NULL,'EASY','감중공원 도착','감중공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20011,2001,2,20010,'NORMAL','감중공원 사진 찍기','감중공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20020,2002,1,NULL,'EASY','갑곶돈대 도착','갑곶돈대에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20021,2002,2,20020,'NORMAL','갑곶돈대 사진 찍기','갑곶돈대의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20030,2003,1,NULL,'EASY','갑곶순교성지 도착','갑곶순교성지에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20031,2003,2,20030,'NORMAL','갑곶순교성지 사진 찍기','갑곶순교성지의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20040,2004,1,NULL,'EASY','강화 갑곶리 탱자나무 도착','강화 갑곶리 탱자나무에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20041,2004,2,20040,'NORMAL','강화 갑곶리 탱자나무 사진 찍기','강화 갑곶리 탱자나무의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20050,2005,1,NULL,'EASY','강화 고인돌 유적 [유네스코 세계유산] 도착','강화 고인돌 유적 [유네스코 세계유산]에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20051,2005,2,20050,'NORMAL','강화 고인돌 유적 [유네스코 세계유산] 사진 찍기','강화 고인돌 유적 [유네스코 세계유산]의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20060,2006,1,NULL,'EASY','강화 달빛동화마을 도착','강화 달빛동화마을에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20061,2006,2,20060,'NORMAL','강화 달빛동화마을 사진 찍기','강화 달빛동화마을의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20070,2007,1,NULL,'EASY','강화 덕진진 도착','강화 덕진진에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20071,2007,2,20070,'NORMAL','강화 덕진진 사진 찍기','강화 덕진진의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20080,2008,1,NULL,'EASY','강화 동막해변 도착','강화 동막해변에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20081,2008,2,20080,'NORMAL','강화 동막해변 사진 찍기','강화 동막해변의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20090,2009,1,NULL,'EASY','강화 분오리돈대 도착','강화 분오리돈대에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (20091,2009,2,20090,'NORMAL','강화 분오리돈대 사진 찍기','강화 분오리돈대의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30000,3000,1,NULL,'EASY','갈마공원 도착','갈마공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30001,3000,2,30000,'NORMAL','갈마공원 사진 찍기','갈마공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30010,3001,1,NULL,'EASY','갑천 도착','갑천에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30011,3001,2,30010,'NORMAL','갑천 사진 찍기','갑천의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30020,3002,1,NULL,'EASY','광수사 도착','광수사에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30021,3002,2,30020,'NORMAL','광수사 사진 찍기','광수사의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30030,3003,1,NULL,'EASY','구봉산(대전) 도착','구봉산(대전)에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30031,3003,2,30030,'NORMAL','구봉산(대전) 사진 찍기','구봉산(대전)의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30040,3004,1,NULL,'EASY','국립 대전 현충원 도착','국립 대전 현충원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30041,3004,2,30040,'NORMAL','국립 대전 현충원 사진 찍기','국립 대전 현충원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30050,3005,1,NULL,'EASY','국립대전숲체원 도착','국립대전숲체원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30051,3005,2,30050,'NORMAL','국립대전숲체원 사진 찍기','국립대전숲체원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30060,3006,1,NULL,'EASY','국립대전현충원 보훈둘레길 도착','국립대전현충원 보훈둘레길에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30061,3006,2,30060,'NORMAL','국립대전현충원 보훈둘레길 사진 찍기','국립대전현충원 보훈둘레길의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30070,3007,1,NULL,'EASY','금강로하스 대청공원 (암석식물원) 도착','금강로하스 대청공원 (암석식물원)에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30071,3007,2,30070,'NORMAL','금강로하스 대청공원 (암석식물원) 사진 찍기','금강로하스 대청공원 (암석식물원)의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30080,3008,1,NULL,'EASY','금강로하스대청공원 도착','금강로하스대청공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30081,3008,2,30080,'NORMAL','금강로하스대청공원 사진 찍기','금강로하스대청공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30090,3009,1,NULL,'EASY','금강로하스산호빛공원 도착','금강로하스산호빛공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (30091,3009,2,30090,'NORMAL','금강로하스산호빛공원 사진 찍기','금강로하스산호빛공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40000,4000,1,NULL,'EASY','가창 찐빵 골목 도착','가창 찐빵 골목에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40001,4000,2,40000,'NORMAL','가창 찐빵 골목 사진 찍기','가창 찐빵 골목의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40010,4001,1,NULL,'EASY','감삼못공원 도착','감삼못공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40011,4001,2,40010,'NORMAL','감삼못공원 사진 찍기','감삼못공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40020,4002,1,NULL,'EASY','강정고령보 도착','강정고령보에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40021,4002,2,40020,'NORMAL','강정고령보 사진 찍기','강정고령보의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40030,4003,1,NULL,'EASY','경극고택 도착','경극고택에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40031,4003,2,40030,'NORMAL','경극고택 사진 찍기','경극고택의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40040,4004,1,NULL,'EASY','경상감영공원 도착','경상감영공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40041,4004,2,40040,'NORMAL','경상감영공원 사진 찍기','경상감영공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40050,4005,1,NULL,'EASY','고산골 도착','고산골에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40051,4005,2,40050,'NORMAL','고산골 사진 찍기','고산골의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40060,4006,1,NULL,'EASY','고산골 메타쉐콰이어길 도착','고산골 메타쉐콰이어길에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40061,4006,2,40060,'NORMAL','고산골 메타쉐콰이어길 사진 찍기','고산골 메타쉐콰이어길의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40070,4007,1,NULL,'EASY','고산서당 도착','고산서당에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40071,4007,2,40070,'NORMAL','고산서당 사진 찍기','고산서당의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40080,4008,1,NULL,'EASY','공룡공원 도착','공룡공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40081,4008,2,40080,'NORMAL','공룡공원 사진 찍기','공룡공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40090,4009,1,NULL,'EASY','공항교강변공원 도착','공항교강변공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (40091,4009,2,40090,'NORMAL','공항교강변공원 사진 찍기','공항교강변공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50000,5000,1,NULL,'EASY','관우집 도착','관우집에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:41:38','2025-12-25 17:41:38');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50001,5000,2,50000,'NORMAL','관우집 사진 찍기','관우집의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:41:38','2025-12-25 17:41:38');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50010,5001,1,NULL,'EASY','SSAFY 광주 캠퍼스 도착','SSAFY 광주 캠퍼스에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:51:06','2025-12-25 17:51:06');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50011,5001,2,50010,'NORMAL','SSAFY 광주 캠퍼스 사진 찍기','SSAFY 광주 캠퍼스의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:51:06','2025-12-25 17:51:06');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50020,5002,1,NULL,'EASY','경암근린공원 도착','경암근린공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50021,5002,2,50020,'NORMAL','경암근린공원 사진 찍기','경암근린공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50030,5003,1,NULL,'EASY','고싸움놀이테마파크 도착','고싸움놀이테마파크에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50031,5003,2,50030,'NORMAL','고싸움놀이테마파크 사진 찍기','고싸움놀이테마파크의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50040,5004,1,NULL,'EASY','고씨삼강문 도착','고씨삼강문에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50041,5004,2,50040,'NORMAL','고씨삼강문 사진 찍기','고씨삼강문의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50050,5005,1,NULL,'EASY','관덕정의 각궁 도착','관덕정의 각궁에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50051,5005,2,50050,'NORMAL','관덕정의 각궁 사진 찍기','관덕정의 각궁의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50060,5006,1,NULL,'EASY','광주 3·1 만세운동 기념비 도착','광주 3·1 만세운동 기념비에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50061,5006,2,50060,'NORMAL','광주 3·1 만세운동 기념비 사진 찍기','광주 3·1 만세운동 기념비의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50070,5007,1,NULL,'EASY','광주 경찰충혼탑 도착','광주 경찰충혼탑에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50071,5007,2,50070,'NORMAL','광주 경찰충혼탑 사진 찍기','광주 경찰충혼탑의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50080,5008,1,NULL,'EASY','광주 송정동 떡갈비 골목 도착','광주 송정동 떡갈비 골목에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50081,5008,2,50080,'NORMAL','광주 송정동 떡갈비 골목 사진 찍기','광주 송정동 떡갈비 골목의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50090,5009,1,NULL,'EASY','광주 수완호수공원 도착','광주 수완호수공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50091,5009,2,50090,'NORMAL','광주 수완호수공원 사진 찍기','광주 수완호수공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50100,5010,1,NULL,'EASY','광주 예술의 거리 도착','광주 예술의 거리에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50101,5010,2,50100,'NORMAL','광주 예술의 거리 사진 찍기','광주 예술의 거리의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50110,5011,1,NULL,'EASY','광주 우치공원 동물원 도착','광주 우치공원 동물원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (50111,5011,2,50110,'NORMAL','광주 우치공원 동물원 사진 찍기','광주 우치공원 동물원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60000,6000,1,NULL,'EASY','가덕도 도착','가덕도에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60001,6000,2,60000,'NORMAL','가덕도 사진 찍기','가덕도의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60010,6001,1,NULL,'EASY','가덕도 등대 도착','가덕도 등대에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60011,6001,2,60010,'NORMAL','가덕도 등대 사진 찍기','가덕도 등대의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60020,6002,1,NULL,'EASY','가덕도 연대봉 도착','가덕도 연대봉에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60021,6002,2,60020,'NORMAL','가덕도 연대봉 사진 찍기','가덕도 연대봉의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60030,6003,1,NULL,'EASY','가덕도대항인공동굴 도착','가덕도대항인공동굴에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60031,6003,2,60030,'NORMAL','가덕도대항인공동굴 사진 찍기','가덕도대항인공동굴의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60040,6004,1,NULL,'EASY','가덕도외양포전망대 도착','가덕도외양포전망대에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60041,6004,2,60040,'NORMAL','가덕도외양포전망대 사진 찍기','가덕도외양포전망대의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60050,6005,1,NULL,'EASY','가야공원 도착','가야공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60051,6005,2,60050,'NORMAL','가야공원 사진 찍기','가야공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60060,6006,1,NULL,'EASY','가톨릭 특성화 거리 도착','가톨릭 특성화 거리에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60061,6006,2,60060,'NORMAL','가톨릭 특성화 거리 사진 찍기','가톨릭 특성화 거리의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60070,6007,1,NULL,'EASY','갈맷길5코스 도착','갈맷길5코스에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60071,6007,2,60070,'NORMAL','갈맷길5코스 사진 찍기','갈맷길5코스의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60080,6008,1,NULL,'EASY','감만시민부두 도착','감만시민부두에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60081,6008,2,60080,'NORMAL','감만시민부두 사진 찍기','감만시민부두의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60090,6009,1,NULL,'EASY','감지해변 도착','감지해변에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (60091,6009,2,60090,'NORMAL','감지해변 사진 찍기','감지해변의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70000,7000,1,NULL,'EASY','가족문화센터 도착','가족문화센터에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70001,7000,2,70000,'NORMAL','가족문화센터 사진 찍기','가족문화센터의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70010,7001,1,NULL,'EASY','간월산 도착','간월산에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70011,7001,2,70010,'NORMAL','간월산 사진 찍기','간월산의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70020,7002,1,NULL,'EASY','간월산 자연휴양림 도착','간월산 자연휴양림에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70021,7002,2,70020,'NORMAL','간월산 자연휴양림 사진 찍기','간월산 자연휴양림의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70030,7003,1,NULL,'EASY','간월재 도착','간월재에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70031,7003,2,70030,'NORMAL','간월재 사진 찍기','간월재의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70040,7004,1,NULL,'EASY','간절곶 도착','간절곶에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70041,7004,2,70040,'NORMAL','간절곶 사진 찍기','간절곶의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70050,7005,1,NULL,'EASY','간절곶 소망길 도착','간절곶 소망길에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70051,7005,2,70050,'NORMAL','간절곶 소망길 사진 찍기','간절곶 소망길의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70060,7006,1,NULL,'EASY','간절곶소망우체통 도착','간절곶소망우체통에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70061,7006,2,70060,'NORMAL','간절곶소망우체통 사진 찍기','간절곶소망우체통의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70070,7007,1,NULL,'EASY','강동 해수온천 도착','강동 해수온천에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70071,7007,2,70070,'NORMAL','강동 해수온천 사진 찍기','강동 해수온천의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70080,7008,1,NULL,'EASY','강동 화암 주상절리 도착','강동 화암 주상절리에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70081,7008,2,70080,'NORMAL','강동 화암 주상절리 사진 찍기','강동 화암 주상절리의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70090,7009,1,NULL,'EASY','강동몽돌해변 (정자해변) 도착','강동몽돌해변 (정자해변)에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (70091,7009,2,70090,'NORMAL','강동몽돌해변 (정자해변) 사진 찍기','강동몽돌해변 (정자해변)의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:51','2025-12-25 18:03:51');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80000,8000,1,NULL,'EASY','고복자연공원 도착','고복자연공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80001,8000,2,80000,'NORMAL','고복자연공원 사진 찍기','고복자연공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80010,8001,1,NULL,'EASY','고운뜰공원 도착','고운뜰공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80011,8001,2,80010,'NORMAL','고운뜰공원 사진 찍기','고운뜰공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80020,8002,1,NULL,'EASY','국립세종수목원 도착','국립세종수목원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80021,8002,2,80020,'NORMAL','국립세종수목원 사진 찍기','국립세종수목원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80030,8003,1,NULL,'EASY','금강대도 도착','금강대도에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80031,8003,2,80030,'NORMAL','금강대도 사진 찍기','금강대도의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80040,8004,1,NULL,'EASY','금강보행교 도착','금강보행교에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80041,8004,2,80040,'NORMAL','금강보행교 사진 찍기','금강보행교의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80050,8005,1,NULL,'EASY','금강수변공원 도착','금강수변공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80051,8005,2,80050,'NORMAL','금강수변공원 사진 찍기','금강수변공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80060,8006,1,NULL,'EASY','금남 백로 서식지 도착','금남 백로 서식지에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80061,8006,2,80060,'NORMAL','금남 백로 서식지 사진 찍기','금남 백로 서식지의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80070,8007,1,NULL,'EASY','금이성 도착','금이성에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80071,8007,2,80070,'NORMAL','금이성 사진 찍기','금이성의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80080,8008,1,NULL,'EASY','김종서 장군 묘 도착','김종서 장군 묘에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80081,8008,2,80080,'NORMAL','김종서 장군 묘 사진 찍기','김종서 장군 묘의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80090,8009,1,NULL,'EASY','나무키움(전의양묘영농조합법인) 도착','나무키움(전의양묘영농조합법인)에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (80091,8009,2,80090,'NORMAL','나무키움(전의양묘영농조합법인) 사진 찍기','나무키움(전의양묘영농조합법인)의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100000,10000,1,NULL,'EASY','가회동성당 도착','가회동성당에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100001,10000,2,100000,'NORMAL','가회동성당 사진 찍기','가회동성당의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100010,10001,1,NULL,'EASY','간데메공원 도착','간데메공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100011,10001,2,100010,'NORMAL','간데메공원 사진 찍기','간데메공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100020,10002,1,NULL,'EASY','간송옛집 도착','간송옛집에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100021,10002,2,100020,'NORMAL','간송옛집 사진 찍기','간송옛집의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100030,10003,1,NULL,'EASY','갈산공원 도착','갈산공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100031,10003,2,100030,'NORMAL','갈산공원 사진 찍기','갈산공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100040,10004,1,NULL,'EASY','감로암(서울) 도착','감로암(서울)에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100041,10004,2,100040,'NORMAL','감로암(서울) 사진 찍기','감로암(서울)의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100050,10005,1,NULL,'EASY','강남 도착','강남에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100051,10005,2,100050,'NORMAL','강남 사진 찍기','강남의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100060,10006,1,NULL,'EASY','강남 마이스 관광특구 도착','강남 마이스 관광특구에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100061,10006,2,100060,'NORMAL','강남 마이스 관광특구 사진 찍기','강남 마이스 관광특구의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100070,10007,1,NULL,'EASY','강동예찬시비 도착','강동예찬시비에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100071,10007,2,100070,'NORMAL','강동예찬시비 사진 찍기','강동예찬시비의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100080,10008,1,NULL,'EASY','강변스파랜드 도착','강변스파랜드에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100081,10008,2,100080,'NORMAL','강변스파랜드 사진 찍기','강변스파랜드의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100090,10009,1,NULL,'EASY','강서습지생태공원 도착','강서습지생태공원에 도착하여 인증하세요.',50,5,1,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
+INSERT INTO `` (`quest_id`,`location_id`,`quest_type_id`,`previous_quest_id`,`difficulty`,`title`,`description`,`reward_xp`,`reward_points`,`require_gps_verify`,`is_active`,`created_at`,`updated_at`) VALUES (100091,10009,2,100090,'NORMAL','강서습지생태공원 사진 찍기','강서습지생태공원의 멋진 사진을 찍어보세요!',150,15,0,1,'2025-12-25 17:40:13','2025-12-25 17:40:13');
 
--- =======================================================================
--- 관광지: 광화문 광장
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(2, '광화문 광장', 37.5759, 126.9768, '1', 280);
 
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`, `require_gps_verify`)
-VALUES
-(20, 2, 1, NULL, 'EASY', '광화문 광장 도착', '광화문 광장에 도착하여 GPS를 인증하세요.', 50, 5, TRUE),
-(21, 2, 2, 20, 'NORMAL', '광화문 광장 세종대왕 동상 사진 찍기', '세종대왕 동상 앞에서 한글의 위대함을 느껴보세요.', 150, 15, TRUE);
+/*
+-- Query: SELECT * FROM mytripquest.locations
+LIMIT 0, 1000
 
--- =======================================================================
--- 관광지: 북촌 한옥마을
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(3, '북촌 한옥마을', 37.5826, 126.9835, '1', 600);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`, `require_gps_verify`)
-VALUES
-(30, 3, 1, NULL, 'EASY', '북촌 한옥마을 도착', '북촌 한옥마을에 도착하여 GPS를 인증하세요.', 50, 5, TRUE),
-(31, 3, 2, 30, 'HARD', '북촌 한옥마을에서 가장 아름다운 한옥 사진 찍기', '북촌의 수많은 한옥들 중, 자신만의 최고 한옥을 찾아 사진으로 남겨주세요.', 300, 30, TRUE);
-
--- =======================================================================
--- 관광지: 국립아시아문화전당 (기존)
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(4, '국립아시아문화전당 (기존)', 35.1585, 126.9224, '5', 280);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`, `require_gps_verify`)
-VALUES
-(40, 4, 1, NULL, 'EASY', '국립아시아문화전당 (기존) 도착', '국립아시아문화전당에 도착하여 GPS를 인증하세요.', 50, 5, TRUE),
-(41, 4, 2, 40, 'NORMAL', '국립아시아문화전당 (기존) 사진 찍기', '국립아시아문화전당의 멋진 건축물을 배경으로 멋진 한 컷을 남겨보세요.', 150, 15, TRUE);
-
--- =======================================================================
--- 관광지: 양림동 펭귄마을
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(5, '양림동 펭귄마을', 35.1388, 126.9150, '5', 150);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`, `require_gps_verify`)
-VALUES
-(50, 5, 1, NULL, 'EASY', '양림동 펭귄마을 도착', '양림동 펭귄마을에 도착하여 GPS를 인증하세요.', 50, 5, TRUE),
-(51, 5, 2, 50, 'EASY', '양림동 펭귄마을 펭귄 사진 찍기', '양림동 펭귄마을에서 숨어있는 펭귄들을 찾아보세요.', 100, 10, TRUE);
-
-
--- ======== 서울 관광지 데이터 (신규 추가) ========
-
--- =======================================================================
--- 관광지: 63스퀘어
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`, `tel`, `homepage`)
-VALUES
-(1001, '63스퀘어', 37.520024, 126.94007, '1', 100, '1833-7001', 'https://www.hanwharesort.co.kr/irsweb/resort3/resort/resort_view.do?resort_cd=04000');
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(10010, 1001, 1, NULL, 'EASY', '63스퀘어 도착', '63스퀘어에 도착하여 GPS를 인증하세요.', 50, 5),
-(10011, 1001, 2, 10010, 'NORMAL', '63스퀘어 배경으로 사진 찍기', '한강을 배경으로 63스퀘어의 멋진 모습을 사진으로 남겨보세요.', 150, 15);
-
--- =======================================================================
--- 관광지: N서울타워
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`, `tel`, `homepage`)
-VALUES
-(1002, 'N서울타워', 37.5511694, 126.9882266, '1', 150, '02-3455-9277', 'http://www.seoultower.co.kr/');
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(10020, 1002, 1, NULL, 'EASY', 'N서울타워 도착', 'N서울타워에 도착하여 GPS를 인증하세요.', 50, 5),
-(10021, 1002, 2, 10020, 'NORMAL', 'N서울타워에서 서울 전경 사진 찍기', 'N서울타워에서 서울의 아름다운 전경을 사진으로 남겨보세요.', 150, 15);
-
--- =======================================================================
--- 관광지: 창덕궁
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`, `tel`, `homepage`)
-VALUES
-(1003, '창덕궁', 37.5794833, 126.9911750, '1', 450, '02-3668-2300', 'http://www.cdg.go.kr/');
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(10030, 1003, 1, NULL, 'EASY', '창덕궁 도착', '창덕궁에 도착하여 GPS를 인증하세요.', 50, 5),
-(10031, 1003, 2, 10030, 'NORMAL', '창덕궁 인정전 사진 찍기', '창덕궁의 정전인 인정전의 모습을 사진으로 남겨보세요.', 150, 15);
-
--- =======================================================================
--- 관광지: 롯데월드타워
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`, `tel`, `homepage`)
-VALUES
-(1004, '롯데월드타워', 37.51250, 127.10278, '1', 200, '02-3213-5000', 'https://seoulsky.lotteworld.com/');
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(10040, 1004, 1, NULL, 'EASY', '롯데월드타워 도착', '롯데월드타워에 도착하여 GPS를 인증하세요.', 50, 5),
-(10041, 1004, 2, 10040, 'NORMAL', '롯데월드타워를 배경으로 사진 찍기', '롯데월드타워의 웅장한 모습을 배경으로 사진을 찍어 인증하세요.', 150, 15);
-
--- =======================================================================
--- 관광지: DDP (동대문디자인플라자)
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`, `tel`, `homepage`)
-VALUES
-(1005, 'DDP (동대문디자인플라자)', 37.567191, 127.010490, '1', 180, '02-2153-0000', 'https://ddp.or.kr/');
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(10050, 1005, 1, NULL, 'EASY', 'DDP 도착', 'DDP(동대문디자인플라자)에 도착하여 GPS를 인증하세요.', 50, 5),
-(10051, 1005, 2, 10050, 'NORMAL', 'DDP 건물 사진 찍기', '독특한 디자인의 DDP 건물을 배경으로 사진을 찍어 인증하세요.', 150, 15);
-
-
--- ======== 광주 관광지 데이터 (신규 추가) ========
-
--- =======================================================================
--- 관광지: 광주학생독립운동발생지(광주제일고등학교)
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(5001, '광주학생독립운동발생지(광주제일고등학교)', 35.1532549, 126.9072398, '5', 200); -- 학교 면적 불분명으로 200m 임의 지정
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(50010, 5001, 1, NULL, 'EASY', '광주학생독립운동발생지 도착', '광주학생독립운동발생지(광주제일고등학교)에 도착하여 GPS를 인증하세요.', 50, 5),
-(50011, 5001, 2, 50010, 'NORMAL', '광주학생독립운동발생지 기념탑 사진 찍기', '광주학생독립운동 기념탑을 배경으로 사진을 찍어 인증하세요.', 150, 15);
-
--- =======================================================================
--- 관광지: 월봉서원(빙월당)
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(5002, '월봉서원(빙월당)', 35.235583, 126.744750, '5', 150);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(50020, 5002, 1, NULL, 'EASY', '월봉서원(빙월당) 도착', '월봉서원(빙월당)에 도착하여 GPS를 인증하세요.', 50, 5),
-(50021, 5002, 2, 50020, 'NORMAL', '월봉서원(빙월당) 건축물 사진 찍기', '월봉서원(빙월당)의 고즈넉한 건축물 앞에서 사진을 찍어 인증하세요.', 150, 15);
-
--- =======================================================================
--- 관광지: 구 전남도청 본관
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(5003, '구 전남도청 본관', 35.146666, 126.920277, '5', 50);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(50030, 5003, 1, NULL, 'EASY', '구 전남도청 본관 도착', '구 전남도청 본관에 도착하여 GPS를 인증하세요.', 50, 5),
-(50031, 5003, 2, 50030, 'NORMAL', '구 전남도청 본관 전경 사진 찍기', '구 전남도청 본관 앞에서 역사적인 건물을 배경으로 사진을 찍어 인증하세요.', 150, 15);
-
--- =======================================================================
--- 관광지: 충효동 정려비각
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(5004, '충효동 정려비각', 35.18472, 127.00111, '5', 40);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(50040, 5004, 1, NULL, 'EASY', '충효동 정려비각 도착', '충효동 정려비각에 도착하여 GPS를 인증하세요.', 50, 5),
-(50041, 5004, 2, 50040, 'NORMAL', '충효동 정려비각 앞에서 사진 찍기', '충효동 정려비각의 고즈넉한 모습을 배경으로 사진을 찍어 인증하세요.', 150, 15);
-
--- =======================================================================
--- 관광지: 포충사
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(5005, '포충사', 35.090555, 126.847221, '5', 30);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(50050, 5005, 1, NULL, 'EASY', '포충사 도착', '포충사에 도착하여 GPS를 인증하세요.', 50, 5),
-(50051, 5005, 2, 50050, 'NORMAL', '포충사 삼문 앞에서 사진 찍기', '포충사의 삼문 앞에서 충절을 기리며 사진을 찍어 인증하세요.', 150, 15);
-
--- =======================================================================
--- 관광지: 증심사 삼층석탑
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(5006, '증심사 삼층석탑', 35.128389, 126.969695, '5', 20);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(50060, 5006, 1, NULL, 'EASY', '증심사 삼층석탑 도착', '증심사 삼층석탑 앞에 도착하여 GPS를 인증하세요.', 50, 5),
-(50061, 5006, 2, 50060, 'NORMAL', '증심사 삼층석탑과 함께 사진 찍기', '증심사 삼층석탑을 배경으로 사진을 찍어 인증하세요.', 150, 15);
-
--- =======================================================================
--- 관광지: 증심사 오백전
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(5007, '증심사 오백전', 35.12833, 126.96972, '5', 30);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(50070, 5007, 1, NULL, 'EASY', '증심사 오백전 도착', '증심사 오백전 앞에 도착하여 GPS를 인증하세요.', 50, 5),
-(50071, 5007, 2, 50070, 'NORMAL', '증심사 오백전 건물 사진 찍기', '증심사 오백전의 아름다운 모습을 배경으로 사진을 찍어 인증하세요.', 150, 15);
-
--- =======================================================================
--- 관광지: 증심사
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(5008, '증심사', 35.12915259439334, 126.96901302479323, '5', 250);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(50080, 5008, 1, NULL, 'EASY', '증심사 도착', '증심사에 도착하여 GPS를 인증하세요.', 50, 5),
-(50081, 5008, 2, 50080, 'NORMAL', '증심사 대웅전 사진 찍기', '증심사 대웅전을 배경으로 사찰의 평온함을 담아 사진을 찍어 인증하세요.', 150, 15);
-
--- =======================================================================
--- 관광지: 광주읍성터
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(5009, '광주읍성터', 35.1468419, 126.9210583, '5', 400);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(50090, 5009, 1, NULL, 'EASY', '광주읍성터 도착', '광주읍성터 추정 위치에 도착하여 GPS를 인증하세요.', 50, 5),
-(50091, 5009, 2, 50090, 'NORMAL', '광주읍성터 흔적 사진 찍기', '광주읍성터의 흔적(표지석 등)을 찾아 사진으로 남겨주세요.', 150, 15);
-
--- =======================================================================
--- 관광지: 광주향교
--- =======================================================================
-INSERT INTO `locations` (`location_id`, `title`, `latitude`, `longitude`, `area_code`, `gps_verify_radius`)
-VALUES
-(5010, '광주향교', 35.14611, 126.903611, '5', 100);
-
-INSERT INTO `quests` (`quest_id`, `location_id`, `quest_type_id`, `previous_quest_id`, `difficulty`, `title`, `description`, `reward_xp`, `reward_points`)
-VALUES
-(50100, 5010, 1, NULL, 'EASY', '광주향교 도착', '광주향교에 도착하여 GPS를 인증하세요.', 50, 5),
-(50101, 5010, 2, 50100, 'NORMAL', '광주향교 대성전 사진 찍기', '광주향교의 중심 건물인 대성전 앞에서 사진을 찍어 인증하세요.', 150, 15);
+-- Date: 2025-12-25 22:43
+*/
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (2000,NULL,'갈현체육공원',NULL,'2',NULL,37.5777207,126.7285768,300,NULL,'인천광역시 계양구 황어로 66 (갈현동)',NULL,NULL,NULL,'2025-12-25 17:40:19','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (2001,NULL,'감중공원',NULL,'2',NULL,37.4932379,126.6736203,200,NULL,'인천광역시 서구 가정로98번길 18',NULL,NULL,NULL,'2025-12-25 17:40:19','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (2002,NULL,'갑곶돈대',NULL,'2',NULL,37.7335377,126.5171140,100,NULL,'인천광역시 강화군 강화읍 해안동로1366번길 18',NULL,NULL,NULL,'2025-12-25 17:40:19','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (2003,NULL,'갑곶순교성지',NULL,'2',NULL,37.7341960,126.5174945,150,NULL,'인천광역시 강화군 강화읍 해안동로1366번길 35',NULL,NULL,NULL,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (2004,NULL,'강화 갑곶리 탱자나무',NULL,'2',NULL,37.7342182,126.5165752,30,NULL,'인천광역시 강화군 강화읍 갑곳리',NULL,NULL,NULL,'2025-12-25 17:40:19','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (2005,NULL,'강화 고인돌 유적 [유네스코 세계유산]',NULL,'2',NULL,37.7734344,126.4374730,300,NULL,'인천광역시 강화군 하점면 부근리',NULL,NULL,NULL,'2025-12-25 17:40:19','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (2006,NULL,'강화 달빛동화마을',NULL,'2',NULL,37.6803033,126.4164970,150,NULL,'인천광역시 강화군 양도면 강화남로921번길 10-6',NULL,NULL,NULL,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (2007,NULL,'강화 덕진진',NULL,'2',NULL,37.6492060,126.5256656,100,NULL,'인천광역시 강화군 불은면 덕진로 31-9',NULL,NULL,NULL,'2025-12-25 17:40:19','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (2008,NULL,'강화 동막해변',NULL,'2',NULL,37.5932919,126.4570623,300,NULL,'인천광역시 강화군 화도면 해안남로 1481',NULL,NULL,NULL,'2025-12-25 17:40:19','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (2009,NULL,'강화 분오리돈대',NULL,'2',NULL,37.5901534,126.4618120,150,NULL,'인천광역시 강화군 화도면 동막리',NULL,NULL,NULL,'2025-12-25 17:40:19','2025-12-25 17:40:19');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (3000,NULL,'갈마공원',NULL,'3',NULL,36.3571341,127.3721884,200,NULL,'대전광역시 서구 한밭대로 664 (갈마동)',NULL,NULL,NULL,'2025-12-25 17:40:24','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (3001,NULL,'갑천',NULL,'3',NULL,36.3628471,127.3626169,150,NULL,'대전광역시 유성구 구성동',NULL,NULL,NULL,'2025-12-25 17:40:24','2025-12-25 17:40:24');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (3002,NULL,'광수사',NULL,'3',NULL,36.3423456,127.2985204,100,NULL,'대전광역시 유성구 학하서로63번길 26 (계산동)',NULL,NULL,NULL,'2025-12-25 17:40:24','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (3003,NULL,'구봉산(대전)',NULL,'3',NULL,36.2838835,127.3394517,300,NULL,'대전광역시 서구 상보안윗길 160',NULL,NULL,NULL,'2025-12-25 17:40:24','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (3004,NULL,'국립 대전 현충원',NULL,'3',NULL,36.3632960,127.2991976,300,NULL,'대전광역시 유성구 현충원로 251 (갑동)',NULL,NULL,NULL,'2025-12-25 17:40:24','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (3005,NULL,'국립대전숲체원',NULL,'3',NULL,36.3235448,127.2910049,300,NULL,'대전광역시 유성구 숲체원로 124 (성북동)',NULL,NULL,NULL,'2025-12-25 17:40:24','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (3006,NULL,'국립대전현충원 보훈둘레길',NULL,'3',NULL,36.3622461,127.2985588,300,NULL,'대전광역시 유성구 현충원로 251',NULL,NULL,NULL,'2025-12-25 17:40:24','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (3007,NULL,'금강로하스 대청공원 (암석식물원)',NULL,'3',NULL,36.4714478,127.4726180,300,NULL,'대전광역시 대덕구 미호동',NULL,NULL,NULL,'2025-12-25 17:40:24','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (3008,NULL,'금강로하스대청공원',NULL,'3',NULL,36.4736698,127.4735845,300,NULL,'대전광역시 대덕구 미호동',NULL,NULL,NULL,'2025-12-25 17:40:24','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (3009,NULL,'금강로하스산호빛공원',NULL,'3',NULL,36.4541238,127.4208120,300,NULL,'대전광역시 대덕구 석봉동',NULL,NULL,NULL,'2025-12-25 17:40:24','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (4000,NULL,'가창 찐빵 골목',NULL,'4',NULL,35.8027170,128.6221983,150,NULL,'대구광역시 달성군 가창면 가창로 1099',NULL,NULL,NULL,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (4001,NULL,'감삼못공원',NULL,'4',NULL,35.8586871,128.5522196,150,NULL,'대구광역시 서구 서대구로3길 43 (내당동)',NULL,NULL,NULL,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (4002,NULL,'강정고령보',NULL,'4',NULL,35.8411597,128.4650416,150,NULL,'대구광역시 달성군 다사읍 강정본길 57',NULL,NULL,NULL,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (4003,NULL,'경극고택',NULL,'4',NULL,35.9074758,128.6866758,150,NULL,'대구광역시 동구 옻골로 195-3',NULL,NULL,NULL,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (4004,NULL,'경상감영공원',NULL,'4',NULL,35.8720530,128.5923073,150,NULL,'대구광역시 중구 경상감영길 99',NULL,NULL,NULL,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (4005,NULL,'고산골',NULL,'4',NULL,35.8191842,128.6007581,150,NULL,'대구광역시 남구 고산3길 95-1',NULL,NULL,NULL,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (4006,NULL,'고산골 메타쉐콰이어길',NULL,'4',NULL,35.8300524,128.6034409,150,NULL,'대구광역시 남구 용두2길 43',NULL,NULL,NULL,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (4007,NULL,'고산서당',NULL,'4',NULL,35.8526437,128.7186912,150,NULL,'대구광역시 수성구 성동로37길 39-3',NULL,NULL,NULL,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (4008,NULL,'공룡공원',NULL,'4',NULL,35.8300524,128.6034409,150,NULL,'대구광역시 남구 용두2길 43',NULL,NULL,NULL,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (4009,NULL,'공항교강변공원',NULL,'4',NULL,35.9012142,128.6259647,150,NULL,'대구광역시 북구 복현동',NULL,NULL,NULL,'2025-12-25 18:03:20','2025-12-25 18:03:20');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5000,NULL,'관우집',NULL,'5',NULL,35.2125539,126.8478965,1500,NULL,'광주광역시 광산구 첨단중앙로68번길 99',NULL,NULL,NULL,'2025-12-25 17:41:38','2025-12-25 17:45:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5001,NULL,'SSAFY 광주 캠퍼스',NULL,'5',NULL,35.2053213,126.8115410,10000,NULL,'광주광역시 광산구 하남산단6번로 133',NULL,NULL,NULL,'2025-12-25 17:51:06','2025-12-25 17:51:06');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5002,NULL,'경암근린공원',NULL,'5',NULL,35.1783221,126.8000978,250,NULL,'광주광역시 광산구 하남대로54번안길 133 (하남동)',NULL,NULL,NULL,'2025-12-25 18:03:27','2025-12-25 18:04:33');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5003,NULL,'고싸움놀이테마파크',NULL,'5',NULL,35.0695406,126.8354974,300,NULL,'광주광역시 남구 고싸움로 2 (칠석동)',NULL,NULL,NULL,'2025-12-25 18:03:27','2025-12-25 18:04:33');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5004,NULL,'고씨삼강문',NULL,'5',NULL,35.0917964,126.8384605,30,NULL,'광주광역시 남구 압촌길 66',NULL,NULL,NULL,'2025-12-25 18:03:27','2025-12-25 18:04:33');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5005,NULL,'관덕정의 각궁',NULL,'5',NULL,35.1419253,126.9118638,50,NULL,'광주광역시 남구 사직길 49',NULL,NULL,NULL,'2025-12-25 18:03:27','2025-12-25 18:04:33');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5006,NULL,'광주 3·1 만세운동 기념비',NULL,'5',NULL,35.1367620,126.9096947,30,NULL,'광주광역시 남구 백서로 13',NULL,NULL,NULL,'2025-12-25 18:03:27','2025-12-25 18:04:33');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5007,NULL,'광주 경찰충혼탑',NULL,'5',NULL,35.1425420,126.9155968,30,NULL,'광주광역시 남구 사직길 49',NULL,NULL,NULL,'2025-12-25 18:03:27','2025-12-25 18:04:33');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5008,NULL,'광주 송정동 떡갈비 골목',NULL,'5',NULL,35.1397153,126.7943076,200,NULL,'광주광역시 광산구 광산로29번길',NULL,NULL,NULL,'2025-12-25 18:03:27','2025-12-25 18:04:33');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5009,NULL,'광주 수완호수공원',NULL,'5',NULL,35.1879825,126.8202597,30000,NULL,'광주광역시 광산구 장신로82번길 57 공원관리사무소',NULL,NULL,NULL,'2025-12-25 18:03:27','2025-12-25 18:40:02');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5010,NULL,'광주 예술의 거리',NULL,'5',NULL,35.1499384,126.9186130,150,NULL,'광주광역시 동구 궁동',NULL,NULL,NULL,'2025-12-25 18:03:27','2025-12-25 18:03:27');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (5011,NULL,'광주 우치공원 동물원',NULL,'5',NULL,35.2235741,126.8940800,300,NULL,'광주광역시 북구 우치로 677',NULL,NULL,NULL,'2025-12-25 18:03:27','2025-12-25 18:04:33');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (6000,NULL,'가덕도',NULL,'6',NULL,35.0399121,128.8284150,250,NULL,'부산광역시 강서구 서천로42번길 351 (천성동)',NULL,NULL,NULL,'2025-12-25 18:03:46','2025-12-25 18:04:51');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (6001,NULL,'가덕도 등대',NULL,'6',NULL,35.0006471,128.8295937,50,NULL,'부산광역시 강서구 외양포로 10',NULL,NULL,NULL,'2025-12-25 18:03:46','2025-12-25 18:04:51');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (6002,NULL,'가덕도 연대봉',NULL,'6',NULL,35.0317518,128.8216714,300,NULL,'부산광역시 강서구 천성동',NULL,NULL,NULL,'2025-12-25 18:03:46','2025-12-25 18:04:51');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (6003,NULL,'가덕도대항인공동굴',NULL,'6',NULL,35.0133095,128.8274686,50,NULL,'부산광역시 강서구 대항동 393-9',NULL,NULL,NULL,'2025-12-25 18:03:46','2025-12-25 18:04:51');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (6004,NULL,'가덕도외양포전망대',NULL,'6',NULL,34.9897844,128.8289302,50,NULL,'부산광역시 강서구 외양포로 10 (대항동)',NULL,NULL,NULL,'2025-12-25 18:03:46','2025-12-25 18:04:51');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (6005,NULL,'가야공원',NULL,'6',NULL,35.1483453,129.0276892,300,NULL,'부산광역시 부산진구 엄광로 118',NULL,NULL,NULL,'2025-12-25 18:03:46','2025-12-25 18:04:51');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (6006,NULL,'가톨릭 특성화 거리',NULL,'6',NULL,35.2434554,129.0970389,150,NULL,'부산광역시 금정구 부곡동',NULL,NULL,NULL,'2025-12-25 18:03:46','2025-12-25 18:03:46');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (6007,NULL,'갈맷길5코스',NULL,'6',NULL,35.0371378,128.8473273,300,NULL,'부산광역시 강서구 동선동',NULL,NULL,NULL,'2025-12-25 18:03:46','2025-12-25 18:04:51');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (6008,NULL,'감만시민부두',NULL,'6',NULL,35.1097087,129.0687505,200,NULL,'부산광역시 남구 감만동 626-1',NULL,NULL,NULL,'2025-12-25 18:03:46','2025-12-25 18:04:51');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (6009,NULL,'감지해변',NULL,'6',NULL,35.0625336,129.0764901,300,NULL,'부산광역시 영도구 감지길 110',NULL,NULL,NULL,'2025-12-25 18:03:46','2025-12-25 18:04:51');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (7000,NULL,'가족문화센터',NULL,'7',NULL,35.5319961,129.2905556,50,NULL,'울산광역시 남구 대공원로 84',NULL,NULL,NULL,'2025-12-25 18:03:51','2025-12-25 18:05:06');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (7001,NULL,'간월산',NULL,'7',NULL,35.5561610,129.0480650,400,NULL,'울산광역시 울주군 상북면 간월산길 614',NULL,NULL,NULL,'2025-12-25 18:03:51','2025-12-25 18:05:06');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (7002,NULL,'간월산 자연휴양림',NULL,'7',NULL,35.5671044,129.0560529,300,NULL,'울산광역시 울주군 상북면 등억알프스로 607-15',NULL,NULL,NULL,'2025-12-25 18:03:51','2025-12-25 18:05:06');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (7003,NULL,'간월재',NULL,'7',NULL,35.5482424,129.0453821,200,NULL,'울산광역시 울주군 상북면 간월산길 614',NULL,NULL,NULL,'2025-12-25 18:03:51','2025-12-25 18:05:06');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (7004,NULL,'간절곶',NULL,'7',NULL,35.3589668,129.3605738,300,NULL,'울산광역시 울주군 서생면 간절곶1길 39-2',NULL,NULL,NULL,'2025-12-25 18:03:51','2025-12-25 18:05:06');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (7005,NULL,'간절곶 소망길',NULL,'7',NULL,35.3546337,129.3492111,300,NULL,'울산광역시 울주군 서생면 나사리',NULL,NULL,NULL,'2025-12-25 18:03:51','2025-12-25 18:05:06');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (7006,NULL,'간절곶소망우체통',NULL,'7',NULL,35.3588057,129.3611488,30,NULL,'울산광역시 울주군 서생면 대송리',NULL,NULL,NULL,'2025-12-25 18:03:51','2025-12-25 18:05:06');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (7007,NULL,'강동 해수온천',NULL,'7',NULL,35.6138565,129.4505699,50,NULL,'울산광역시 북구 동해안로 1418',NULL,NULL,NULL,'2025-12-25 18:03:51','2025-12-25 18:05:06');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (7008,NULL,'강동 화암 주상절리',NULL,'7',NULL,35.6341985,129.4424756,300,NULL,'울산광역시 북구 산하동 952-1번지 일원',NULL,NULL,NULL,'2025-12-25 18:03:51','2025-12-25 18:05:06');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (7009,NULL,'강동몽돌해변 (정자해변)',NULL,'7',NULL,35.6278381,129.4423980,300,NULL,'울산광역시 북구 산하동',NULL,NULL,NULL,'2025-12-25 18:03:51','2025-12-25 18:05:06');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (8000,NULL,'고복자연공원',NULL,'8',NULL,36.6000120,127.2274837,300,NULL,'세종특별자치시 연서면 도신고복로 586',NULL,NULL,NULL,'2025-12-25 18:03:55','2025-12-25 18:05:21');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (8001,NULL,'고운뜰공원',NULL,'8',NULL,36.5125528,127.2391322,250,NULL,'세종특별자치시 만남로 151 (고운동)',NULL,NULL,NULL,'2025-12-25 18:03:55','2025-12-25 18:05:21');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (8002,NULL,'국립세종수목원',NULL,'8',NULL,36.4986580,127.2857090,300,NULL,'세종특별자치시 수목원로 136 (세종동)',NULL,NULL,NULL,'2025-12-25 18:03:55','2025-12-25 18:05:21');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (8003,NULL,'금강대도',NULL,'8',NULL,36.4444286,127.3151939,100,NULL,'세종특별자치시 금남면 금천1길 78',NULL,NULL,NULL,'2025-12-25 18:03:55','2025-12-25 18:05:21');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (8004,NULL,'금강보행교',NULL,'8',NULL,36.4817461,127.2873177,150,NULL,'세종특별자치시 보람동',NULL,NULL,NULL,'2025-12-25 18:03:55','2025-12-25 18:03:55');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (8005,NULL,'금강수변공원',NULL,'8',NULL,36.4830460,127.2920172,300,NULL,'세종특별자치시 보람동',NULL,NULL,NULL,'2025-12-25 18:03:55','2025-12-25 18:05:21');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (8006,NULL,'금남 백로 서식지',NULL,'8',NULL,36.4424479,127.2909156,300,NULL,'세종특별자치시 금남면 감성리',NULL,NULL,NULL,'2025-12-25 18:03:55','2025-12-25 18:05:21');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (8007,NULL,'금이성',NULL,'8',NULL,36.6325356,127.2039433,200,NULL,'세종특별자치시 전동면 송성리',NULL,NULL,NULL,'2025-12-25 18:03:55','2025-12-25 18:05:21');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (8008,NULL,'김종서 장군 묘',NULL,'8',NULL,36.5226123,127.2158674,50,NULL,'세종특별자치시 장군면 대교리',NULL,NULL,NULL,'2025-12-25 18:03:55','2025-12-25 18:05:21');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (8009,NULL,'나무키움(전의양묘영농조합법인)',NULL,'8',NULL,36.6764471,127.1978759,50,NULL,'세종특별자치시 전의면 근성길 14',NULL,NULL,NULL,'2025-12-25 18:03:55','2025-12-25 18:05:21');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (10000,NULL,'가회동성당',NULL,'1',NULL,37.5820859,126.9846617,100,NULL,'서울특별시 종로구 북촌로 57 (가회동)',NULL,NULL,NULL,'2025-12-25 17:40:13','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (10001,NULL,'간데메공원',NULL,'1',NULL,37.5728353,127.0490783,200,NULL,'서울특별시 동대문구 서울시립대로2길 59 (답십리동)',NULL,NULL,NULL,'2025-12-25 17:40:13','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (10002,NULL,'간송옛집',NULL,'1',NULL,37.6649465,127.0282026,50,NULL,'서울특별시 도봉구 시루봉로 149-18 (방학동)',NULL,NULL,NULL,'2025-12-25 17:40:13','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (10003,NULL,'갈산공원',NULL,'1',NULL,37.5061176,126.8684105,200,NULL,'서울특별시 양천구 신정동 162-56',NULL,NULL,NULL,'2025-12-25 17:40:13','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (10004,NULL,'감로암(서울)',NULL,'1',NULL,37.5753815,127.0066515,100,NULL,'서울특별시 종로구 율곡로23길 16 (충신동)',NULL,NULL,NULL,'2025-12-25 17:40:13','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (10005,NULL,'강남',NULL,'1',NULL,37.5268958,127.0270733,50,NULL,'서울특별시 강남구 압구정로 161 (압구정동)',NULL,NULL,NULL,'2025-12-25 17:40:13','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (10006,NULL,'강남 마이스 관광특구',NULL,'1',NULL,37.5119176,127.0592180,300,NULL,'서울특별시 강남구 영동대로 513 (삼성동)',NULL,NULL,NULL,'2025-12-25 17:40:13','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (10007,NULL,'강동예찬시비',NULL,'1',NULL,37.5426290,127.1207893,30,NULL,'서울특별시 강동구 구천면로 141 (천호동)',NULL,NULL,NULL,'2025-12-25 17:40:13','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (10008,NULL,'강변스파랜드',NULL,'1',NULL,37.5349377,127.0913228,50,NULL,'서울특별시 광진구 구의강변로 45 (구의동)',NULL,NULL,NULL,'2025-12-25 17:40:13','2025-12-25 17:40:56');
+INSERT INTO `` (`location_id`,`content_id`,`title`,`content_type_id`,`area_code`,`sigungu_code`,`latitude`,`longitude`,`gps_verify_radius`,`tel`,`addr1`,`addr2`,`homepage`,`overview`,`created_at`,`updated_at`) VALUES (10009,NULL,'강서습지생태공원',NULL,'1',NULL,37.5860880,126.8171491,300,NULL,'서울특별시 강서구 양천로27길 279-23',NULL,NULL,NULL,'2025-12-25 17:40:13','2025-12-25 17:40:56');

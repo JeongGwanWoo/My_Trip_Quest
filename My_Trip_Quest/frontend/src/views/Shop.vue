@@ -95,7 +95,7 @@
     <BaseModal :show="showLoginModal" @close="closeLoginModal">
       <div class="modal-body">
         <h3 class="modal-title">로그인 필요</h3>
-        <p class="modal-text">로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?</p>
+        <p class="modal-text">로그인이 필요한 서비스입니다.<br>로그인 페이지로 이동하시겠습니까?</p>
         <div class="modal-actions">
           <button class="btn-cancel" @click="closeLoginModal">취소</button>
           <button class="btn-confirm" @click="goToLogin">로그인</button>
