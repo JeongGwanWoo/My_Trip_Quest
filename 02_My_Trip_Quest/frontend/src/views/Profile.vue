@@ -1224,7 +1224,7 @@ const earnedBadges = ref([
     gap: 32px;
     align-items: center;
     justify-content: center;
-    position: static;
+    position: relative; /* position: static 대신 relative로 변경 */
   }
   .avatar-area {
     margin-bottom: 0;

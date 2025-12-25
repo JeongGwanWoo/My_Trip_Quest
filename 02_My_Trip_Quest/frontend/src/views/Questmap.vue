@@ -47,7 +47,9 @@
                   @click="handleQuestCardClick(quest.id)"
                 >
                   <div class="card-left">
-                    <div class="quest-icon-box">{{ quest.icon }}</div>
+                    <div class="progress-circle" :style="`--progress: ${quest.percentage}%`">
+                      <span>{{ quest.percentage }}%</span>
+                    </div>
                     <div class="quest-text">
                       <div class="quest-name">{{ quest.name }}</div>
                       <div class="quest-sub">
@@ -56,9 +58,6 @@
                     </div>
                   </div>
                   <div class="card-right">
-                    <div class="progress-circle" :style="`--progress: ${quest.percentage}%`">
-                      <span>{{ quest.percentage }}%</span>
-                    </div>
                     <button class="arrow-btn" :class="{ 'expanded': expandedAreaCodes.includes(quest.id) }">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="6 9 12 15 18 9"></polyline>
@@ -130,7 +129,7 @@
                 </template>
                 <template v-else-if="quest.status === 'ACCEPTED' || quest.status === 'IN_PROGRESS'">
                   <button 
-                    class="btn-primary-sm" 
+                    class="btn-success-sm" 
                     @click.stop="showQuestDetails(quest)">
                     완료하기
                   </button>
@@ -227,7 +226,7 @@
     <BaseModal :show="showLoginModal" @close="closeLoginModal">
       <div class="modal-body">
         <h3 class="modal-title">로그인 필요</h3>
-        <p class="modal-text">로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?</p>
+        <p class="modal-text">로그인이 필요한 서비스입니다.<br>로그인 페이지로 이동하시겠습니까?</p>
         <div class="modal-actions">
           <button class="btn-cancel" @click="closeLoginModal">취소</button>
           <button class="btn-confirm" @click="goToLogin">로그인</button>
@@ -934,14 +933,14 @@ onBeforeUnmount(() => {
 .quest-card.accent-red::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #ef4444; }
 .quest-card.accent-blue::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #3b82f6; }
 .quest-card.accent-gray::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #94a3b8; }
-.card-left { display: flex; align-items: center; gap: 16px; }
-.quest-icon-box { width: 48px; height: 48px; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-.quest-name { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
-.quest-sub { font-size: 13px; color: #64748b; }
+.card-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
+.quest-icon-box { width: 48px; height: 48px; background: #f8fafc; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.quest-text { flex: 1; min-width: 0; }
+.quest-name { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 4px; white-space: nowrap; }
+.quest-sub { font-size: 13px; color: #64748b;  word-break: keep-all; }
 .accent-text { color: #3b82f6; font-weight: 600; }
-.card-right { display: flex; align-items: center; gap: 16px; }
-.arrow-btn { background: transparent; border: none; color: #94a3b8; cursor: pointer; transition: transform 0.3s ease; padding: 4px; }
-.arrow-btn.expanded { transform: rotate(180deg); color: #3b82f6; }
+.card-right { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.arrow-btn { background: transparent; border: none; color: #94a3b8; cursor: pointer; transition: transform 0.3s ease; padding: 4px; }.arrow-btn.expanded { transform: rotate(180deg); color: #3b82f6; }
 
 .location-list-container { margin-top: -8px; margin-bottom: 8px; padding-left: 24px; }
 .location-list-connector { width: 2px; height: 16px; background: #e2e8f0; margin-left: 23px; margin-bottom: 4px; }
@@ -962,18 +961,34 @@ onBeforeUnmount(() => {
 .modal-subtitle { font-size: 14px; color: #64748b; }
 .nested-quest-list { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
 .empty-state { text-align: center; padding: 40px 0; color: #94a3b8; }
-.nested-quest-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; transition: border-color 0.2s; }
+.nested-quest-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; align-items: center; /* Align content to the center */ transition: border-color 0.2s; }
 .nested-quest-item:hover { border-color: #cbd5e1; }
 .quest-title-text { font-weight: 600; color: #334155; font-size: 15px; }
-.quest-actions { display: flex; gap: 8px; flex-wrap: nowrap; }
+.quest-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; /* Add spacing below the title */ }
 .btn-text { background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; font-weight: 500; white-space: nowrap; }
 .btn-text:hover { color: #334155; }
 .btn-primary-sm { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
 .btn-primary-sm:hover { background: #1d4ed8; }
 .btn-primary-sm:disabled {
-  background: #94a3b8;
+  background: #94a3af;
   cursor: not-allowed;
   white-space: nowrap;
+}
+
+.btn-success-sm {
+  background: #22c55e; /* Green color */
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.btn-success-sm:hover {
+  background: #16a34a; /* A darker green for hover */
 }
 
 .btn-secondary-sm {
