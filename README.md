@@ -140,6 +140,6 @@ MyTripQuest는 여행을 단순한 기록이 아닌 도전하고, 증명하고, 
 
 | 구분 | 링크 |
 | :--- | :--- |
-| ERD | [ERD 바로가기](설계서/MyTripQuest_ERD.png) |
-| 시연 시나리오 | [시연 시나리오 바로가기](docs/MyTripQuest_시연시나리오.pdf) |
-| 발표자료 | [발표자료 바로가기](251226_14기_광주_5반_관통PJT_정관우_차지훈.pdf) |
+| ERD | [ERD 바로가기](docs/MyTripQuest_ERD.png) |
+| 시연 시나리오 | [시연 시나리오 바로가기](docs/MyTripQuest_시연_시나리오.pdf) |
+| 발표자료 | [발표자료 바로가기](docs/251226_14기_광주_5반_관통PJT_정관우_차지훈.pdf) |
