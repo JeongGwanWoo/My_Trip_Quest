@@ -26,76 +26,78 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtTokenProvider jwtTokenProvider;
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+        private final JwtTokenProvider jwtTokenProvider;
+        private final CustomOAuth2UserService customOAuth2UserService;
+        private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+        private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .httpBasic(httpBasic -> httpBasic.disable())
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(
-                                // Auth
-                                "/api/v1/users/register",
-                                "/api/v1/users/login",
-                                "/api/v1/users/social-signup",
-                                "/api/v1/users/check-nickname",
-                                "/api/v1/users/send-verification-code",
-                                "/api/v1/users/send-reset-code",
-                                "/api/v1/users/verify-code",
-                                "/api/v1/users/reset-password",
-                                "/login/oauth2/**",
-                                "/oauth2/**",
-                                // Public GET requests
-                                "/api/v1/quest-map/**",
-                                "/api/v1/rankings",
-                                "/api/v1/items/shop",
-                                "/api/v1/tour/**"
-                        ).permitAll()
-                        // Admin endpoints
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        // All other requests must be authenticated
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
-                .oauth2Login(oauth2 -> oauth2
-                        .successHandler(oAuth2LoginSuccessHandler)
-                        .failureHandler(oAuth2LoginFailureHandler)
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService)
-                        )
-                );
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                .httpBasic(httpBasic -> httpBasic.disable())
+                                .csrf(csrf -> csrf.disable())
+                                .sessionManagement(sessionManagement -> sessionManagement
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(authorize -> authorize
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                                .requestMatchers(
+                                                                // Auth
+                                                                "/api/v1/users/register",
+                                                                "/api/v1/users/login",
+                                                                "/api/v1/users/social-signup",
+                                                                "/api/v1/users/check-nickname",
+                                                                "/api/v1/users/send-verification-code",
+                                                                "/api/v1/users/send-reset-code",
+                                                                "/api/v1/users/verify-code",
+                                                                "/api/v1/users/reset-password",
+                                                                "/login/oauth2/**",
+                                                                "/oauth2/**",
+                                                                // Public GET requests
+                                                                "/api/v1/quest-map/**",
+                                                                "/api/v1/rankings",
+                                                                "/api/v1/items/shop",
+                                                                "/api/v1/tour/**",
+                                                                // Swagger
+                                                                "/swagger-ui/**",
+                                                                "/v3/api-docs/**")
+                                                .permitAll()
+                                                // Admin endpoints
+                                                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                                                // All other requests must be authenticated
+                                                .anyRequest().authenticated())
+                                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
+                                                UsernamePasswordAuthenticationFilter.class)
+                                .oauth2Login(oauth2 -> oauth2
+                                                .successHandler(oAuth2LoginSuccessHandler)
+                                                .failureHandler(oAuth2LoginFailureHandler)
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                                .userService(customOAuth2UserService)));
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        
-        // 1. 프론트엔드 주소 허용
-        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
-        
-        // 2. 모든 HTTP 메서드 허용
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        
-        // 3. 모든 헤더 허용
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "x-auth-token"));
-        
-        // 4. 자격 증명 허용
-        configuration.setAllowCredentials(true);
-        
-        // 5. 헤더 노출
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "x-auth-token"));
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+                // 1. 프론트엔드 주소 허용
+                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:5173"));
+
+                // 2. 모든 HTTP 메서드 허용
+                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+                // 3. 모든 헤더 허용
+                configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "x-auth-token"));
+
+                // 4. 자격 증명 허용
+                configuration.setAllowCredentials(true);
+
+                // 5. 헤더 노출
+                configuration.setExposedHeaders(Arrays.asList("Authorization", "x-auth-token"));
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
+                return source;
+        }
 }
