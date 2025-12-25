@@ -112,7 +112,7 @@ My Trip Quest 시연 영상 보기 (링크 추가 예정)
 -   **Language**: Java 17
 -   **Framework**: Spring Boot 3.5.8
 -   **Database**: MySQL
--   **ORM**: Spring Data JPA, MyBatis
+-   **ORM**: MyBatis
 -   **Security**: Spring Security, JWT
 -   **API Documentation**: SpringDoc (Swagger UI)
 -   **Build Tool**: Maven
