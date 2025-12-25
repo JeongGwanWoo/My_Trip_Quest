@@ -6,7 +6,7 @@ import com.mytripquest.domain.item.dto.ShopItemResponseDto;
 import com.mytripquest.domain.item.entity.Item;
 import com.mytripquest.domain.item.entity.UserItem;
 
-import com.mytripquest.domain.item.repository.ItemRepository;
+import com.mytripquest.domain.item.repository.ItemMapper;
 import com.mytripquest.domain.user.entity.User;
 import com.mytripquest.domain.user.repository.UserMapper;
 import com.mytripquest.global.error.exception.BusinessException;
@@ -26,12 +26,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ItemService {
 
-    private final ItemRepository itemRepository;
+    private final ItemMapper itemMapper;
     private final UserMapper userMapper;
 
     @Transactional(readOnly = true)
     public List<ItemDto> findAllItems() {
-        return itemRepository.findAllItems().stream()
+        return itemMapper.findAllItems().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -48,7 +48,7 @@ public class ItemService {
     }
 
     public List<UserItem> findMyItems(Long userId) {
-        return itemRepository.findUserItemsByUserId(userId);
+        return itemMapper.findUserItemsByUserId(userId);
     }
 
     // [수정] category 파라미터 추가
@@ -60,12 +60,12 @@ public class ItemService {
 
         // 1. Get total number of items (searchCategory 조건 추가)
         // 매퍼 메서드 이름도 명확하게 변경하거나, 기존 메서드에 파라미터 추가 필요
-        long totalItems = itemRepository.countShopItems(searchCategory);
+        long totalItems = itemMapper.countShopItems(searchCategory);
         int totalPages = (int) Math.ceil((double) totalItems / size);
 
         // 2. Get paginated items from the database (searchCategory 조건 추가)
         int offset = page * size;
-        List<Item> paginatedItems = itemRepository.findShopItemsWithPagination(size, offset, searchCategory);
+        List<Item> paginatedItems = itemMapper.findShopItemsWithPagination(size, offset, searchCategory);
 
         // 3. Get the items the user already owns
         Set<Long> myItemIds;
@@ -103,7 +103,7 @@ public class ItemService {
     @Transactional
     public void buyItem(Long userId, Long itemId) {
         // 1. 아이템 정보 조회
-        Item item = itemRepository.findById(itemId)
+        Item item = itemMapper.findById(itemId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
 
         // 2. 사용자 정보 조회
@@ -116,7 +116,7 @@ public class ItemService {
         }
 
         // 4. 이미 소유하고 있는지 확인
-        itemRepository.findUserItem(userId, itemId).ifPresent(userItem -> {
+        itemMapper.findUserItem(userId, itemId).ifPresent(userItem -> {
             throw new BusinessException(ErrorCode.ITEM_ALREADY_OWNED);
         });
 
@@ -131,6 +131,6 @@ public class ItemService {
         userMapper.updateUser(updatedUser);
 
         // 7. 인벤토리에 아이템 추가
-        itemRepository.addUserItem(userId, itemId, false);
+        itemMapper.addUserItem(userId, itemId, false);
     }
 }

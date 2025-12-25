@@ -407,75 +407,82 @@ const findMyLocation = () => {
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      const locPosition = new kakao.maps.LatLng(lat, lng);
+  // 위치 가져오기 헬퍼 함수 (Promise 반환)
+  const getCurrentPositionPromise = (options) => {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, options);
+    });
+  };
 
-      // 1. 줌 레벨 변경 (먼저 상세 레벨로 변경하여 좌표 계산 정확도 확보)
-      map.setLevel(4, { animate: false }); 
-      
-      // 2. 중심 이동 (즉시 이동하여 깜빡임 최소화)
-      map.setCenter(locPosition);
+  const updateMapWithPosition = (position) => {
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    const locPosition = new kakao.maps.LatLng(lat, lng);
 
-      // 기존 사용자 위치 마커가 있다면 제거
-      if (userLocationMarker) {
-        userLocationMarker.setMap(null);
-      }
+    map.setLevel(4, { animate: false }); 
+    map.setCenter(locPosition);
 
-      // 사용자 위치 마커 생성 (DOM 요소 직접 생성 및 인라인 스타일 적용)
-      const markerRoot = document.createElement('div');
-      markerRoot.className = 'user-location-marker'; // 애니메이션용 클래스 유지
-      markerRoot.style.position = 'relative';
-      markerRoot.style.width = '40px';
-      markerRoot.style.height = '40px';
-      markerRoot.style.display = 'flex';
-      markerRoot.style.justifyContent = 'center';
-      markerRoot.style.alignItems = 'center';
+    if (userLocationMarker) {
+      userLocationMarker.setMap(null);
+    }
 
-      const dot = document.createElement('div');
-      dot.style.width = '16px';
-      dot.style.height = '16px';
-      dot.style.backgroundColor = '#3b82f6';
-      dot.style.border = '3px solid white';
-      dot.style.borderRadius = '50%';
-      dot.style.boxShadow = '0 0 6px rgba(0,0,0,0.4)';
-      dot.style.zIndex = '2';
+    const markerRoot = document.createElement('div');
+    markerRoot.className = 'user-location-marker';
+    markerRoot.style.position = 'relative';
+    markerRoot.style.width = '40px';
+    markerRoot.style.height = '40px';
+    markerRoot.style.display = 'flex';
+    markerRoot.style.justifyContent = 'center';
+    markerRoot.style.alignItems = 'center';
 
-      const pulse = document.createElement('div');
-      pulse.className = 'user-pulse'; // 애니메이션용 클래스 유지
-      pulse.style.position = 'absolute';
-      pulse.style.width = '100%';
-      pulse.style.height = '100%';
-      pulse.style.backgroundColor = 'rgba(59, 130, 246, 0.4)';
-      pulse.style.borderRadius = '50%';
-      pulse.style.zIndex = '1';
+    const dot = document.createElement('div');
+    dot.style.width = '16px';
+    dot.style.height = '16px';
+    dot.style.backgroundColor = '#3b82f6';
+    dot.style.border = '3px solid white';
+    dot.style.borderRadius = '50%';
+    dot.style.boxShadow = '0 0 6px rgba(0,0,0,0.4)';
+    dot.style.zIndex = '2';
 
-      markerRoot.appendChild(dot);
-      markerRoot.appendChild(pulse);
+    const pulse = document.createElement('div');
+    pulse.className = 'user-pulse';
+    pulse.style.position = 'absolute';
+    pulse.style.width = '100%';
+    pulse.style.height = '100%';
+    pulse.style.backgroundColor = 'rgba(59, 130, 246, 0.4)';
+    pulse.style.borderRadius = '50%';
+    pulse.style.zIndex = '1';
 
-      userLocationMarker = new kakao.maps.CustomOverlay({
-        position: locPosition,
-        content: markerRoot,
-        map: map,
-        zIndex: 9999, // 최상위 표시
-        xAnchor: 0.5,
-        yAnchor: 0.5
-      });
-    },
-    (error) => {
-      console.error("Geolocation error:", error);
+    markerRoot.appendChild(dot);
+    markerRoot.appendChild(pulse);
+
+    userLocationMarker = new kakao.maps.CustomOverlay({
+      position: locPosition,
+      content: markerRoot,
+      map: map,
+      zIndex: 9999,
+      xAnchor: 0.5,
+      yAnchor: 0.5
+    });
+  };
+
+  // 1차 시도: 높은 정확도
+  getCurrentPositionPromise({ enableHighAccuracy: true, maximumAge: 0, timeout: 30000 })
+    .then(updateMapWithPosition)
+    .catch(() => {
+      // 2차 시도: 낮은 정확도 (Failover)
+      console.warn("High accuracy geolocation failed, trying low accuracy...");
+      return getCurrentPositionPromise({ enableHighAccuracy: false, maximumAge: 0, timeout: 30000 })
+        .then(updateMapWithPosition);
+    })
+    .catch((error) => {
+      console.error("Geolocation final error:", error);
       let msg = "위치 정보를 가져올 수 없습니다.";
       if (error.code === 1) msg = "위치 정보 접근 권한이 거부되었습니다.";
+      else if (error.code === 2) msg = "위치 정보를 사용할 수 없습니다. (신호 미약 또는 네트워크 오류)";
+      else if (error.code === 3) msg = "위치 정보를 가져오는 데 시간이 초과되었습니다.";
       alert(msg);
-    },
-    {
-      enableHighAccuracy: true,
-      maximumAge: 0,
-      timeout: 10000
-    }
-  );
+    });
 };
 
 // props.areas가 변경될 때 마커를 업데이트합니다.
@@ -495,7 +502,12 @@ watch(
   () => props.locations,
   (newLocations) => {
     if (map && currentZoomLevel < MARKER_VISIBLE_LEVEL) {
+      // 줌인 상태라면 즉시 갱신
       displayLocationMarkers(newLocations);
+    } else {
+        // 줌아웃 상태라면 기존 캐시 삭제 (다음에 줌인할 때 새로 그리기 위함)
+        locationMarkers.forEach(marker => marker.setMap(null));
+        locationMarkers = [];
     }
   },
   { deep: true }
@@ -562,18 +574,24 @@ const initMap = () => {
     currentZoomLevel = level;
     
     // 줌 레벨에 따라 마커 표시 전환
-    // 줌 레벨에 따라 마커 표시 전환
     // 레벨 10 미만(더 확대된 상태)일 때 관광지 마커 표시
     if (level < MARKER_VISIBLE_LEVEL) {
       // 줌인 상태: 지역 마커 숨기고 관광지 마커 표시
       markers.forEach(marker => marker.setMap(null));
-      if (props.locations && props.locations.length > 0) {
+      
+      // 관광지 마커가 이미 생성되어 있다면 재사용 (setMap(map))
+      if (locationMarkers.length > 0) {
+        locationMarkers.forEach(marker => marker.setMap(map));
+      } else if (props.locations && props.locations.length > 0) {
+        // 생성된 적이 없다면 새로 생성
         displayLocationMarkers(props.locations);
       }
     } else {
       // 줌아웃 상태: 관광지 마커 숨기고 지역 마커 표시
+      // 기존 마커를 삭제하지 않고 지도에서만 감춤 (캐싱)
       locationMarkers.forEach(marker => marker.setMap(null));
-      locationMarkers = [];
+      // locationMarkers = []; // <-- 삭제하지 않음
+      
       markers.forEach(marker => marker.setMap(map));
     }
 

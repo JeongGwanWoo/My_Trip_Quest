@@ -1,6 +1,6 @@
 <template>
   <BaseModal :show="true" @close="$emit('close')">
-    <div class="modal-inner">
+    <div class="modal-inner" style="max-height: 80vh; overflow-y: auto;">
       <div v-if="quest">
         <header class="modal-header">
           <span class="quest-type-badge">{{ getQuestTypeName(quest.questTypeId) }}</span>

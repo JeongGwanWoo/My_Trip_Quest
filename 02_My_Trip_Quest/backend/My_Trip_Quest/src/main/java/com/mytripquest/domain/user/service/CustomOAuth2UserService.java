@@ -1,7 +1,7 @@
 package com.mytripquest.domain.user.service;
 
 import com.mytripquest.domain.item.entity.Item;
-import com.mytripquest.domain.item.repository.ItemMapper;
+
 import com.mytripquest.domain.user.dto.oauth.GoogleOAuth2UserInfo;
 import com.mytripquest.domain.user.dto.oauth.KakaoOAuth2UserInfo;
 import com.mytripquest.domain.user.dto.oauth.NaverOAuth2UserInfo;
@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,13 +35,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final ItemMapper itemMapper;
 
     @Override
     @Transactional
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
-        
+
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         OAuth2UserInfo oAuth2UserInfo;
 
@@ -60,7 +58,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String email = oAuth2UserInfo.getEmail();
         Optional<User> userOptional = userMapper.findByEmail(email);
-        
+
         Map<String, Object> newAttributes = new HashMap<>(oAuth2UserInfo.getAttributes());
         newAttributes.put("email", email);
 
@@ -78,7 +76,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")), // 임시 권한
                 newAttributes,
-                userRequest.getClientRegistration().getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName()
-        );
+                userRequest.getClientRegistration().getProviderDetails().getUserInfoEndpoint()
+                        .getUserNameAttributeName());
     }
 }
